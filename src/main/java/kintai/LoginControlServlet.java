@@ -13,7 +13,6 @@ import jakarta.servlet.http.HttpSession;
 /**
  * ログイン処理を受け持つサーブレット。
  */
-// ※注意：クラス名と@WebServletのパスをご自身のプロジェクトに合わせてください
 @WebServlet("/web/LoginControlServlet")
 public class LoginControlServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -48,7 +47,7 @@ public class LoginControlServlet extends HttpServlet {
             session.setAttribute("user", user); // "user"というキーでUserBeanオブジェクトを保存
             
             //  成功ページにリダイレクトする
-            response.sendRedirect("success.jsp");
+            response.sendRedirect("menu.jsp");
             
         } else {
             // --- ログイン失敗の処理 ---
@@ -57,7 +56,6 @@ public class LoginControlServlet extends HttpServlet {
             request.setAttribute("errorMessage", "従業員番号またはパスワードが正しくありません。");
             
             //  login.jspに処理を「フォワード」して、エラーメッセージを表示させる
-            //     ※リダイレクトではなくフォワードを使うことで、エラーメッセージをJSPに渡せる
             RequestDispatcher dispatcher = request.getRequestDispatcher("/web/login.jsp");
             dispatcher.forward(request, response);
         }

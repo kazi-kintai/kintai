@@ -6,7 +6,6 @@ import java.sql.SQLException;
 
 /**
  * データベースへの接続を提供するクラス。
- * このクラスのgetConnection()メソッドは、呼び出されるたびに新しい接続を確立します。
  */
 public class DBAccess {
 
@@ -16,13 +15,6 @@ public class DBAccess {
     private static final String DB_USER = "root";
     private static final String DB_PWD = ""; // MySQLに設定したパスワード
 
-    /**
-     * データベースへの接続を確立し、Connectionオブジェクトを返す。
-     * このメソッドはnullを返しません。失敗した場合は例外をスローします。
-     * @return データベース接続を表すConnectionオブジェクト
-     * @throws SQLException データベースアクセスエラーが発生した場合
-     * @throws ClassNotFoundException JDBCドライバが見つからない場合
-     */
     public Connection getConnection() throws SQLException, ClassNotFoundException {
         // 1. JDBCドライバをロード
         Class.forName(DB_DRIVER);

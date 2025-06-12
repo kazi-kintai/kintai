@@ -1,8 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="kintai.UserBean" %>
 <%
-    // セッションからユーザー情報を取得し、もし存在しなければログインページに戻す
-    // (直接このページにアクセスされるのを防ぐためのセキュリティ対策)
     UserBean user = (UserBean) session.getAttribute("user");
     if (user == null) {
         response.sendRedirect("login.jsp");

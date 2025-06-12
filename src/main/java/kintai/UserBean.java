@@ -7,8 +7,6 @@ public class UserBean implements Serializable {
 
     // --- フィールド定義 ---
     // empテーブルの各列に対応する。
-    // ※注意：フィールド名は、前回のリクエストに基づき「empno」としています。
-    //         データベースの列名「emp_id」とは異なるため、DAOでマッピング処理が必要です。
 
     private String empno;       // empテーブルの「emp_id」列に対応
     private String name;        // empテーブルの「emp_name」列に対応
