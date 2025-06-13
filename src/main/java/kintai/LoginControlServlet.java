@@ -13,13 +13,9 @@ import jakarta.servlet.http.HttpSession;
 /**
  * ログイン処理を受け持つサーブレット。
  */
-@WebServlet("/web/LoginControlServlet")
+@WebServlet("/LoginControl")
 public class LoginControlServlet extends HttpServlet {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * login.jspからPOSTメソッドで送信されたリクエストを処理します。
-     */
+    
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         
         // 1. JSPから送信されたパラメータを取得
@@ -47,7 +43,7 @@ public class LoginControlServlet extends HttpServlet {
             session.setAttribute("user", user); // "user"というキーでUserBeanオブジェクトを保存
             
             //  成功ページにリダイレクトする
-            response.sendRedirect("menu.jsp");
+            response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
             
         } else {
             // --- ログイン失敗の処理 ---

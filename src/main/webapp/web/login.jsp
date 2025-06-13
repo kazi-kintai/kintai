@@ -7,12 +7,20 @@
         body {
             font-family: sans-serif;
             display: flex;
+            flex-direction: column; 
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
             background-color: #f7f7f7;
         }
+        .title {
+ 			text-align: center;
+			font-weight: bold;
+			font-size: 24px;
+			margin: 0 0 30px 0;
+			color: #333;
+		}
         .login-container {
             text-align: center;
             padding: 40px;
@@ -41,13 +49,13 @@
     </style>
 </head>
 <body>
+    <p class="title">勤怠管理システム</p>
     <div class="login-container">
-        <h2>社員ログイン</h2>
+        <h2>従業員ログイン</h2>
         <p>従業員番号とパスワードを入力してください</p>
 
         <%-- ログインフォーム --%>
-        <%-- action属性は、あとで作成するサーブレットのパスに設定します --%>
-        <form action="LoginControlServlet" method="post">
+        <form action="<%=request.getContextPath()%>/LoginControl" method="post">
             <div class="form-group">
                 <label for="empno">従業員番号:</label>
                 <input type="text" id="empno" name="empno" required>
@@ -62,7 +70,6 @@
 
         <%-- エラーメッセージ表示エリア  --%>
         <div class="error-message">
-            <%-- あとでサーブレットから渡されたエラーメッセージをここに表示します --%>
             <%
                 String errorMessage = (String) request.getAttribute("errorMessage");
                 if (errorMessage != null) {

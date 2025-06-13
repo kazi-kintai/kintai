@@ -24,7 +24,7 @@ public class UserDao {
         // --- SQL文 ---
         // テーブル名: emp
         // 検索列: EMPNO, PASS
-        // 取得列: EMPNO, EMPNAME, DEPTIND, POSTINO
+        // 取得列: EMPNO, EMPNAME, DEPTNO, POSTINO
         String sql = "SELECT EMPNO, EMPNAME, DEPTNO, POSTNO FROM emp WHERE EMPNO = ? AND PASS = ?";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -46,7 +46,7 @@ public class UserDao {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            return null;
+ //           return null;
         }
         return user;
     }
