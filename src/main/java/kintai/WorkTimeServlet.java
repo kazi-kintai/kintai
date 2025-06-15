@@ -25,10 +25,10 @@ public class WorkTimeServlet extends HttpServlet {
      * 表示の前に、本日の打刻データを準備してJSPに渡す。
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        
+
         // --- ★★★ ここからデータ取得のシミュレーション ★★★ ---
         // 次のステップで、この部分はWorkTimeDaoの呼び出しに置き換わります。
-        
+
         // 1. 本日の出退勤データを準備（シミュレーション）
         Map<String, String> workTimeData = new HashMap<>();
         workTimeData.put("clockInTime", "09:02"); // DBから取得した出勤時刻
@@ -36,13 +36,13 @@ public class WorkTimeServlet extends HttpServlet {
 
         // 2. 本日の休憩記録リストを準備（シミュレーション）
         List<Map<String, String>> breakList = new ArrayList<>();
-        
+
         Map<String, String> break1 = new HashMap<>();
         break1.put("breakId", "101"); // 休憩記録のユニークID
         break1.put("startTime", "12:00");
         break1.put("endTime", "13:00");
         breakList.add(break1);
-        
+
         Map<String, String> break2 = new HashMap<>();
         break2.put("breakId", "102");
         break2.put("startTime", "15:00");
@@ -62,9 +62,9 @@ public class WorkTimeServlet extends HttpServlet {
      * POSTリクエストで、dakoku.jspから送信されたデータを受け取る。
      */
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        
+
         String action = request.getParameter("action");
-        
+
         if ("delete_break".equals(action)) {
             // --- 休憩削除の処理 ---
             String breakId = request.getParameter("breakId");
@@ -75,13 +75,13 @@ public class WorkTimeServlet extends HttpServlet {
             // --- 時間登録の処理 ---
             String clockInTime = request.getParameter("clockInTime");
             String clockOutTime = request.getParameter("clockOutTime");
-            String[] breakStartTimes = request.getParameterValues("breakStartTime");
-            String[] breakEndTimes = request.getParameterValues("breakEndTime");
-            
+            String breakStart = request.getParameter("breakStartTime"); //  使用単数形
+            String breakEnd = request.getParameter("breakEndTime"); //  使用単数形
+
             System.out.println("勤怠登録データを受け取りました。");
             // (ここにWorkTimeDao.save(...)の呼び出しが入ります)
         }
-        
+
         // どんな処理の後でも、最終的には画面を再表示して最新の状態を見せる
         doGet(request, response);
     }
