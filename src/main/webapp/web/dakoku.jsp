@@ -104,7 +104,7 @@
                 <thead><tr><th>休憩開始</th><th>休憩終了</th><th>操作</th></tr></thead>
                 <tbody>
                     <% if (breakList.isEmpty()) { %>
-                        <tr><td colspan="3">休憩記録はありません。</td></tr>
+                        <tr><td colspan="3">休憩記録はありません</td></tr>
                     <% } else { for (Map<String, String> breakItem : breakList) { %>
                         <tr>
                             <td><%= breakItem.get("startTime") %></td>
