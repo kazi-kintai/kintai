@@ -1,0 +1,151 @@
+package kintai;
+
+import java.io.IOException;
+import java.util.List;
+
+import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+/**
+ * 部署管理機能を提供するサーブレット
+ * 部署の一覧表示、追加、更新、削除を処理する
+ */
+@WebServlet("/deptManage")
+public class DeptManageServlet extends HttpServlet {
+    private static final long serialVersionUID = 1L;
+    
+    private DeptDao deptDao = new DeptDao();
+    
+    /**
+     * GETリクエストの処理
+     * 部署一覧を表示する
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        
+        // セッションチェック
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/web/login.jsp");
+            return;
+        }
+        
+        // 管理者権限チェック
+        UserBean user = (UserBean) session.getAttribute("user");
+        if (user.getRole() != 1) {
+            response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
+            return;
+        }
+        
+        // 部署一覧を取得
+        List<DeptBean> deptList = deptDao.findAll();
+        request.setAttribute("deptList", deptList);
+        
+        // 部署管理画面にフォワード
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/dept_manage.jsp");
+        dispatcher.forward(request, response);
+    }
+    
+    /**
+     * POSTリクエストの処理
+     * 部署の追加、更新、削除を処理する
+     */
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        
+        // セッションチェック
+        HttpSession session = request.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            response.sendRedirect(request.getContextPath() + "/web/login.jsp");
+            return;
+        }
+        
+        // 管理者権限チェック
+        UserBean user = (UserBean) session.getAttribute("user");
+        if (user.getRole() != 1) {
+            response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
+            return;
+        }
+        
+        // アクションを取得
+        String action = request.getParameter("action");
+        
+        boolean success = false;
+        String message = "";
+        
+        try {
+            switch (action) {
+                case "add":
+                    // 新規追加処理
+                    String newDeptNo = request.getParameter("deptNo");
+                    String newDeptName = request.getParameter("deptName");
+                    
+                    // 入力チェック
+                    if (newDeptNo == null || newDeptNo.trim().isEmpty() || 
+                        newDeptName == null || newDeptName.trim().isEmpty()) {
+                        message = "部署番号と部署名は必須入力です";
+                        break;
+                    }
+                    
+                    // 部署番号の重複チェック
+                    if (deptDao.exists(newDeptNo)) {
+                        message = "部署番号「" + newDeptNo + "」は既に存在します";
+                        break;
+                    }
+                    
+                    DeptBean newDept = new DeptBean(newDeptNo, newDeptName);
+                    success = deptDao.insert(newDept);
+                    message = success ? "部署を追加しました" : "部署の追加に失敗しました";
+                    break;
+                    
+                case "update":
+                    // 更新処理
+                    String updateDeptNo = request.getParameter("deptNo");
+                    String updateDeptName = request.getParameter("deptName");
+                    
+                    // 入力チェック
+                    if (updateDeptName == null || updateDeptName.trim().isEmpty()) {
+                        message = "部署名は必須入力です";
+                        break;
+                    }
+                    
+                    DeptBean updateDept = new DeptBean(updateDeptNo, updateDeptName);
+                    success = deptDao.update(updateDept);
+                    message = success ? "部署を更新しました" : "部署の更新に失敗しました";
+                    break;
+                    
+                case "delete":
+                    // 削除処理
+                    String deleteDeptNo = request.getParameter("deptNo");
+                    success = deptDao.delete(deleteDeptNo);
+                    
+                    if (success) {
+                        message = "部署を削除しました";
+                    } else {
+                        message = "部署の削除に失敗しました。この部署に所属する社員が存在する可能性があります";
+                    }
+                    break;
+                    
+                default:
+                    message = "不正な操作です";
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            message = "処理中にエラーが発生しました";
+        }
+        
+        // 処理結果をリクエスト属性に設定
+        request.setAttribute("message", message);
+        request.setAttribute("success", success);
+        
+        // 部署一覧を再取得して表示
+        doGet(request, response);
+    }
+}
