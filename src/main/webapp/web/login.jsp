@@ -55,7 +55,7 @@
         <p>従業員番号とパスワードを入力してください</p>
 
         <%-- ログインフォーム --%>
-        <form action="<%=request.getContextPath()%>/LoginControl" method="post">
+        <form action="<%=request.getContextPath()%>/LoginCheck" method="post">
             <div class="form-group">
                 <label for="empno">従業員番号:</label>
                 <input type="text" id="empno" name="empno" required>

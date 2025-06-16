@@ -1,4 +1,4 @@
-package kintai; 
+package kintai;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -20,12 +20,12 @@ public class UserDao {
      */
     public UserBean findByLoginInfo(String empno, String password) {
         UserBean user = null;
-        
+
         // --- SQL文 ---
         // テーブル名: emp
         // 検索列: EMPNO, PASS
         // 取得列: EMPNO, EMPNAME, DEPTNO, POSTINO
-        String sql = "SELECT EMPNO, EMPNAME, DEPTNO, POSTNO FROM emp WHERE EMPNO = ? AND PASS = ?";
+        String sql = "SELECT EMPNO, EMPNAME, DEPTNO, POSTNO, ROLE FROM emp WHERE EMPNO = ? AND PASS = ?";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -36,12 +36,13 @@ public class UserDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     user = new UserBean();
-                    
+
                     // --- ResultSetからUserBeanへのマッピング ---
                     user.setEmpno(rs.getString("EMPNO"));
                     user.setName(rs.getString("EMPNAME"));
                     user.setDeptId(rs.getString("DEPTNO"));
                     user.setPostId(rs.getString("POSTNO"));
+                    user.setRole(rs.getInt("ROLE"));
                 }
             }
         } catch (Exception e) {

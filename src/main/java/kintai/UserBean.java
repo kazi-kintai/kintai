@@ -1,4 +1,4 @@
-package kintai; 
+package kintai;
 
 import java.io.Serializable;
 
@@ -12,6 +12,7 @@ public class UserBean implements Serializable {
     private String name;        // empテーブルの「emp_name」列に対応
     private String deptId;     // empテーブルの「dept_id」列に対応
     private String postId;       // empテーブルの「pos_id」列に対応
+    private int role; // ユーザーの役割を保持 (0:従業員, 1:管理者)
 
     public UserBean() {
     }
@@ -44,5 +45,11 @@ public class UserBean implements Serializable {
     }
     public void setPostId(String postId) {
         this.postId = postId;
+    }
+    public int getRole() {
+    return role;
+    }
+    public void setRole(int role) {
+    this.role = role;
     }
 }

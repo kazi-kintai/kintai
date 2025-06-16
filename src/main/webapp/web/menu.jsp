@@ -72,7 +72,7 @@
 		<h1>基本メニュー</h1>
 
 		<p><a href="">勤怠記録一覧</a></p>
-		<p><a href="<%= request.getContextPath() %>/WorkControl">本日分の打刻</a></p>
+		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
 		<p><a href="">過去の勤務記録</a></p>
 	</div>
 </body>
