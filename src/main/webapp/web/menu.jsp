@@ -2,14 +2,12 @@
 <%@ page import="kintai.UserBean" %>
 <%
     UserBean user = (UserBean) session.getAttribute("user");
-%>
-<%--
+    // ログインチェック
     if (user == null) {
-        response.sendRedirect("login.jsp");
+        response.sendRedirect(request.getContextPath() + "/web/login.jsp");
         return;
     }
- --%>
-<%
+    
     String deptname = (String)session.getAttribute("deptname");
 %>
 <html>
@@ -37,12 +35,18 @@
             line-height: 1.5;
         }
         .logout-button {
+            background-color: #dc3545;
             color: white;
-            border: 1px solid #666;
+            border: 1px solid #dc3545;
             border-radius: 5px;
             padding: 8px 16px;
             cursor: pointer;
             font-size: 1em;
+            text-decoration: none;
+        }
+        .logout-button:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
         }
         .menu {
             display: flex;
@@ -58,13 +62,14 @@
 <body>
     
     <div class="header">
-		<div class="userinfo">
-	    	<%--LoginControlに部署名と氏名を取得する処理を要追加 --%>
-	   		<p>部署：営業部<%-- <%= deptname --%></p>
-	    	<p>氏名：山田太郎<%--<%= user.getName()--%></p>
+		<div class="user-info">
+	    	<%-- 部署名と氏名を表示 --%>
+	   		<p>部署：営業部<%-- <%= deptname %> --%></p>
+	    	<p>氏名：<%= user.getName() %></p>
 		</div>
-	    <form method="post" action="<%= request.getContextPath() %>/login" class="logout-button">
-    		<input type="button" name="logout" value="ログアウト">
+	    <%-- ログアウトボタン（修正版） --%>
+	    <form method="post" action="<%= request.getContextPath() %>/logout" style="margin: 0;">
+    		<input type="submit" value="ログアウト" class="logout-button">
     	</form>
 	</div>
     
