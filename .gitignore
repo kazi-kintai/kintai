@@ -18,3 +18,7 @@ Thumbs.db
 .mvn/
 mvnw
 mvnw.cmd
+
+
+pom.xml
+web.xml
