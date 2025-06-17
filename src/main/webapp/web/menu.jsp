@@ -67,7 +67,7 @@
 	   		<p>部署：営業部<%-- <%= deptname %> --%></p>
 	    	<p>氏名：<%= user.getName() %></p>
 		</div>
-	    <%-- ログアウトボタン（修正版） --%>
+	    <%-- ログアウトボタン --%>
 	    <form method="post" action="<%= request.getContextPath() %>/logout" style="margin: 0;">
     		<input type="submit" value="ログアウト" class="logout-button">
     	</form>
