@@ -15,12 +15,12 @@
             background-color: #f7f7f7;
         }
         .title {
- 			text-align: center;
-			font-weight: bold;
-			font-size: 24px;
-			margin: 0 0 30px 0;
-			color: #333;
-		}
+            text-align: center;
+            font-weight: bold;
+            font-size: 24px;
+            margin: 0 0 30px 0;
+            color: #333;
+        }
         .login-container {
             text-align: center;
             padding: 40px;
@@ -47,6 +47,24 @@
             cursor: pointer;
         }
     </style>
+    <script>
+        function validateForm() {
+            // 入力フィールドを取得
+            var empno = document.getElementById("empno").value;
+            var password = document.getElementById("password").value;
+            var errorDiv = document.getElementById("errorMessage");
+            
+            // 空文字チェック（スペースも除去）
+            if (empno.trim() === "" || password.trim() === "") {
+                errorDiv.innerHTML = "従業員番号とパスワードを入力してください";
+                return false; // フォーム送信を中止
+            }
+            
+            // エラーメッセージをクリア
+            errorDiv.innerHTML = "";
+            return true; // フォーム送信を続行
+        }
+    </script>
 </head>
 <body>
     <p class="title">勤怠管理システム</p>
@@ -55,22 +73,23 @@
         <p>従業員番号とパスワードを入力してください</p>
 
         <%-- ログインフォーム --%>
-        <form action="<%=request.getContextPath()%>/LoginCheck" method="post">
+        <form action="<%=request.getContextPath()%>/LoginCheck" method="post" onsubmit="return validateForm()">
             <div class="form-group">
                 <label for="empno">従業員番号:</label>
-                <input type="text" id="empno" name="empno" required>
+                <input type="text" id="empno" name="empno">
             </div>
             <div class="form-group">
                 <label for="password">パスワード:</label>
-                <input type="password" id="password" name="password" required>
+                <input type="password" id="password" name="password">
             </div>
 
             <input type="submit" value="ログイン">
         </form>
 
         <%-- エラーメッセージ表示エリア  --%>
-        <div class="error-message">
+        <div class="error-message" id="errorMessage">
             <%
+                // サーバー側からのエラーメッセージも表示
                 String errorMessage = (String) request.getAttribute("errorMessage");
                 if (errorMessage != null) {
                     out.println(errorMessage);
