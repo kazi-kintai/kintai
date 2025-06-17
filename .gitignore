@@ -22,3 +22,45 @@ mvnw.cmd
 
 pom.xml
 web.xml
+
+# IDEA files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Eclipse files
+.project
+.classpath
+.settings/
+
+# Build artifacts
+bin/
+build/
+target/
+classes/
+*.class
+*.jar
+*.war
+*.ear
+*.zip
+*.tar
+*.gz
+
+# Log files
+*.log
+
+# Cursor IDE specific
+.cursorignore
+
+# Maven generated files
+pom.xml.tag
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+# A file you explicitly want to keep out (if any)
+# For example, a local configuration file that should not be shared
+# config/local.properties
