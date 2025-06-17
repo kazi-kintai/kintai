@@ -17,7 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
  * 勤怠登録に関連するリクエストを処理するサーブレット。
  */
 @WebServlet("/worktime")
-public class WorkTimeServlet extends HttpServlet {
+public class WorkPunchFormServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     /**
