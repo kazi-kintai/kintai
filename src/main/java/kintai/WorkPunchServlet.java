@@ -22,7 +22,7 @@ import jakarta.servlet.http.HttpSession;
 /**
  * 勤怠登録に関連するリクエストを処理するサーブレット。
  * データベースと連携して勤怠データの表示・登録・更新・削除を行う。
- * 
+ *
  * 主な機能：
  * - 出勤・退勤の打刻処理
  * - 休憩時間の登録・削除
@@ -39,7 +39,7 @@ public class WorkPunchServlet extends HttpServlet {
      * GETリクエストの処理メソッド
      * 勤怠登録画面(dakoku.jsp)を表示する前に、
      * ログイン中のユーザーの今日の勤怠データをデータベースから取得してJSPに渡す。
-     * 
+     *
      * @param request HTTPリクエストオブジェクト
      * @param response HTTPレスポンスオブジェクト
      * @throws ServletException サーブレット例外
@@ -47,10 +47,10 @@ public class WorkPunchServlet extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        
+
         // セッション情報を取得（既存のセッションのみ、新規作成はしない）
         HttpSession session = request.getSession(false);
-        
+
         // セッションが存在しない、またはユーザー情報がない場合はログイン画面にリダイレクト
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/web/login.jsp");
@@ -90,7 +90,7 @@ public class WorkPunchServlet extends HttpServlet {
             Map<String, String> breakItem = new HashMap<>();
             // 休憩ID（削除処理で使用）
             breakItem.put("breakId", String.valueOf(breakBean.getBreakId()));
-            
+
             // 休憩開始時刻が記録されている場合
             if (breakBean.getBreakStart() != null) {
                 breakItem.put("startTime", breakBean.getBreakStart().toLocalTime().format(timeFormatter));
@@ -119,7 +119,6 @@ public class WorkPunchServlet extends HttpServlet {
      * - 退勤打刻（clock_out）
      * - 休憩時間追加（add_break）
      * - 休憩時間削除（delete_break）
-     * 
      * @param request HTTPリクエストオブジェクト
      * @param response HTTPレスポンスオブジェクト
      * @throws ServletException サーブレット例外
@@ -127,16 +126,16 @@ public class WorkPunchServlet extends HttpServlet {
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        
+
         // セッション情報を取得（既存のセッションのみ）
         HttpSession session = request.getSession(false);
-        
+
         // ログインチェック：セッションが存在しない、またはユーザー情報がない場合
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/web/login.jsp");
             return;
         }
-        
+
         // ログインユーザーの情報を取得
         UserBean user = (UserBean) session.getAttribute("user");
         String empno = user.getEmpno(); // 従業員番号
@@ -159,7 +158,7 @@ public class WorkPunchServlet extends HttpServlet {
                     newWorkTime.setEmpno(empno); // 従業員番号設定
                     newWorkTime.setKintaiDate(today); // 勤怠日付設定
                     newWorkTime.setClockIn(Time.valueOf(LocalTime.now())); // 現在時刻を出勤時刻として設定
-                    
+
                     // データベースに保存
                     workTimeDao.saveWorkTime(newWorkTime);
                     // 成功メッセージを設定
@@ -182,24 +181,24 @@ public class WorkPunchServlet extends HttpServlet {
                 // 出勤記録がないと休憩は追加できない（業務ルール）
                 if (workTime == null) {
                     request.setAttribute("errorMessage", "先に出勤打刻をしてください");
-                    break; 
+                    break;
                 }
-                
+
                 // リクエストパラメータから休憩開始・終了時刻を取得
                 String breakStartStr = request.getParameter("breakStartTime");
                 String breakEndStr = request.getParameter("breakEndTime");
-                
+
                 // 新しい休憩データオブジェクトを作成
                 BreakBean newBreak = new BreakBean();
                 newBreak.setRecId(workTime.getRecId()); // 勤怠記録IDを関連付け
                 newBreak.setBreakStart(parseTime(breakStartStr)); // 休憩開始時刻を設定
                 newBreak.setBreakEnd(parseTime(breakEndStr)); // 休憩終了時刻を設定
-                
+
                 // データベースに保存
                 workTimeDao.addBreak(newBreak);
                 request.setAttribute("successMessage", "休憩時間を追加しました");
                 break;
-                
+
             case "delete_break": // 休憩時間削除処理
                 // リクエストパラメータから削除対象の休憩IDを取得
                 String breakIdStr = request.getParameter("breakId");
@@ -215,7 +214,7 @@ public class WorkPunchServlet extends HttpServlet {
                 }
                 break;
         }
-        
+
         // 処理完了後、画面を再表示するためdoGetメソッドを呼び出し
         doGet(request, response);
     }
@@ -223,7 +222,7 @@ public class WorkPunchServlet extends HttpServlet {
     /**
      * 時間文字列を java.sql.Time オブジェクトに変換する補助メソッド
      * "HH:mm"または"H:mm"形式の文字列に対応（例: "09:00" または "9:00"）
-     * 
+     *
      * @param timeStr 変換する時間文字列（例: "14:30", "9:15"）
      * @return 変換後のTimeオブジェクト。変換できない場合はnullを返す
      */
@@ -232,12 +231,12 @@ public class WorkPunchServlet extends HttpServlet {
         if (timeStr == null || timeStr.trim().isEmpty()) {
             return null;
         }
-        
+
         try {
             // "H:mm"フォーマットでパース（先頭の0を省略した形式にも対応）
             // 例: "9:00" → LocalTime(09:00), "14:30" → LocalTime(14:30)
             LocalTime localTime = LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("H:mm"));
-            
+
             // LocalTimeをjava.sql.Timeに変換して返す
             return Time.valueOf(localTime);
         } catch (DateTimeParseException e) {

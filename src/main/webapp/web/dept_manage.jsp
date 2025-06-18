@@ -10,7 +10,7 @@
         return;
     }
     
-    // 部署リストを取得
+    // リストを取得
     List<DeptBean> deptList = (List<DeptBean>) request.getAttribute("deptList");
     String message = (String) request.getAttribute("message");
     Boolean success = (Boolean) request.getAttribute("success");
@@ -29,7 +29,7 @@
         }
         
         .container {
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -83,7 +83,7 @@
         
         .form-group label {
             display: inline-block;
-            width: 100px;
+            width: 120px;
             font-weight: bold;
         }
         
@@ -168,8 +168,9 @@
         }
         
         /* 編集フォーム */
-        .edit-row {
+        .edit-form {
             display: none;
+            margin: 0;
         }
         
         .edit-form input[type="text"] {
@@ -197,19 +198,15 @@
     <script>
         // 編集モードの切り替え
         function toggleEdit(deptNo) {
-            // 表示行を取得
-            var displayRow = document.getElementById('display-' + deptNo);
-            // 編集行を取得
-            var editRow = document.getElementById('edit-' + deptNo);
+            var displaySpan = document.getElementById('display-' + deptNo);
+            var editForm = document.getElementById('edit-' + deptNo);
             
-            if (editRow.style.display === 'table-row') {
-                // 編集モードから表示モードに戻る
-                displayRow.style.display = 'table-row';
-                editRow.style.display = 'none';
+            if (editForm.style.display === 'inline') {
+                displaySpan.style.display = 'inline';
+                editForm.style.display = 'none';
             } else {
-                // 表示モードから編集モードに切り替え
-                displayRow.style.display = 'none';
-                editRow.style.display = 'table-row';
+                displaySpan.style.display = 'none';
+                editForm.style.display = 'inline';
             }
         }
         
@@ -218,6 +215,31 @@
             if (confirm('部署「' + deptName + '」を削除してもよろしいですか？')) {
                 document.getElementById('deleteForm-' + deptNo).submit();
             }
+        }
+        
+        // 追加確認
+        function confirmAdd(form) {
+            var deptNo = form.deptNo.value;
+            var deptName = form.deptName.value;
+            
+            if (deptNo.trim() === '' || deptName.trim() === '') {
+                alert('部署番号と部署名を入力してください。');
+                return false;
+            }
+            
+            return confirm('部署番号「' + deptNo + '」、部署名「' + deptName + '」を追加してもよろしいですか？');
+        }
+        
+        // 更新確認
+        function confirmUpdate(form, deptNo) {
+            var deptName = form.deptName.value;
+            
+            if (deptName.trim() === '') {
+                alert('部署名を入力してください。');
+                return false;
+            }
+            
+            return confirm('部署番号「' + deptNo + '」の部署名を「' + deptName + '」に更新してもよろしいですか？');
         }
     </script>
 </head>
@@ -235,11 +257,11 @@
         <%-- 新規追加フォーム --%>
         <div class="add-form">
             <h2>新規部署追加</h2>
-            <form method="post" action="<%= request.getContextPath() %>/deptManage">
+            <form method="post" action="<%= request.getContextPath() %>/deptManage" onsubmit="return confirmAdd(this)">
                 <input type="hidden" name="action" value="add">
                 <div class="form-group">
                     <label for="newDeptNo">部署番号：</label>
-                    <input type="text" id="newDeptNo" name="deptNo" maxlength="5" required>
+                    <input type="text" id="newDeptNo" name="deptNo" maxlength="10" required>
                 </div>
                 <div class="form-group">
                     <label for="newDeptName">部署名：</label>
@@ -262,10 +284,28 @@
             <tbody>
                 <% if (deptList != null && !deptList.isEmpty()) { %>
                     <% for (DeptBean dept : deptList) { %>
-                        <%-- 表示行 --%>
-                        <tr id="display-<%= dept.getDeptNo() %>">
+                        <tr>
                             <td><%= dept.getDeptNo() %></td>
-                            <td><%= dept.getDeptName() %></td>
+                            <td>
+                                <%-- 表示用 --%>
+                                <span id="display-<%= dept.getDeptNo() %>">
+                                    <%= dept.getDeptName() %>
+                                </span>
+                                
+                                <%-- 編集フォーム（初期状態では非表示） --%>
+                                <form id="edit-<%= dept.getDeptNo() %>" method="post" 
+                                      action="<%= request.getContextPath() %>/deptManage" 
+                                      class="edit-form" style="display: none;"
+                                      onsubmit="return confirmUpdate(this, '<%= dept.getDeptNo() %>')">
+                                    <input type="hidden" name="action" value="update">
+                                    <input type="hidden" name="deptNo" value="<%= dept.getDeptNo() %>">
+                                    <input type="text" name="deptName" value="<%= dept.getDeptName() %>" 
+                                           maxlength="50" required>
+                                    <button type="submit" class="btn btn-primary">保存</button>
+                                    <button type="button" class="btn btn-secondary" 
+                                            onclick="toggleEdit('<%= dept.getDeptNo() %>')">キャンセル</button>
+                                </form>
+                            </td>
                             <td>
                                 <button class="btn btn-success" onclick="toggleEdit('<%= dept.getDeptNo() %>')">編集</button>
                                 <button class="btn btn-danger" onclick="confirmDelete('<%= dept.getDeptNo() %>', '<%= dept.getDeptName() %>')">削除</button>
@@ -278,20 +318,6 @@
                                 </form>
                             </td>
                         </tr>
-                        
-                        <%-- 編集行（初期状態では非表示） --%>
-                        <tr id="edit-<%= dept.getDeptNo() %>" class="edit-row" style="display: none;">
-                            <td><%= dept.getDeptNo() %></td>
-                            <td colspan="2">
-                                <form method="post" action="<%= request.getContextPath() %>/deptManage" style="display: inline;">
-                                    <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="deptNo" value="<%= dept.getDeptNo() %>">
-                                    <input type="text" name="deptName" value="<%= dept.getDeptName() %>" maxlength="50" required>
-                                    <button type="submit" class="btn btn-primary">保存</button>
-                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= dept.getDeptNo() %>')">キャンセル</button>
-                                </form>
-                            </td>
-                        </tr>
                     <% } %>
                 <% } else { %>
                     <tr>
@@ -301,7 +327,7 @@
             </tbody>
         </table>
         
-        <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理者メニューへ戻る</a>
+        <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理部基本メニューへ戻る</a>
     </div>
 </body>
 </html>

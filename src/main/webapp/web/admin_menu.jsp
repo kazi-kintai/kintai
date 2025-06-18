@@ -12,7 +12,7 @@
 %>
 <html>
 <head>
-    <title>勤怠管理システムメニュー（管理者）</title>
+    <title>勤怠管理システムメニュー（管理部）</title>
     
     <style>
        	body {
@@ -90,19 +90,19 @@
 	</div>
     
 	<div class="menu">
-		<h1>管理者メニュー</h1>
+		<h1>管理部基本メニュー</h1>
 
 		<%-- 基本機能 --%>
 		<h3>基本機能</h3>
 		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
-		<p><a href="">社員別勤怠記録表示</a></p>
+		<p><a href="">従業員別勤怠記録表示</a></p>
 		<p><a href="">業務内容別勤務時間登録</a></p>
 		
 		<%-- 管理機能 --%>
 		<h3>管理機能</h3>
 		<p><a href="<%= request.getContextPath() %>/deptManage">部署登録・変更・削除</a></p>
-		<p><a href="<%= request.getContextPath() %>/empManage">社員登録・変更・削除</a></p>
-		<p><a href="">役職管理</a></p>
+		<p><a href="<%= request.getContextPath() %>/empManage">従業員登録・変更・削除</a></p>
+		<p><a href="<%= request.getContextPath() %>/postManage">役職登録・変更・削除</a></p>
 		<p><a href="">プロジェクト管理</a></p>
 		<p><a href="">休日種別管理</a></p>
 		<p><a href="">会社カレンダー管理</a></p>
