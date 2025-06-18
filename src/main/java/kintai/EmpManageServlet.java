@@ -12,8 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * 社員管理機能を提供するサーブレット
- * 社員の一覧表示、追加、更新、削除を処理する
+ * 従業員管理機能を提供するサーブレット
+ * 従業員の一覧表示、追加、更新、削除を処理する
  */
 @WebServlet("/empManage")
 public class EmpManageServlet extends HttpServlet {
@@ -25,7 +25,7 @@ public class EmpManageServlet extends HttpServlet {
     
     /**
      * GETリクエストの処理
-     * 社員一覧を表示する
+     * 従業員一覧を表示する
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -45,7 +45,7 @@ public class EmpManageServlet extends HttpServlet {
             return;
         }
         
-        // 社員一覧、部署一覧、役職一覧を取得
+        // 従業員一覧、部署一覧、役職一覧を取得
         List<EmpBean> empList = empDao.findAll();
         List<DeptBean> deptList = deptDao.findAll();
         List<PostBean> postList = postDao.findAll();
@@ -54,14 +54,14 @@ public class EmpManageServlet extends HttpServlet {
         request.setAttribute("deptList", deptList);
         request.setAttribute("postList", postList);
         
-        // 社員管理画面にフォワード
+        // 従業員管理画面にフォワード
         RequestDispatcher dispatcher = request.getRequestDispatcher("/web/emp_manage.jsp");
         dispatcher.forward(request, response);
     }
     
     /**
      * POSTリクエストの処理
-     * 社員の追加、更新、削除を処理する
+     * 従業員の追加、更新、削除を処理する
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
@@ -108,9 +108,9 @@ public class EmpManageServlet extends HttpServlet {
                         break;
                     }
                     
-                    // 社員番号の重複チェック
+                    // 従業員番号の重複チェック
                     if (empDao.exists(newEmpNo)) {
-                        message = "社員番号「" + newEmpNo + "」は既に存在します";
+                        message = "従業員番号「" + newEmpNo + "」は既に存在します";
                         break;
                     }
                     
@@ -123,7 +123,7 @@ public class EmpManageServlet extends HttpServlet {
                     newEmp.setRole(Integer.parseInt(newRoleStr));
                     
                     success = empDao.insert(newEmp);
-                    message = success ? "社員を追加しました" : "社員の追加に失敗しました";
+                    message = success ? "従業員を追加しました" : "従業員の追加に失敗しました";
                     break;
                     
                 case "update":
@@ -153,7 +153,7 @@ public class EmpManageServlet extends HttpServlet {
                     updateEmp.setRole(Integer.parseInt(updateRoleStr));
                     
                     success = empDao.update(updateEmp);
-                    message = success ? "社員情報を更新しました" : "社員情報の更新に失敗しました";
+                    message = success ? "従業員情報を更新しました" : "従業員情報の更新に失敗しました";
                     break;
                     
                 case "delete":
@@ -162,9 +162,9 @@ public class EmpManageServlet extends HttpServlet {
                     success = empDao.delete(deleteEmpNo);
                     
                     if (success) {
-                        message = "社員を削除しました";
+                        message = "従業員を削除しました";
                     } else {
-                        message = "社員の削除に失敗しました。この社員の勤怠データが存在する可能性があります";
+                        message = "従業員の削除に失敗しました。この従業員の勤怠データが存在する可能性があります";
                     }
                     break;
                     
@@ -180,7 +180,7 @@ public class EmpManageServlet extends HttpServlet {
         request.setAttribute("message", message);
         request.setAttribute("success", success);
         
-        // 社員一覧を再取得して表示
+        // 従業員一覧を再取得して表示
         doGet(request, response);
     }
 }
