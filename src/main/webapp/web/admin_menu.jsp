@@ -95,7 +95,7 @@
 		<%-- 基本機能 --%>
 		<h3>基本機能</h3>
 		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
-		<p><a href="">従業員別勤怠記録表示</a></p>
+		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet">従業員別勤怠記録表示</a></p>
 		<p><a href="">業務内容別勤務時間登録</a></p>
 		
 		<%-- 管理機能 --%>
