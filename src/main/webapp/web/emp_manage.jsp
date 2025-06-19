@@ -23,7 +23,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>社員管理</title>
+    <title>従業員管理</title>
     <style>
         body {
             font-family: 'メイリオ', sans-serif;
@@ -225,15 +225,25 @@
         
         // 削除確認
         function confirmDelete(empNo, empName) {
-            if (confirm('社員「' + empName + '」を削除してもよろしいですか？')) {
+            if (confirm('従業員「' + empName + '」を削除してもよろしいですか？')) {
                 document.getElementById('deleteForm-' + empNo).submit();
             }
+        }
+
+        // 追加確認
+        function confirmAdd() {
+            return confirm('この内容で新しい従業員を追加してもよろしいですか？');
+        }
+
+        // 変更確認
+        function confirmUpdate(empName) {
+            return confirm('従業員「' + empName + '」の情報を変更してもよろしいですか？');
         }
     </script>
 </head>
 <body>
     <div class="container">
-        <h1>社員管理</h1>
+        <h1>従業員管理</h1>
         
         <%-- メッセージ表示 --%>
         <% if (message != null && !message.isEmpty()) { %>
@@ -244,15 +254,15 @@
         
         <%-- 新規追加フォーム --%>
         <div class="add-form">
-            <h2>新規社員追加</h2>
-            <form method="post" action="<%= request.getContextPath() %>/empManage">
+            <h2>新規従業員追加</h2>
+            <form method="post" action="<%= request.getContextPath() %>/empManage" onsubmit="return confirmAdd();">
                 <input type="hidden" name="action" value="add">
                 <div class="form-group">
-                    <label for="newEmpNo">社員番号：</label>
+                    <label for="newEmpNo">従業員番号：</label>
                     <input type="text" id="newEmpNo" name="empNo" maxlength="10" required>
                 </div>
                 <div class="form-group">
-                    <label for="newEmpName">社員名：</label>
+                    <label for="newEmpName">氏名：</label>
                     <input type="text" id="newEmpName" name="empName" maxlength="50" required>
                 </div>
                 <div class="form-group">
@@ -292,13 +302,13 @@
             </form>
         </div>
         
-        <%-- 社員一覧テーブル --%>
-        <h2>社員一覧</h2>
+        <%-- 従業員一覧テーブル --%>
+        <h2>従業員一覧</h2>
         <table class="emp-table">
             <thead>
                 <tr>
-                    <th>社員番号</th>
-                    <th>社員名</th>
+                    <th>従業員番号</th>
+                    <th>氏名</th>
                     <th>部署</th>
                     <th>役職</th>
                     <th>権限</th>
@@ -312,8 +322,10 @@
                         <tr id="display-<%= emp.getEmpNo() %>">
                             <td><%= emp.getEmpNo() %></td>
                             <td><%= emp.getEmpName() %></td>
-                            <td><%= emp.getDeptName() != null ? emp.getDeptName() : emp.getDeptNo() %></td>
-                            <td><%= emp.getPostName() != null ? emp.getPostName() : emp.getPostNo() %></td>
+                            <%-- 部署名の表示（nullまたは"なし"の場合の処理） --%>
+                            <td><%= (emp.getDeptName() != null && !emp.getDeptName().equals("なし")) ? emp.getDeptName() : "なし" %></td>
+                            <%-- 役職名の表示（nullまたは"なし"の場合の処理） --%>
+                            <td><%= (emp.getPostName() != null && !emp.getPostName().equals("なし")) ? emp.getPostName() : "なし" %></td>
                             <td><%= emp.getRole() == 1 ? "管理者" : "一般社員" %></td>
                             <td>
                                 <button class="btn btn-success" onclick="toggleEdit('<%= emp.getEmpNo() %>')">編集</button>
@@ -332,11 +344,11 @@
                         <tr id="edit-<%= emp.getEmpNo() %>" class="edit-row" style="display: none;">
                             <td><%= emp.getEmpNo() %></td>
                             <td colspan="5">
-                                <form method="post" action="<%= request.getContextPath() %>/empManage" class="form-inline">
+                                <form method="post" action="<%= request.getContextPath() %>/empManage" class="form-inline" onsubmit="return confirmUpdate('<%= emp.getEmpName() %>');">
                                     <input type="hidden" name="action" value="update">
                                     <input type="hidden" name="empNo" value="<%= emp.getEmpNo() %>">
                                     
-                                    社員名：<input type="text" name="empName" value="<%= emp.getEmpName() %>" maxlength="50" required>
+                                    氏名：<input type="text" name="empName" value="<%= emp.getEmpName() %>" maxlength="50" required>
                                     
                                     部署：
                                     <select name="deptNo" required>
@@ -376,13 +388,13 @@
                     <% } %>
                 <% } else { %>
                     <tr>
-                        <td colspan="6" style="text-align: center;">社員データがありません</td>
+                        <td colspan="6" style="text-align: center;">従業員データがありません</td>
                     </tr>
                 <% } %>
             </tbody>
         </table>
         
-        <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理者メニューへ戻る</a>
+        <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理部基本メニューへ戻る</a>
     </div>
 </body>
 </html>
