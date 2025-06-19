@@ -9,7 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * kintaiテーブルおよびbreakテーブルへのデータアクセスを担当するクラス (DAO)。
+ * kintaiテーブルおよびbreakテーブル、work_time_detailテーブルへのデータアクセスを担当するクラス (DAO)。
+ * 勤怠データ、休憩データ、工数明細データの検索、追加、更新、削除を行う。
  */
 public class WorkTimeDao {
 
@@ -55,7 +56,12 @@ public class WorkTimeDao {
      */
     public List<BreakBean> findBreaksByDate(String empno, LocalDate date) {
         List<BreakBean> breakList = new ArrayList<>();
-        String sql = "SELECT BREAKID, RECID, BREAKSTART, BREAKEND FROM break WHERE EMPNO = ? AND KINTAIDATE = ?";
+        // RECIDを取得し、そのRECIDに紐づく休憩データを取得するようにSQLを修正
+        String sql = "SELECT b.BREAKID, b.RECID, b.BREAKSTART, b.BREAKEND " +
+                     "FROM break b " +
+                     "JOIN kintai k ON b.RECID = k.RECID " +
+                     "WHERE k.EMPNO = ? AND k.KINTAIDATE = ? " +
+                     "ORDER BY b.BREAKSTART"; // 休憩開始時刻でソートして表示順を制御
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -170,50 +176,113 @@ public class WorkTimeDao {
         }
     }
 
-    // addBreakメソッド内で使用するための補助メソッド
-    private LocalDate findKintaiDateByRecId(int recId) {
-        String sql = "SELECT KINTAIDATE FROM kintai WHERE RECID = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+    /**
+     * 指定されたRECIDの勤怠記録に紐づく工数明細のリストを取得します。
+     * @param recId 勤怠記録ID
+     * @return 工数明細のリスト。見つからない場合は空のリスト。
+     */
+    public List<KinmuManageBean.WorkDetail> findWorkDetailsByRecId(int recId) {
+        List<KinmuManageBean.WorkDetail> workDetailList = new ArrayList<>();
+        // SQLを修正: projectテーブルの代わりにgyomuテーブルをJOIN
+        String sql = "SELECT wd.DETAILID, wd.RECID, wd.EMPNO, wd.KINTAIDATE, wd.GYOMUNO, " +
+                     "wd.STARTTIME, wd.ENDTIME, wd.DESCRIPTION, g.GYOMUNAME " + // g.GYOMUNAME を取得
+                     "FROM work_time_detail wd " +
+                     "LEFT JOIN gyomu g ON wd.GYOMUNO = g.GYOMUNO " + // gyomuテーブルとJOIN
+                     "WHERE wd.RECID = ? " +
+                     "ORDER BY wd.STARTTIME"; // 作業開始時刻でソート
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setInt(1, recId);
+
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getDate("KINTAIDATE").toLocalDate();
+                while (rs.next()) {
+                    KinmuManageBean.WorkDetail detail = new KinmuManageBean.WorkDetail();
+                    detail.setDetailId(rs.getInt("DETAILID"));
+                    detail.setRecId(rs.getInt("RECID"));
+                    detail.setEmpno(rs.getString("EMPNO"));
+                    detail.setKintaiDate(rs.getDate("KINTAIDATE").toLocalDate());
+                    detail.setGyomuNo(rs.getString("GYOMUNO")); // setProjectNo から setGyomuNo に変更
+                    detail.setStartTime(rs.getTime("STARTTIME"));
+                    detail.setEndTime(rs.getTime("ENDTIME"));
+                    detail.setDescription(rs.getString("DESCRIPTION"));
+                    detail.setGyomuName(rs.getString("GYOMUNAME")); // setProjectName から setGyomuName に変更
+                    workDetailList.add(detail);
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
-        return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return workDetailList;
     }
-    private String findEmpnoByRecId(int recId) {
-        String sql = "SELECT EMPNO FROM kintai WHERE RECID = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, recId);
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("EMPNO");
-                }
-            }
-        } catch (Exception e) { e.printStackTrace(); }
-        return null;
+
+    /**
+     * 新しい工数明細をデータベースに追加します。
+     * @param workDetail 追加する工数明細情報
+     */
+    public void addWorkDetail(KinmuManageBean.WorkDetail workDetail) {
+        // SQLを修正: PROJECTNO の代わりに GYOMUNO を使用
+        String sql = "INSERT INTO work_time_detail (RECID, EMPNO, KINTAIDATE, GYOMUNO, STARTTIME, ENDTIME, DESCRIPTION) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, workDetail.getRecId());
+            ps.setString(2, workDetail.getEmpno());
+            ps.setDate(3, Date.valueOf(workDetail.getKintaiDate()));
+            ps.setString(4, workDetail.getGyomuNo()); // setProjectNo から setGyomuNo に変更
+            ps.setTime(5, workDetail.getStartTime());
+            ps.setTime(6, workDetail.getEndTime());
+            ps.setString(7, workDetail.getDescription());
+
+            ps.executeUpdate();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-    
-    
-    // startBreakメソッドで利用する補助メソッド（既にあれば不要）
+
+    /**
+     * 工数明細をデータベースから削除します。
+     * @param detailId 削除する工数明細のID
+     */
+    public void deleteWorkDetail(int detailId) {
+        String sql = "DELETE FROM work_time_detail WHERE DETAILID = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, detailId);
+            ps.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 指定されたRECIDの勤怠記録情報をデータベースから検索する補助メソッド。
+     * KinmuManageServletから呼び出されることを想定。
+     * @param recId 勤怠記録ID
+     * @return WorkTimeBeanオブジェクト。見つからない場合はnull
+     */
     private WorkTimeBean findWorkTimeByRecId(int recId) {
-        String sql = "SELECT * FROM kintai WHERE RECID = ?";
-        try (Connection conn = db.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+        WorkTimeBean workTime = null;
+        String sql = "SELECT RECID, EMPNO, KINTAIDATE, CLOCKIN, CLOCKOUT FROM kintai WHERE RECID = ?";
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, recId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    WorkTimeBean workTime = new WorkTimeBean();
+                    workTime = new WorkTimeBean();
                     workTime.setRecId(rs.getInt("RECID"));
                     workTime.setEmpno(rs.getString("EMPNO"));
                     workTime.setKintaiDate(rs.getDate("KINTAIDATE").toLocalDate());
                     workTime.setClockIn(rs.getTime("CLOCKIN"));
                     workTime.setClockOut(rs.getTime("CLOCKOUT"));
-                    return workTime;
                 }
             }
-        } catch (Exception e) { e.printStackTrace(); }
-        return null;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return workTime;
     }
 }
