@@ -1,34 +1,37 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="kintai.UserBean" %>
 <%
-    // セッションからユーザー情報を取得（セッションがなければログインページへ）
     UserBean user = (UserBean) session.getAttribute("user");
-    if (user == null || user.getRole() != 1) { // 管理者でなければアクセスさせない
+    // ログインチェック
+    if (user == null) {
         response.sendRedirect(request.getContextPath() + "/web/login.jsp");
         return;
     }
     
-    // ToDo: 本来はuser.getDeptId()を使って、データベースから部署名を取得すべき
-    String deptName = "管理部"; // 一時的なプレースホルダ 
+    String deptname = (String)session.getAttribute("deptname");
 %>
 <html>
 <head>
-    <title>管理者メニュー</title>
+    <title>勤怠管理システムメニュー（管理部）</title>
+    
     <style>
-        body {
+       	body {
             margin: 0;
             font-family: sans-serif;
             background: #f7f7f7;
+            height: 100vh;
         }
-        .header {
+       .header {
             display: flex;
             justify-content: space-between;
-            align-items: center; /* 中央揃えに見栄えを良くする */
+            align-items: flex-start;
             padding: 10px 20px;
             background: #fff;
             border-bottom: 1px solid #ccc;
         }
         .user-info {
+            display: flex;
+            flex-direction: column;
             line-height: 1.5;
         }
         .logout-button {
@@ -45,64 +48,64 @@
             background-color: #c82333;
             border-color: #bd2130;
         }
-        .container {
-            max-width: 800px;
-            margin: auto;
-            padding-top: 20px;
-        }
-        .menu-section {
-            border: 1px solid #ccc;
-            border-radius: 8px;
+        .menu {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            margin-bottom: 30px;
-            background-color: #fff;
-        }
-        h2 {
             text-align: center;
+        }
+        .menu h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
             color: #333;
         }
-        .menu-section p {
-            text-align: center;
+        .menu p {
+            margin: 8px 0;
         }
-        .menu-section a {
-            font-size: 1.2em;
+        .menu a {
+            color: #007bff;
             text-decoration: none;
-            color: #0066cc;
+            font-size: 16px;
         }
-        .menu-section a:hover {
+        .menu a:hover {
             text-decoration: underline;
         }
-    </style>
+     </style>
+    
 </head>
 <body>
-
+    
     <div class="header">
-        <div class="user-info">
-            <p>部署：<%= deptName %></p>
-            <p>氏名：<%= user.getName() %> さん（管理者）</p>
-        </div>
-        <%-- ログアウト --%>
-        <form method="post" action="<%= request.getContextPath() %>/logout" style="margin: 0;">
+		<div class="user-info">
+	    	<%-- 部署名と氏名を表示 --%>
+	   		<p>部署：営業部<%-- <%= deptname %> --%></p>
+	    	<p>氏名：<%= user.getName() %></p>
+		</div>
+	    <%-- ログアウトボタン（修正版） --%>
+	    <form method="post" action="<%= request.getContextPath() %>/logout" style="margin: 0;">
     		<input type="submit" value="ログアウト" class="logout-button">
     	</form>
-    </div>
+	</div>
+    
+	<div class="menu">
+		<h1>管理部基本メニュー</h1>
 
-    <div class="container">
-        <%-- 管理者個人のためのメニュー --%>
-        <div class="menu-section">
-            <h2>個人用メニュー</h2>
-            <p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
-            <p><a href="">自身の勤怠記録</a></p>
-        </div>
-
-        <%-- 全従業員を管理するためのメニュー --%>
-        <div class="menu-section">
-            <h2>管理用メニュー</h2>
-            <p><a href="">全従業員の勤怠一覧</a></p>
-            <p><a href="">社員情報管理</a></p>
-            <p><a href="">部署・役職管理</a></p>
-        </div>
-    </div>
-
+		<%-- 基本機能 --%>
+		<h3>基本機能</h3>
+		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
+		<p><a href="">従業員別勤怠記録表示</a></p>
+		<p><a href="">業務内容別勤務時間登録</a></p>
+		
+		<%-- 管理機能 --%>
+		<h3>管理機能</h3>
+		<p><a href="<%= request.getContextPath() %>/deptManage">部署登録・変更・削除</a></p>
+		<p><a href="<%= request.getContextPath() %>/empManage">従業員登録・変更・削除</a></p>
+		<p><a href="<%= request.getContextPath() %>/postManage">役職登録・変更・削除</a></p>
+		<p><a href="">プロジェクト管理</a></p>
+		<p><a href="">休日種別管理</a></p>
+		<p><a href="">会社カレンダー管理</a></p>
+	</div>
 </body>
 </html>
