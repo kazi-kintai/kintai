@@ -14,7 +14,7 @@ import jakarta.servlet.http.HttpSession;
  * ログイン処理を受け持つサーブレット。
  */
 @WebServlet("/LoginControl")
-public class LoginControlServlet extends HttpServlet {
+public class LoginCheckServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
