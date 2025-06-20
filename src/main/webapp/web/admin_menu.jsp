@@ -97,6 +97,7 @@
 		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
 		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet">従業員別勤怠記録表示</a></p>
 		<p><a href="<%= request.getContextPath() %>/KinmuManageServlet">勤務時間管理</a></p>
+		<p><a href="<%= request.getContextPath() %>/PasswordChangeServlet">パスワード変更</a></p>
 		
 		<%-- 管理機能 --%>
 		<h3>管理機能</h3>
