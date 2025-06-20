@@ -79,6 +79,7 @@
 		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet">勤怠記録表示</a></p>
 		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
 		<p><a href="">過去の勤務記録</a></p>
+		<p><a href="<%= request.getContextPath() %>/KinmuManageServlet">勤務時間管理</a></p>
 	</div>
 </body>
 </html>

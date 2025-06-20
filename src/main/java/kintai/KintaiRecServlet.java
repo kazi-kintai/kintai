@@ -3,7 +3,7 @@ package kintai;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException; // 日付解析例外用
-import java.util.ArrayList; // 新しい追加: targetEmpNos が null で初期化される場合があるため
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.servlet.RequestDispatcher;
@@ -18,11 +18,11 @@ import jakarta.servlet.http.HttpSession;
  * 勤怠時間記録表示機能を提供するサーブレット。
  * ログインユーザーの権限に基づき、自身の、または指定された従業員の勤怠記録を検索・表示する。
  */
-@WebServlet("/KintaiRecServlet") // 全体ファイルまとめ.xlsx - Sheet1.pdf の KintaiRecServlet.java に対応
+@WebServlet("/KintaiRecServlet")
 public class KintaiRecServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    // KintaiRecDao のインスタンス。後で作成します
+    // KintaiRecDao のインスタンス。
     private KintaiRecDao kintaiRecDao = new KintaiRecDao();
     private DeptDao deptDao = new DeptDao(); // 部署名取得用
     private PostDao postDao = new PostDao(); // 役職名取得用
@@ -50,7 +50,7 @@ public class KintaiRecServlet extends HttpServlet {
 
         UserBean user = (UserBean) session.getAttribute("user");
         String loggedInEmpno = user.getEmpno(); // ログイン中の従業員番号
-        int userRole = user.getRole();          // ログイン中のユーザー権限 (0:一般, 1:管理者)
+        int userRoleId = user.getRoleId();          // ログイン中のユーザー権限 (旧userRoleからuserRoleIdへ変更)
 
         // --- フィルター条件の取得 ---
         String empNoFilter = request.getParameter("empNoFilter");
@@ -81,14 +81,14 @@ public class KintaiRecServlet extends HttpServlet {
         // ログインユーザーの権限に基づいてフィルタリングロジックを適用
         List<String> targetEmpNos = new ArrayList<>(); // 検索対象の従業員番号リストを初期化
 
-        if (userRole == 0) { // 一般社員の場合
+        if (userRoleId == 0) { // 一般社員の場合 (ROLEIDが0)
             // 自身の勤怠記録のみを表示
             targetEmpNos.add(loggedInEmpno); // 検索対象をログインユーザーのempnoに固定
             // 一般社員は他の従業員を検索できないため、フィルターパラメータをクリア
             empNoFilter = null; // JSP側でempNoFilterの初期値として使うため、ここではnullのままにする
             deptNoFilter = null;
             postNoFilter = null;
-        } else if (userRole == 1) { // 管理者の場合
+        } else if (userRoleId == 1) { // 管理者の場合 (ROLEIDが1)
             // 全ての従業員の勤怠記録を検索可能。
             // empNoFilter が指定されていれば、そのempNoのみをtargetEmpNosに追加
             if (empNoFilter != null && !empNoFilter.trim().isEmpty()) {
@@ -97,22 +97,19 @@ public class KintaiRecServlet extends HttpServlet {
             // empNoFilter が指定されていなければ、targetEmpNosは空のまま。
             // KintaiRecDaoはtargetEmpNosが空の場合に全従業員を対象として検索する
         }
-        // TODO: 主任/リーダーの役割の場合のロジックをここに追加 (例えば、userRoleが2の場合)
-        //       else if (userRole == 2) {
+        // TODO: 承認者（ROLEID=2）の場合のロジックをここに追加
+        //       else if (userRoleId == 2) {
         //           // 直属の部下のempNoリストを取得
-        //           targetEmpNos = empDao.findSubordinatesEmpNos(loggedInEmpno);
-        //           // この場合、empNoFilter, deptNoFilter, postNoFilterはtargetEmpNosの範囲内で適用される
-        //           // ただし、KintaiRecDaoのgetKintaiRecordsメソッドで、targetEmpNosが空でない場合にIN句を使うようにしているので、
-        //           // ここでtargetEmpNosを設定すれば、追加のempNoFilter処理は不要
+        //           targetEmpNos = empDao.findSubordinatesEmpNos(loggedInEmpno); // ※EmpDaoにこのメソッドを実装する必要あり
         //       }
 
 
         // 勤怠記録データの取得（KintaiRecDaoを使用）
         List<KintaiRecBean> kintaiRecords;
         try {
-             // KintaiRecDao.getKintaiRecords() メソッドを正しい引数で呼び出す
+             // KintaiRecDao.getKintaiRecords() メソッドを呼び出す
             kintaiRecords = kintaiRecDao.getKintaiRecords(
-                targetEmpNos, deptNoFilter, postNoFilter, startDate, endDate, userRole
+                targetEmpNos, deptNoFilter, postNoFilter, startDate, endDate, userRoleId // userRoleからuserRoleIdへ変更
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -122,7 +119,7 @@ public class KintaiRecServlet extends HttpServlet {
 
 
         // ドロップダウンリスト用のデータ（管理者向け）
-        if (userRole == 1) { // 管理者のみフィルター用データを提供
+        if (userRoleId == 1) { // 管理者のみフィルター用データを提供
             request.setAttribute("deptList", deptDao.findAll());
             request.setAttribute("postList", postDao.findAll());
             request.setAttribute("allEmpList", empDao.findAll()); // 従業員名フィルター用（全従業員）
@@ -136,11 +133,11 @@ public class KintaiRecServlet extends HttpServlet {
         request.setAttribute("postNoFilter", postNoFilter);
         request.setAttribute("startDate", startDateStr);
         request.setAttribute("endDate", endDateStr);
-        request.setAttribute("userRole", userRole); // JSPで権限に応じた表示を制御するためにロールを渡す
+        request.setAttribute("userRoleId", userRoleId); // JSPで権限に応じた表示を制御するためにロールIDを渡す
 
 
         // 勤怠記録表示画面にフォワード
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/kintai_rec.jsp"); // 全体ファイルまとめ.xlsx - Sheet1.pdf の kintai_rec.jsp に対応
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/kintai_rec.jsp");
         dispatcher.forward(request, response);
     }
 
