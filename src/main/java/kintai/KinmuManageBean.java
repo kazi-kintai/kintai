@@ -1,58 +1,50 @@
 package kintai;
 
 import java.io.Serializable;
-import java.sql.Time;
-import java.time.Duration;
 import java.time.LocalDate;
-import java.time.LocalTime;
+// 旧WorkDetailで使用していたTime, LocalTime, Durationはwork_allocで直接時間を入力するため不要になります
 
 /**
  * 勤務時間管理画面（kinmu_manage.jsp）で使用するデータを保持するJavaBean。
- * 特に、工数明細（work_time_detailテーブル）の情報を内部クラスとして定義します。
+ * 特に、工数割り当て（work_allocテーブル）の情報を内部クラスとして定義します。
  */
 public class KinmuManageBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
+    // KinmuManageBean自体は、特定の勤怠記録（recId, kintaiDate, empno）
+    // とその日の出退勤、休憩時間、工数割り当てのリストを保持するためのコンテナとして使われることが多いです。
+    // ここではWorkAlloc内部クラスの定義を主とします。
+
     /**
-     * 工数明細（work_time_detailテーブルのレコード）を保持する内部JavaBean。
+     * 工数割り当て（work_allocテーブルのレコード）を保持する内部JavaBean。
      */
-    public static class WorkDetail implements Serializable {
+    public static class WorkAlloc implements Serializable {
         private static final long serialVersionUID = 1L;
 
-        private int detailId;       // 勤務時間明細ID (DETAILID)
-        private int recId;          // 勤怠記録ID (RECID)
-        private String empno;       // 従業員番号 (EMPNO) - 参照用
-        private LocalDate kintaiDate; // 勤怠日付 (KINTAIDATE) - 参照用
-        private String gyomuNo;     // 業務番号 (GYOMUNO) - projectNoから変更
-        private Time startTime;     // 作業開始時刻 (STARTTIME)
-        private Time endTime;       // 作業終了時刻 (ENDTIME)
-        private String description; // 作業内容説明 (DESCRIPTION)
+        private int allocationId;   // 割り当てID (ALLOCATION_ID)
+        private String empno;       // 従業員番号 (EMPNO) - 参照用（ただしwork_allocのPKの一部）
+        private int projectId;      // プロジェクトID (PROJECT_ID)
+        private LocalDate workDate; // 作業日 (WORK_DATE)
+        private double workHours;   // 作業時間 (WORK_HOURS)
 
-        // 表示用の追加フィールド
-        private String gyomuName; // 業務名 - projectNameから変更
+        // 表示用の追加フィールド（JOINで取得）
+        private String empName;     // 従業員名
+        private String projectName; // プロジェクト名
 
         /**
          * デフォルトコンストラクタ
          */
-        public WorkDetail() {
+        public WorkAlloc() {
         }
 
         // --- アクセサメソッド (getter/setter) ---
 
-        public int getDetailId() {
-            return detailId;
+        public int getAllocationId() {
+            return allocationId;
         }
 
-        public void setDetailId(int detailId) {
-            this.detailId = detailId;
-        }
-
-        public int getRecId() {
-            return recId;
-        }
-
-        public void setRecId(int recId) {
-            this.recId = recId;
+        public void setAllocationId(int allocationId) {
+            this.allocationId = allocationId;
         }
 
         public String getEmpno() {
@@ -63,74 +55,53 @@ public class KinmuManageBean implements Serializable {
             this.empno = empno;
         }
 
-        public LocalDate getKintaiDate() {
-            return kintaiDate;
+        public int getProjectId() {
+            return projectId;
         }
 
-        public void setKintaiDate(LocalDate kintaiDate) {
-            this.kintaiDate = kintaiDate;
+        public void setProjectId(int projectId) {
+            this.projectId = projectId;
         }
 
-        public String getGyomuNo() { // getProjectNo から変更
-            return gyomuNo;
+        public LocalDate getWorkDate() {
+            return workDate;
         }
 
-        public void setGyomuNo(String gyomuNo) { // setProjectNo から変更
-            this.gyomuNo = gyomuNo;
+        public void setWorkDate(LocalDate workDate) {
+            this.workDate = workDate;
         }
 
-        public Time getStartTime() {
-            return startTime;
+        public double getWorkHours() {
+            return workHours;
         }
 
-        public void setStartTime(Time startTime) {
-            this.startTime = startTime;
+        public void setWorkHours(double workHours) {
+            this.workHours = workHours;
         }
 
-        public Time getEndTime() {
-            return endTime;
+        public String getEmpName() {
+            return empName;
         }
 
-        public void setEndTime(Time endTime) {
-            this.endTime = endTime;
+        public void setEmpName(String empName) {
+            this.empName = empName;
         }
 
-        public String getDescription() {
-            return description;
+        public String getProjectName() {
+            return projectName;
         }
 
-        public void setDescription(String description) {
-            this.description = description;
-        }
-
-        public String getGyomuName() { // getProjectName から変更
-            return gyomuName;
-        }
-
-        public void setGyomuName(String gyomuName) { // setProjectName から変更
-            this.gyomuName = gyomuName;
+        public void setProjectName(String projectName) {
+            this.projectName = projectName;
         }
 
         /**
-         * 作業時間をHH:mm形式の文字列で取得します。
-         * @return HH:mm形式の作業時間。開始時刻または終了時刻がnullの場合は"---"
+         * 作業時間をHH.HH形式の文字列で取得します。
+         * @return HH.HH形式の作業時間
          */
-        public String getWorkDurationFormatted() {
-            if (startTime == null || endTime == null) {
-                return "---";
-            }
-            LocalTime start = startTime.toLocalTime();
-            LocalTime end = endTime.toLocalTime();
-
-            long totalMinutes = 0;
-            // 終了時刻が開始時刻より前の場合（日付を跨ぐ場合）を考慮
-            if (end.isBefore(start)) {
-                Duration duration = Duration.between(start, LocalTime.MAX).plus(Duration.between(LocalTime.MIDNIGHT, end));
-                totalMinutes = duration.toMinutes();
-            } else {
-                totalMinutes = Duration.between(start, end).toMinutes();
-            }
-            return String.format("%02d:%02d", totalMinutes / 60, totalMinutes % 60);
+        public String getWorkHoursFormatted() {
+            // DecimalFormatなどを使用する方が厳密だが、ここではString.formatで簡易的に対応
+            return String.format("%.2f", workHours);
         }
     }
 }

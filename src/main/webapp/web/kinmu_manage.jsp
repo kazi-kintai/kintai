@@ -2,8 +2,8 @@
 <%@ page import="kintai.UserBean" %>
 <%@ page import="kintai.WorkTimeBean" %>
 <%@ page import="kintai.BreakBean" %>
-<%@ page import="kintai.GyomuBean" %> <%-- ProjectBean から GyomuBean へ変更 --%>
-<%@ page import="kintai.KinmuManageBean" %> <%-- WorkDetail 内部クラスを使用するため --%>
+<%@ page import="kintai.ProjectBean" %> <%-- ProjectBean をインポート --%>
+<%@ page import="kintai.KinmuManageBean" %> <%-- WorkAlloc 内部クラスを使用するため --%>
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="java.util.List" %>
@@ -20,15 +20,14 @@
     // セッションからユーザー情報を取得
     String loggedInUserName = user.getName();
     String loggedInDeptName = (String) session.getAttribute("deptName");
-    // 修正箇所: user.getRole() を user.getRoleId() に変更
     int userRoleId = user.getRoleId(); 
 
     // サーブレットから渡されたデータを取得
     String targetDateStr = (String) request.getAttribute("targetDate");
     Map<String, String> workTimeData = (Map<String, String>) request.getAttribute("workTimeData");
     List<Map<String, String>> breakList = (List<Map<String, String>>) request.getAttribute("breakList");
-    List<KinmuManageBean.WorkDetail> workDetails = (List<KinmuManageBean.WorkDetail>) request.getAttribute("workDetails");
-    List<GyomuBean> gyomuList = (List<GyomuBean>) request.getAttribute("gyomuList"); // projectList から gyomuList へ変更
+    List<KinmuManageBean.WorkAlloc> workAllocs = (List<KinmuManageBean.WorkAlloc>) request.getAttribute("workAllocs"); // workDetails から workAllocs へ変更
+    List<ProjectBean> projectList = (List<ProjectBean>) request.getAttribute("projectList"); // gyomuList から projectList へ変更
 
     String successMessage = (String) request.getAttribute("successMessage");
     String errorMessage = (String) request.getAttribute("errorMessage");
@@ -36,15 +35,15 @@
     // nullチェックと初期化
     if (workTimeData == null) workTimeData = new HashMap<>();
     if (breakList == null) breakList = new java.util.ArrayList<>();
-    if (workDetails == null) workDetails = new java.util.ArrayList<>();
-    if (gyomuList == null) gyomuList = new java.util.ArrayList<>(); // projectList から gyomuList へ変更
+    if (workAllocs == null) workAllocs = new java.util.ArrayList<>(); // workDetails から workAllocs へ変更
+    if (projectList == null) projectList = new java.util.ArrayList<>(); // gyomuList から projectList へ変更
     
     // 現在表示している日付をLocalDateオブジェクトに変換
     LocalDate targetDate = LocalDate.parse(targetDateStr);
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
     String formattedTargetDate = targetDate.format(formatter);
 
-    // メニューへ戻るリンクのURLを権限に応じて設定 (userRole を userRoleId に変更)
+    // メニューへ戻るリンクのURLを権限に応じて設定
     String backUrl = (userRoleId == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
 %>
 <!DOCTYPE html>
@@ -365,36 +364,32 @@
             </table>
         </div>
 
-        <%-- 工数明細（業務）管理エリア --%>
+        <%-- 工数割り当て（プロジェクト）管理エリア --%>
         <div class="section">
-            <h2>工数明細（業務）</h2> <%-- プロジェクトから業務へ変更 --%>
-            <table class="work-detail-table">
+            <h2>工数割り当て（プロジェクト）</h2>
+            <table class="work-detail-table"> <%-- クラス名はそのまま流用 --%>
                 <thead>
                     <tr>
-                        <th>業務</th> <%-- プロジェクトから業務へ変更 --%>
-                        <th>開始時刻</th>
-                        <th>終了時刻</th>
+                        <th>プロジェクト</th>
                         <th>作業時間</th>
                         <th>説明</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% if (workDetails.isEmpty()) { %>
-                        <tr><td colspan="6">工数明細はありません</td></tr>
+                    <% if (workAllocs.isEmpty()) { %>
+                        <tr><td colspan="4">工数割り当てはありません</td></tr> <%-- colspan の数も変更 --%>
                     <% } else { %>
-                        <% for (KinmuManageBean.WorkDetail detail : workDetails) { %>
+                        <% for (KinmuManageBean.WorkAlloc alloc : workAllocs) { %>
                             <tr>
-                                <td><%= detail.getGyomuName() != null ? detail.getGyomuName() : "---" %></td> <%-- getProjectName から getGyomuName へ変更 --%>
-                                <td><%= detail.getStartTime() != null ? detail.getStartTime().toString().substring(0, 5) : "---" %></td>
-                                <td><%= detail.getEndTime() != null ? detail.getEndTime().toString().substring(0, 5) : "---" %></td>
-                                <td><%= detail.getWorkDurationFormatted() %></td>
-                                <td><%= detail.getDescription() != null ? detail.getDescription() : "" %></td>
+                                <td><%= alloc.getProjectName() != null ? alloc.getProjectName() : "---" %></td>
+                                <td><%= alloc.getWorkHoursFormatted() %></td>
+                                <td>---</td> <%-- work_allocテーブルにはdescription列はないため固定表示 --%>
                                 <td class="action-cell">
-                                    <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この工数明細を削除しますか？');" style="display: inline;">
-                                        <input type="hidden" name="action" value="delete_work_detail">
+                                    <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この工数割り当てを削除しますか？');" style="display: inline;">
+                                        <input type="hidden" name="action" value="delete_work_alloc">
                                         <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
-                                        <input type="hidden" name="detailId" value="<%= detail.getDetailId() %>">
+                                        <input type="hidden" name="allocationId" value="<%= alloc.getAllocationId() %>">
                                         <button type="submit" class="btn-danger">削除</button>
                                     </form>
                                     <%-- TODO: 工数明細の編集機能が必要な場合はここに追加 --%>
@@ -403,21 +398,19 @@
                         <% } %>
                     <% } %>
                     <tr>
-                        <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('新しい工数明細を追加しますか？');">
-                            <input type="hidden" name="action" value="add_work_detail">
+                        <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('新しい工数割り当てを追加しますか？');">
+                            <input type="hidden" name="action" value="add_work_alloc">
                             <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
                             <td>
-                                <select name="newGyomuNo" required> <%-- name="newProjectNo" から name="newGyomuNo" へ変更 --%>
+                                <select name="newProjectId" required>
                                     <option value="">選択</option>
-                                    <% for (GyomuBean gyomu : gyomuList) { %> <%-- projectList から gyomuList へ、ProjectBean から GyomuBean へ変更 --%>
-                                        <option value="<%= gyomu.getGyomuNo() %>"><%= gyomu.getGyomuName() %></option>
+                                    <% for (ProjectBean project : projectList) { %>
+                                        <option value="<%= project.getProjectId() %>"><%= project.getProjectName() %></option>
                                     <% } %>
                                 </select>
                             </td>
-                            <td><input type="time" name="newDetailStartTime" placeholder="HH:mm" required></td>
-                            <td><input type="time" name="newDetailEndTime" placeholder="HH:mm" required></td>
-                            <td>---</td> <%-- 作業時間は入力せず、表示時に計算するため --%>
-                            <td><input type="text" name="newDescription" class="description-input" maxlength="255" placeholder="作業内容（任意）"></td>
+                            <td><input type="text" name="newWorkHours" placeholder="例: 8.00" pattern="^\d+(\.\d{1,2})?$" title="半角数字で時間を入力してください（例: 8.00）" required></td>
+                            <td>---</td> <%-- 説明欄は削除され、固定値または別の方法で表示 --%>
                             <td class="action-cell"><button type="submit" class="btn-success">追加</button></td>
                         </form>
                     </tr>

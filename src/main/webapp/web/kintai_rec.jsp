@@ -19,17 +19,10 @@
 
     // セッションからユーザー情報を取得
     String loggedInUserName = user.getName();
-    // ここで部署名も取得したい場合、UserBeanにdeptNameを追加するか、セッションに別途保存する必要があります。
-    // 今回はuser.getDeptId()を使用し、DAOで取得したdeptListから名前を引くか、別途取得する想定です。
-    // 仮に部署名もセッションに入っていると仮定
-    String loggedInDeptName = (String) session.getAttribute("deptName"); 
-    // もしUserBeanにdeptName/postNameがない場合、または最新の情報を表示したい場合、
-    // ここでDAOを使って取得することも可能です。
-    // 例：UserBean userDetail = new EmpDao().findByEmpNo(user.getEmpno());
-    // if (userDetail != null) {
-    //     loggedInDeptName = userDetail.getDeptName();
-    // }
-
+    String loggedInDeptName = (String) session.getAttribute("deptName");
+    // 修正箇所: user.getRole() を user.getRoleId() に変更
+    // UserBeanのロールIDを取得
+    int userRoleId = user.getRoleId(); 
 
     // サーブレットから渡されたデータを取得
     List<KintaiRecBean> kintaiRecords = (List<KintaiRecBean>) request.getAttribute("kintaiRecords");
@@ -38,9 +31,15 @@
     String postNoFilter = (String) request.getAttribute("postNoFilter");
     String startDate = (String) request.getAttribute("startDate");
     String endDate = (String) request.getAttribute("endDate");
-    Integer userRole = (Integer) request.getAttribute("userRole"); // intからIntegerへキャスト
+    // 修正箇所: userRole を userRoleId に変更
+    // int userRole = (Integer) request.getAttribute("userRole"); // 旧変数
+    Integer retrievedUserRoleId = (Integer) request.getAttribute("userRoleId"); // サーブレットから取得
 
-    // フィルター用ドロップダウンリストのデータ（管理者向け）
+    // nullチェックと初期化
+    if (kintaiRecords == null) kintaiRecords = new java.util.ArrayList<>();
+    // deptList, postList, allEmpList は管理者ロールでのみ使用されるため、
+    // ここでnullチェックと初期化を行わないと、一般社員の場合にエラーになる可能性がある。
+    // サーブレットで適切に初期化されていることを前提とするか、ここで初期化
     List<DeptBean> deptList = (List<DeptBean>) request.getAttribute("deptList");
     List<PostBean> postList = (List<PostBean>) request.getAttribute("postList");
     List<EmpBean> allEmpList = (List<EmpBean>) request.getAttribute("allEmpList");
@@ -48,7 +47,6 @@
     String successMessage = (String) request.getAttribute("successMessage");
     String errorMessage = (String) request.getAttribute("errorMessage");
 
-    if (kintaiRecords == null) kintaiRecords = new java.util.ArrayList<>();
     if (deptList == null) deptList = new java.util.ArrayList<>();
     if (postList == null) postList = new java.util.ArrayList<>();
     if (allEmpList == null) allEmpList = new java.util.ArrayList<>();
@@ -63,8 +61,9 @@
     dayOfWeekMap.put(DayOfWeek.SATURDAY, "土");
     dayOfWeekMap.put(DayOfWeek.SUNDAY, "日");
 
-    // メニューへ戻るリンクのURLを権限に応じて設定
-    String backUrl = (userRole != null && userRole == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
+    // メニューへ戻るリンクのURLを権限に応じて設定 (userRole から userRoleId へ変更)
+    // JSPファイル内で直接UserBeanのuserRoleIdを使用
+    String backUrl = (userRoleId == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
 %>
 <!DOCTYPE html>
 <html>
@@ -257,7 +256,8 @@
         <% } %>
 
         <%-- フィルター/検索エリア (管理者向けにのみ表示) --%>
-        <% if (userRole != null && userRole == 1) { %>
+        <%-- userRole から userRoleId へ変更 --%>
+        <% if (userRoleId == 1) { %>
             <div class="filter-form">
                 <form action="<%= request.getContextPath() %>/KintaiRecServlet" method="get" style="display: flex; flex-wrap: wrap; gap: 15px;">
                     <div class="filter-group">
@@ -327,7 +327,8 @@
                 <tr>
                     <th>日付</th>
                     <th>曜日</th>
-                    <% if (userRole != null && userRole == 1) { %>
+                    <%-- userRole から userRoleId へ変更 --%>
+                    <% if (userRoleId == 1) { %>
                         <th>従業員番号</th>
                         <th>氏名</th>
                         <th>部署</th>
@@ -356,7 +357,8 @@
                         <tr class="<%= dayClass %>">
                             <td><%= record.getKintaiDate() != null ? record.getKintaiDate().toString() : "---" %></td>
                             <td><%= record.getKintaiDate() != null ? dayOfWeekMap.get(record.getKintaiDate().getDayOfWeek()) : "---" %></td>
-                            <% if (userRole != null && userRole == 1) { %>
+                            <%-- userRole から userRoleId へ変更 --%>
+                            <% if (userRoleId == 1) { %>
                                 <td><%= record.getEmpno() != null ? record.getEmpno() : "---" %></td>
                                 <td><%= record.getEmpName() != null ? record.getEmpName() : "---" %></td>
                                 <td><%= record.getDeptName() != null ? record.getDeptName() : "---" %></td>
@@ -370,7 +372,8 @@
                     <% } %>
                 <% } else { %>
                     <tr>
-                        <td colspan="<%= (userRole != null && userRole == 1) ? 10 : 6 %>" style="text-align: center;">
+                        <%-- userRole から userRoleId へ変更 --%>
+                        <td colspan="<%= (userRoleId == 1) ? 10 : 6 %>" style="text-align: center;">
                             勤怠記録がありません。
                         </td>
                     </tr>

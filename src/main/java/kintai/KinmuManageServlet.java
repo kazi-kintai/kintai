@@ -20,17 +20,17 @@ import jakarta.servlet.http.HttpSession;
 
 /**
  * 勤務時間管理機能を提供するサーブレット。
- * 従業員が自身の勤怠（出勤、退勤、休憩）や工数明細（業務）を管理・修正する画面を制御する。
+ * 従業員が自身の勤怠（出勤、退勤、休憩）や工数割り当て（プロジェクト）を管理・修正する画面を制御する。
  */
 @WebServlet("/KinmuManageServlet") // 全体ファイルまとめ.xlsx - Sheet1.pdf の kinmu_manage.jsp に対応するサーブレット
 public class KinmuManageServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
-    // WorkTimeDaoを流用して勤怠および休憩データを操作
+    // WorkTimeDaoを流用して勤怠および休憩データ、工数割り当てデータを操作
     private WorkTimeDao workTimeDao = new WorkTimeDao();
-    // GyomuDaoのインスタンス (プロジェクトから業務へ変更)
-    private GyomuDao gyomuDao = new GyomuDao();
-
+    // ProjectDaoのインスタンス (工数割り当てはプロジェクトに紐づくため)
+    private ProjectDao projectDao = new ProjectDao();
+    // GyomuDaoはもう使用しないため削除
 
     /**
      * GETリクエストの処理メソッド。
@@ -98,25 +98,23 @@ public class KinmuManageServlet extends HttpServlet {
             formattedBreakList.add(breakItem);
         }
 
-        // --- 工数明細（業務）の取得 ---
-        // WorkTimeDao に work_time_detail の操作メソッドを追加する想定
-        List<KinmuManageBean.WorkDetail> workDetails = new ArrayList<>();
-        if (workTime != null) {
-            // RECIDを使ってwork_time_detailから工数明細を取得
-            // このメソッドはWorkTimeDaoに実装します
-            workDetails = workTimeDao.findWorkDetailsByRecId(workTime.getRecId());
-        }
+        // --- 工数割り当て（プロジェクト）の取得 ---
+        // WorkTimeDao に work_alloc の操作メソッドを追加する想定
+        List<KinmuManageBean.WorkAlloc> workAllocs = new ArrayList<>(); // WorkDetailからWorkAllocに変更
+        // work_allocはRECIDに紐づかないため、EMPNOとWORK_DATEで直接取得
+        workAllocs = workTimeDao.findWorkAllocsByEmpNoAndDate(empno, targetDate); // 新規メソッド呼び出し
 
-        // 業務のドロップダウンリスト用データ (プロジェクトから業務へ変更)
-        List<GyomuBean> gyomuList = gyomuDao.findAll();
+        // プロジェクトのドロップダウンリスト用データ
+        List<ProjectBean> projectList = projectDao.findAll();
 
 
         // リクエスト属性にデータを設定
         request.setAttribute("targetDate", targetDate.toString());
         request.setAttribute("workTimeData", workTimeData);
         request.setAttribute("breakList", formattedBreakList);
-        request.setAttribute("workDetails", workDetails);
-        request.setAttribute("gyomuList", gyomuList); // projectList から gyomuList へ変更
+        request.setAttribute("workAllocs", workAllocs); // workDetailsからworkAllocsに変更
+        request.setAttribute("projectList", projectList);
+        // gyomuListはもう使用しないため削除
 
 
         // メッセージの引き渡し
@@ -133,7 +131,7 @@ public class KinmuManageServlet extends HttpServlet {
 
     /**
      * POSTリクエストの処理メソッド。
-     * 勤務時間管理画面からのデータ送信（出退勤更新、休憩追加/削除、工数明細追加/削除）を受け付ける。
+     * 勤務時間管理画面からのデータ送信（出退勤更新、休憩追加/削除、工数割り当て追加/削除）を受け付ける。
      * @param request HTTPリクエストオブジェクト
      * @param response HTTPレスポンスオブジェクト
      * @throws ServletException サーブレット例外
@@ -221,42 +219,42 @@ public class KinmuManageServlet extends HttpServlet {
                     successMessage = "休憩時間を削除しました。";
                     break;
 
-                case "add_work_detail": // 工数明細の追加
-                    String gyomuNo = request.getParameter("newGyomuNo"); // projectNo から gyomuNo へ変更
-                    String detailStartTimeStr = request.getParameter("newDetailStartTime");
-                    String detailEndTimeStr = request.getParameter("newDetailEndTime");
-                    String description = request.getParameter("newDescription");
+                case "add_work_alloc": // 工数割り当ての追加 (add_work_detailから変更)
+                    String projectIdStr = request.getParameter("newProjectId"); // gyomuNoからprojectIdに変更
+                    String workHoursStr = request.getParameter("newWorkHours"); // 開始/終了時刻からworkHoursに変更
+                    String description = request.getParameter("newDescription"); // 説明は残す
 
-                    currentWorkTime = workTimeDao.findWorkTimeByDate(empno, targetDate);
-                    if (currentWorkTime == null) {
-                        errorMessage = "勤怠記録がないため、工数明細を追加できません。先に出勤時間を登録してください。";
+                    if (projectIdStr == null || projectIdStr.trim().isEmpty() ||
+                        workHoursStr == null || workHoursStr.trim().isEmpty()) {
+                        errorMessage = "プロジェクトと作業時間は必須入力です。";
                         break;
                     }
 
-                    KinmuManageBean.WorkDetail newWorkDetail = new KinmuManageBean.WorkDetail();
-                    newWorkDetail.setRecId(currentWorkTime.getRecId());
-                    newWorkDetail.setEmpno(empno);
-                    newWorkDetail.setKintaiDate(targetDate);
-                    newWorkDetail.setGyomuNo(gyomuNo); // setProjectNo から setGyomuNo へ変更
-                    newWorkDetail.setStartTime(parseTime(detailStartTimeStr));
-                    newWorkDetail.setEndTime(parseTime(detailEndTimeStr));
-                    newWorkDetail.setDescription(description);
+                    int projectId = Integer.parseInt(projectIdStr);
+                    double workHours = Double.parseDouble(workHoursStr);
 
-                    // WorkTimeDaoに実装するメソッド
-                    workTimeDao.addWorkDetail(newWorkDetail); 
-                    successMessage = "工数明細を追加しました。";
+                    KinmuManageBean.WorkAlloc newWorkAlloc = new KinmuManageBean.WorkAlloc(); // WorkDetailからWorkAllocに変更
+                    newWorkAlloc.setEmpno(empno);
+                    newWorkAlloc.setProjectId(projectId);
+                    newWorkAlloc.setWorkDate(targetDate);
+                    newWorkAlloc.setWorkHours(workHours);
+                    // newWorkAlloc.setDescription(description); // work_allocテーブルにはdescription列はないため設定しない
+
+                    // WorkTimeDaoに新しく実装するメソッド (addWorkDetailから変更)
+                    workTimeDao.addWorkAlloc(newWorkAlloc); 
+                    successMessage = "工数割り当てを追加しました。";
                     break;
                 
-                case "delete_work_detail": // 工数明細の削除
-                    String deleteDetailIdStr = request.getParameter("detailId");
-                    int deleteDetailId = Integer.parseInt(deleteDetailIdStr);
-                    // WorkTimeDaoに実装するメソッド
-                    workTimeDao.deleteWorkDetail(deleteDetailId);
-                    successMessage = "工数明細を削除しました。";
+                case "delete_work_alloc": // 工数割り当ての削除 (delete_work_detailから変更)
+                    String deleteAllocationIdStr = request.getParameter("allocationId"); // detailIdからallocationIdに変更
+                    int deleteAllocationId = Integer.parseInt(deleteAllocationIdStr);
+                    // WorkTimeDaoに新しく実装するメソッド (deleteWorkDetailから変更)
+                    workTimeDao.deleteWorkAlloc(deleteAllocationId);
+                    successMessage = "工数割り当てを削除しました。";
                     break;
 
-                // TODO: 必要に応じて工数明細の更新機能を追加
-                // case "update_work_detail":
+                // TODO: 必要に応じて工数割り当ての更新機能を追加
+                // case "update_work_alloc":
                 //    ...
                 //    break;
 
@@ -265,7 +263,7 @@ public class KinmuManageServlet extends HttpServlet {
                     break;
             }
         } catch (NumberFormatException e) {
-            errorMessage = "入力された数値が不正です。";
+            errorMessage = "入力された数値が不正です。時間またはIDを確認してください。";
             e.printStackTrace();
         } catch (DateTimeParseException e) {
             errorMessage = "入力された日付または時間の形式が不正です。";

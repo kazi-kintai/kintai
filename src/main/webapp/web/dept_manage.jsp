@@ -5,7 +5,7 @@
 <%
     // ログインチェック
     UserBean user = (UserBean) session.getAttribute("user");
-    if (user == null || user.getRole() != 1) {
+    if (user == null || user.getRoleId() != 1) {
         response.sendRedirect(request.getContextPath() + "/web/login.jsp");
         return;
     }
