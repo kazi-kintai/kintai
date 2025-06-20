@@ -20,7 +20,8 @@
     // セッションからユーザー情報を取得
     String loggedInUserName = user.getName();
     String loggedInDeptName = (String) session.getAttribute("deptName");
-    int userRole = user.getRole(); // ロールも取得
+    // 修正箇所: user.getRole() を user.getRoleId() に変更
+    int userRoleId = user.getRoleId(); 
 
     // サーブレットから渡されたデータを取得
     String targetDateStr = (String) request.getAttribute("targetDate");
@@ -43,8 +44,8 @@
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日");
     String formattedTargetDate = targetDate.format(formatter);
 
-    // メニューへ戻るリンクのURLを権限に応じて設定
-    String backUrl = (userRole == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
+    // メニューへ戻るリンクのURLを権限に応じて設定 (userRole を userRoleId に変更)
+    String backUrl = (userRoleId == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
 %>
 <!DOCTYPE html>
 <html>
@@ -364,9 +365,9 @@
             </table>
         </div>
 
-        <%-- 業務明細管理エリア --%>
+        <%-- 工数明細（業務）管理エリア --%>
         <div class="section">
-            <h2>業務明細</h2> <%-- プロジェクトから業務へ変更 --%>
+            <h2>工数明細（業務）</h2> <%-- プロジェクトから業務へ変更 --%>
             <table class="work-detail-table">
                 <thead>
                     <tr>
@@ -380,7 +381,7 @@
                 </thead>
                 <tbody>
                     <% if (workDetails.isEmpty()) { %>
-                        <tr><td colspan="6">業務明細はありません</td></tr>
+                        <tr><td colspan="6">工数明細はありません</td></tr>
                     <% } else { %>
                         <% for (KinmuManageBean.WorkDetail detail : workDetails) { %>
                             <tr>
@@ -390,19 +391,19 @@
                                 <td><%= detail.getWorkDurationFormatted() %></td>
                                 <td><%= detail.getDescription() != null ? detail.getDescription() : "" %></td>
                                 <td class="action-cell">
-                                    <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この業務明細を削除しますか？');" style="display: inline;">
+                                    <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この工数明細を削除しますか？');" style="display: inline;">
                                         <input type="hidden" name="action" value="delete_work_detail">
                                         <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
                                         <input type="hidden" name="detailId" value="<%= detail.getDetailId() %>">
                                         <button type="submit" class="btn-danger">削除</button>
                                     </form>
-                                    <%-- TODO: 業務明細の編集機能が必要な場合はここに追加 --%>
+                                    <%-- TODO: 工数明細の編集機能が必要な場合はここに追加 --%>
                                 </td>
                             </tr>
                         <% } %>
                     <% } %>
                     <tr>
-                        <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('新しい業務明細を追加しますか？');">
+                        <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('新しい工数明細を追加しますか？');">
                             <input type="hidden" name="action" value="add_work_detail">
                             <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
                             <td>

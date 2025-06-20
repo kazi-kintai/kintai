@@ -19,11 +19,15 @@ import jakarta.servlet.http.HttpSession;
 public class DeptManageServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
-    private DeptDao deptDao = new DeptDao();
-    
+    private DeptDao deptDao = new DeptDao(); // 部署DAOのインスタンス
+
     /**
-     * GETリクエストの処理
-     * 部署一覧を表示する
+     * GETリクエストの処理メソッド。
+     * 部署一覧を表示する。
+     * @param request HTTPリクエストオブジェクト
+     * @param response HTTPレスポンスオブジェクト
+     * @throws ServletException サーブレット例外
+     * @throws IOException 入出力例外
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -36,9 +40,9 @@ public class DeptManageServlet extends HttpServlet {
             return;
         }
         
-        // 管理者権限チェック
+        // 管理者権限チェック 
         UserBean user = (UserBean) session.getAttribute("user");
-        if (user.getRole() != 1) {
+        if (user.getRoleId() != 1) { // ROLEIDが1が管理者
             response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
             return;
         }
@@ -53,8 +57,12 @@ public class DeptManageServlet extends HttpServlet {
     }
     
     /**
-     * POSTリクエストの処理
-     * 部署の追加、更新、削除を処理する
+     * POSTリクエストの処理メソッド。
+     * 部署の追加、更新、削除を処理する。
+     * @param request HTTPリクエストオブジェクト
+     * @param response HTTPレスポンスオブジェクト
+     * @throws ServletException サーブレット例外
+     * @throws IOException 入出力例外
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
@@ -67,9 +75,9 @@ public class DeptManageServlet extends HttpServlet {
             return;
         }
         
-        // 管理者権限チェック
+        // 管理者権限チェック (UserBeanのgetRole()からgetRoleId()へ変更)
         UserBean user = (UserBean) session.getAttribute("user");
-        if (user.getRole() != 1) {
+        if (user.getRoleId() != 1) { // ROLEIDが1が管理者
             response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
             return;
         }
@@ -93,7 +101,12 @@ public class DeptManageServlet extends HttpServlet {
                         message = "部署番号と部署名は必須入力です";
                         break;
                     }
-                    
+                    // 新しいER図のDEPTNOの長さはVARCHAR(5)
+                    if (newDeptNo.length() > 5) {
+                        message = "部署番号は5文字以内で入力してください";
+                        break;
+                    }
+
                     // 部署番号の重複チェック
                     if (deptDao.exists(newDeptNo)) {
                         message = "部署番号「" + newDeptNo + "」は既に存在します";
@@ -115,6 +128,7 @@ public class DeptManageServlet extends HttpServlet {
                         message = "部署名は必須入力です";
                         break;
                     }
+                    // DEPTNOの長さチェックは不要（主キーなので変更されないため）
                     
                     DeptBean updateDept = new DeptBean(updateDeptNo, updateDeptName);
                     success = deptDao.update(updateDept);

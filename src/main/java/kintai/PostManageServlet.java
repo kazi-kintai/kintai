@@ -19,11 +19,15 @@ import jakarta.servlet.http.HttpSession;
 public class PostManageServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     
-    private PostDao postDao = new PostDao();
+    private PostDao postDao = new PostDao(); // 役職DAOのインスタンス
     
     /**
-     * GETリクエストの処理
-     * 役職一覧を表示する
+     * GETリクエストの処理メソッド。
+     * 役職一覧を表示する。
+     * @param request HTTPリクエストオブジェクト
+     * @param response HTTPレスポンスオブジェクト
+     * @throws ServletException サーブレット例外
+     * @throws IOException 入出力例外
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
@@ -36,9 +40,9 @@ public class PostManageServlet extends HttpServlet {
             return;
         }
         
-        // 管理者権限チェック
+        // 管理者権限チェック (UserBeanのgetRole()からgetRoleId()へ変更)
         UserBean user = (UserBean) session.getAttribute("user");
-        if (user.getRole() != 1) {
+        if (user.getRoleId() != 1) { // ROLEIDが1が管理者
             response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
             return;
         }
@@ -53,8 +57,12 @@ public class PostManageServlet extends HttpServlet {
     }
     
     /**
-     * POSTリクエストの処理
-     * 役職の追加、更新、削除を処理する
+     * POSTリクエストの処理メソッド。
+     * 役職の追加、更新、削除を処理する。
+     * @param request HTTPリクエストオブジェクト
+     * @param response HTTPレスポンスオブジェクト
+     * @throws ServletException サーブレット例外
+     * @throws IOException 入出力例外
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
@@ -67,9 +75,9 @@ public class PostManageServlet extends HttpServlet {
             return;
         }
         
-        // 管理者権限チェック
+        // 管理者権限チェック (UserBeanのgetRole()からgetRoleId()へ変更)
         UserBean user = (UserBean) session.getAttribute("user");
-        if (user.getRole() != 1) {
+        if (user.getRoleId() != 1) { // ROLEIDが1が管理者
             response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
             return;
         }
@@ -91,6 +99,11 @@ public class PostManageServlet extends HttpServlet {
                     if (newPostNo == null || newPostNo.trim().isEmpty() || 
                         newPostName == null || newPostName.trim().isEmpty()) {
                         message = "役職番号と役職名は必須入力です";
+                        break;
+                    }
+                    // 新しいER図のPOSTNOの長さはVARCHAR(5)
+                    if (newPostNo.length() > 5) {
+                        message = "役職番号は5文字以内で入力してください";
                         break;
                     }
                     
@@ -115,6 +128,7 @@ public class PostManageServlet extends HttpServlet {
                         message = "役職名は必須入力です";
                         break;
                     }
+                    // POSTNOの長さチェックは不要（主キーなので変更されないため）
                     
                     PostBean updatePost = new PostBean(updatePostNo, updatePostName);
                     success = postDao.update(updatePost);

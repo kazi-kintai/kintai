@@ -42,9 +42,8 @@ public class LoginCheckServlet extends HttpServlet {
 
         // 2. UserDaoをインスタンス化
         UserDao userDao = new UserDao();
-        // 追加: 部署名、役職名取得用にDAOをインスタンス化
-        DeptDao deptDao = new DeptDao();
-        PostDao postDao = new PostDao();
+        DeptDao deptDao = new DeptDao(); // 既存のDeptDaoを使用
+        PostDao postDao = new PostDao(); // 既存のPostDaoを使用
 
         // 3. UserDaoを使って、データベースにユーザーが存在するか問い合わせる
         UserBean user = userDao.findByLoginInfo(empno, password);
@@ -57,20 +56,19 @@ public class LoginCheckServlet extends HttpServlet {
             HttpSession session = request.getSession();
             session.setAttribute("user", user);
 
-            // 追加: ログインユーザーの部署名と役職名を取得し、セッションに保存
             String deptName = null;
             String postName = null;
 
-            // 部署名を取得
-            if (user.getDeptId() != null && !user.getDeptId().isEmpty()) {
-                DeptBean dept = deptDao.findByDeptNo(user.getDeptId());
+            // 部署名を取得 (UserBeanのgetDeptId()からgetDeptNo()へ変更)
+            if (user.getDeptNo() != null && !user.getDeptNo().isEmpty()) {
+                DeptBean dept = deptDao.findByDeptNo(user.getDeptNo());
                 if (dept != null) {
                     deptName = dept.getDeptName();
                 }
             }
-            // 役職名を取得
-            if (user.getPostId() != null && !user.getPostId().isEmpty()) {
-                PostBean post = postDao.findByPostNo(user.getPostId());
+            // 役職名を取得 (UserBeanのgetPostId()からgetPostNo()へ変更)
+            if (user.getPostNo() != null && !user.getPostNo().isEmpty()) {
+                PostBean post = postDao.findByPostNo(user.getPostNo());
                 if (post != null) {
                     postName = post.getPostName();
                 }
@@ -81,12 +79,12 @@ public class LoginCheckServlet extends HttpServlet {
             session.setAttribute("postName", postName != null ? postName : "情報なし");
 
 
-            // ユーザーの役割(ROLE)に応じてリダイレクト先を決定
-            if (user.getRole() == 1) {
+            // ユーザーの役割(ROLEID)に応じてリダイレクト先を決定 
+            if (user.getRoleId() == 1) { // 管理者のROLEIDが1の場合
                 // 管理者の場合 -> 管理者用メニューにリダイレクト
                 response.sendRedirect(request.getContextPath() + "/web/admin_menu.jsp");
-            } else {
-                // 普通従業員の場合 -> 通常メニューにリダイレクト
+            } else { // その他のロールの場合（一般社員や承認者）
+                // 一般従業員の場合 -> 通常メニューにリダイレクト
                 response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
             }
 
