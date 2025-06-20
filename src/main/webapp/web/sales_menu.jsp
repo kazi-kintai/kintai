@@ -92,13 +92,15 @@
 	<div class="menu">
 
 		<%-- 基本機能 --%>
-		<h3>個人用メニュー</h3>
+		<h3>基本メニュー</h3>
 		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
-		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet">自身の勤怠記録</a></p>
-		
-		<h3>管理用メニュー</h3>
 		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet">従業員別勤怠記録表示</a></p>
-		<p><a href="">パスワード変更</a></p>				
+		<p><a href="<%= request.getContextPath() %>/KinmuManageServlet">勤務時間管理</a></p>
+
+<%-- 管理用メニューに分離する必要があれば戻す --%>
+<%--		<h3>管理用メニュー</h3>
+		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet">従業員別勤怠記録表示</a></p>			
+ --%>
 	</div>
 </body>
 </html>
