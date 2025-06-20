@@ -9,8 +9,7 @@
     }
     
     // ToDo: 本来はuser.getDeptId()を使って、データベースから部署名を取得すべき
-    // (待办：原本应该使用 user.getDeptId() 从数据库中获取部署名)
-    String deptName = "管理部"; // 一時的なプレースホルダ (暂时的占位符)
+    String deptName = "管理部"; // 一時的なプレースホルダ 
 %>
 <html>
 <head>
@@ -33,11 +32,18 @@
             line-height: 1.5;
         }
         .logout-button {
+            background-color: #dc3545;
+            color: white;
+            border: 1px solid #dc3545;
+            border-radius: 5px;
             padding: 8px 16px;
             cursor: pointer;
-            border-radius: 5px;
-            border: 1px solid #666;
-            background-color: #f0f0f0;
+            font-size: 1em;
+            text-decoration: none;
+        }
+        .logout-button:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
         }
         .container {
             max-width: 800px;
@@ -70,18 +76,16 @@
 </head>
 <body>
 
-    <%-- ★★★ ここからヘッダー部分を修正 ★★★ --%>
     <div class="header">
         <div class="user-info">
             <p>部署：<%= deptName %></p>
             <p>氏名：<%= user.getName() %> さん（管理者）</p>
         </div>
-        <%-- ログアウト機能は後で実装します --%>
-        <form method="post" action="<%= request.getContextPath() %>/logout">
-            <input type="submit" value="ログアウト" class="logout-button">
-        </form>
+        <%-- ログアウト --%>
+        <form method="post" action="<%= request.getContextPath() %>/logout" style="margin: 0;">
+    		<input type="submit" value="ログアウト" class="logout-button">
+    	</form>
     </div>
-    <%-- ★★★ ここまでヘッダー部分を修正 ★★★ --%>
 
     <div class="container">
         <%-- 管理者個人のためのメニュー --%>

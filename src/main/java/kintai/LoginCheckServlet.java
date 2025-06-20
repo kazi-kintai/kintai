@@ -22,6 +22,15 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response) 
     // 1. JSPから送信されたパラメータを取得
     String empno = request.getParameter("empno");
     String password = request.getParameter("password");
+    
+    // 入力値の検証（サーバー側でも検証を行う）
+    if (empno == null || empno.trim().isEmpty() || 
+        password == null || password.trim().isEmpty()) {
+        request.setAttribute("errorMessage", "従業員番号とパスワードを入力してください");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/login.jsp");
+        dispatcher.forward(request, response);
+        return;
+    }
 
     // 2. UserDaoをインスタンス化
     UserDao userDao = new UserDao();
@@ -51,6 +60,19 @@ protected void doPost(HttpServletRequest request, HttpServletResponse response) 
         request.setAttribute("errorMessage", "従業員番号またはパスワードが正しくありません");
         RequestDispatcher dispatcher = request.getRequestDispatcher("/web/login.jsp");
         dispatcher.forward(request, response);
+
+
         }
+    }
+    
+    /**
+     * GETリクエストの処理
+     * ログイン画面へリダイレクト
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        // GETリクエストの場合はログイン画面へリダイレクト
+        response.sendRedirect(request.getContextPath() + "/web/login.jsp");
     }
 }

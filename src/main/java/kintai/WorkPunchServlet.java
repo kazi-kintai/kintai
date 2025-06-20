@@ -163,7 +163,7 @@ public class WorkPunchServlet extends HttpServlet {
                     // データベースに保存
                     workTimeDao.saveWorkTime(newWorkTime);
                     // 成功メッセージを設定
-                    request.setAttribute("successMessage", "出勤打刻を記録しました。");
+                    request.setAttribute("successMessage", "出勤打刻を記録しました");
                 }
                 // 既に出勤記録がある場合は何もしない（重複打刻防止）
                 break;
@@ -173,7 +173,7 @@ public class WorkPunchServlet extends HttpServlet {
                 if (workTime != null && workTime.getClockOut() == null) {
                     workTime.setClockOut(Time.valueOf(LocalTime.now())); // 現在時刻を退勤時刻として設定
                     workTimeDao.saveWorkTime(workTime); // データベースを更新
-                    request.setAttribute("successMessage", "退勤打刻を記録しました。");
+                    request.setAttribute("successMessage", "退勤打刻を記録しました");
                 }
                 // 出勤記録がない、または既に退勤済みの場合は何もしない
                 break;
@@ -181,7 +181,7 @@ public class WorkPunchServlet extends HttpServlet {
             case "add_break": // 休憩時間追加処理
                 // 出勤記録がないと休憩は追加できない（業務ルール）
                 if (workTime == null) {
-                    request.setAttribute("errorMessage", "先に出勤打刻をしてください。");
+                    request.setAttribute("errorMessage", "先に出勤打刻をしてください");
                     break; 
                 }
                 
@@ -197,7 +197,7 @@ public class WorkPunchServlet extends HttpServlet {
                 
                 // データベースに保存
                 workTimeDao.addBreak(newBreak);
-                request.setAttribute("successMessage", "休憩時間を追加しました。");
+                request.setAttribute("successMessage", "休憩時間を追加しました");
                 break;
                 
             case "delete_break": // 休憩時間削除処理
@@ -208,7 +208,7 @@ public class WorkPunchServlet extends HttpServlet {
                     int breakId = Integer.parseInt(breakIdStr);
                     // データベースから削除
                     workTimeDao.deleteBreak(breakId);
-                    request.setAttribute("successMessage", "休憩記録を削除しました。");
+                    request.setAttribute("successMessage", "休憩記録を削除しました");
                 } catch (NumberFormatException e) {
                     // 休憩IDが数値でない場合のエラーハンドリング
                     System.err.println("無効な休憩IDです: " + breakIdStr);
