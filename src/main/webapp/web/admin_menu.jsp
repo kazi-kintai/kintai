@@ -106,7 +106,7 @@
 		<p><a href="<%= request.getContextPath() %>/postManage">役職登録・変更・削除</a></p>
 		<p><a href="">プロジェクト管理</a></p>
 		<p><a href="">休日種別管理</a></p>
-		<p><a href="">会社カレンダー管理</a></p>
+		<p><a href="<%= request.getContextPath() %>/CalendarManageServlet">イベント・カレンダー管理</a></p>
 	</div>
 </body>
 </html>
