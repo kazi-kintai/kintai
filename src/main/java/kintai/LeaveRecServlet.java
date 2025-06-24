@@ -49,13 +49,13 @@ public class LeaveRecServlet extends HttpServlet {
 
             // 有給・特別・代休 すべての残数を算出
             int paid = dao.fetchTotalPaidLeave(empNo);
-            int used = dao.countUsedPaidLeave(empNo);
+//            int used = dao.countUsedPaidLeave(empNo);
             int special = dao.fetchTotalSpecialLeave(empNo);
             int comp = dao.fetchTotalCompLeave(empNo); // ← 実装していない場合は省略可
 
             request.setAttribute("totalPaidLeave", paid);
-            request.setAttribute("usedPaidLeave", used);
-            request.setAttribute("remainingPaidLeave", paid - used);
+//            request.setAttribute("usedPaidLeave", used);
+//            request.setAttribute("remainingPaidLeave", paid - used);
             request.setAttribute("remainingSpecialLeave", special);
             request.setAttribute("remainingCompLeave", comp);
 

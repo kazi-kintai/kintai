@@ -9,19 +9,29 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * LeaveRecDAO は、休暇申請および支給情報を操作する DAO クラスです。
+ * LeaveRecDAO は、休暇申請およびマスタ情報を扱うデータアクセスクラスです。
  */
 public class LeaveRecDAO {
 
-    // データベース接続メソッド
-    private Connection getConnection() throws SQLException {
-        String url = "jdbc:mysql://localhost:3306/kintai_db"; // ← あなたのDB名に合わせて変更
-        String user = "root"; // DBユーザー名
-        String pass = "";     // パスワード（未設定なら空）
-        return DriverManager.getConnection(url, user, pass);
+    /** データベースの接続情報 */
+    private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
+    private static final String DB_URL = "jdbc:mysql://localhost/kintai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo";
+    private static final String DB_USER = "root";
+    private static final String DB_PWD = ""; // 必要に応じてMySQLのパスワードを設定
+
+    static {
+        try {
+            Class.forName(DB_DRIVER);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException("JDBCドライバのロードに失敗しました", e);
+        }
     }
 
-    // 1. 新しい休暇申請を登録する
+    public Connection getConnection() throws SQLException {
+        return DriverManager.getConnection(DB_URL, DB_USER, DB_PWD);
+    }
+
+    // 1. 新規休暇申請を登録する
     public boolean insertLeave(LeaveRequest l) throws SQLException {
         String sql = "INSERT INTO leave_rec (EMPNO, LEAVE_TYPE_ID, STARTDATE, ENDDATE, REASON, APPROVEDBY) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -59,23 +69,25 @@ public class LeaveRecDAO {
         }
     }
 
-    // 4. 有給休暇（LEAVE_TYPE_ID=1）の使用件数をカウントする
-    public int countUsedPaidLeave(String empNo) throws SQLException {
-        String sql = "SELECT COUNT(*) FROM leave_rec WHERE EMPNO = ? AND LEAVE_TYPE_ID = 1";
-        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, empNo);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next() ? rs.getInt(1) : 0;
-        }
-    }
+//    // 4. 有給休暇の使用件数をカウントする
+//    public int countUsedPaidLeave(String empNo) throws SQLException {
+//        String sql = "SELECT COUNT(*) FROM leave_rec WHERE EMPNO = ? AND LEAVE_TYPE_ID = 1";
+//        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
+//            stmt.setString(1, empNo);
+//            try (ResultSet rs = stmt.executeQuery()) {
+////                return rs.next() ? rs.getInt(1) : 0;
+//            }
+//        }
+//    }
 
     // 5. 支給された有給休暇の合計を取得する
     public int fetchTotalPaidLeave(String empNo) throws SQLException {
         String sql = "SELECT PAID_LEAVE_TOTAL FROM leave_quota WHERE EMPNO = ?";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, empNo);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next() ? rs.getInt("PAID_LEAVE_TOTAL") : 0;
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("PAID_LEAVE_TOTAL") : 0;
+            }
         }
     }
 
@@ -84,8 +96,9 @@ public class LeaveRecDAO {
         String sql = "SELECT SPECIAL_LEAVE_TOTAL FROM leave_quota WHERE EMPNO = ?";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, empNo);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next() ? rs.getInt("SPECIAL_LEAVE_TOTAL") : 0;
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("SPECIAL_LEAVE_TOTAL") : 0;
+            }
         }
     }
 
@@ -94,37 +107,84 @@ public class LeaveRecDAO {
         String sql = "SELECT COMP_LEAVE_TOTAL FROM leave_quota WHERE EMPNO = ?";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, empNo);
-            ResultSet rs = stmt.executeQuery();
-            return rs.next() ? rs.getInt("COMP_LEAVE_TOTAL") : 0;
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next() ? rs.getInt("COMP_LEAVE_TOTAL") : 0;
+            }
         }
     }
 
-    // 8. 指定社員の休暇申請リストを取得する
+    // 8. 指定社員の休暇申請一覧を取得する
     public List<LeaveRequest> getLeaveList(String empNo) throws SQLException {
         List<LeaveRequest> list = new ArrayList<>();
         String sql = "SELECT * FROM leave_rec WHERE EMPNO = ? ORDER BY STARTDATE DESC";
         try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql)) {
             stmt.setString(1, empNo);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                LeaveRequest l = new LeaveRequest();
-                l.setLeaveId(rs.getInt("LEAVEID"));
-                l.setEmpNo(rs.getString("EMPNO"));
-                l.setLeaveTypeId(rs.getInt("LEAVE_TYPE_ID"));
-                l.setStartDate(rs.getDate("STARTDATE"));
-                l.setEndDate(rs.getDate("ENDDATE"));
-                l.setReason(rs.getString("REASON"));
-                l.setApprovedBy(rs.getString("APPROVEDBY"));
-                l.setCreatedAt(rs.getTimestamp("CREATED_AT"));
-                list.add(l);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    LeaveRequest l = new LeaveRequest();
+                    l.setLeaveId(rs.getInt("LEAVEID"));
+                    l.setEmpNo(rs.getString("EMPNO"));
+                    l.setLeaveTypeId(rs.getInt("LEAVE_TYPE_ID"));
+                    l.setStartDate(rs.getDate("STARTDATE"));
+                    l.setEndDate(rs.getDate("ENDDATE"));
+                    l.setReason(rs.getString("REASON"));
+                    l.setApprovedBy(rs.getString("APPROVEDBY"));
+                    l.setCreatedAt(rs.getTimestamp("CREATED_AT"));
+                    list.add(l);
+                }
             }
         }
         return list;
     }
 
-    // 9. LeaveRequest に支給有給日数をセットする（補助メソッド）
+    // 9. LeaveRequest に支給有給休暇を設定する
     public void fillLeaveQuotaIntoBean(LeaveRequest bean) throws SQLException {
         int quota = fetchTotalPaidLeave(bean.getEmpNo());
         bean.setTotalPaidLeave(quota);
+    }
+
+    // 10. 社員一覧を取得する
+    public List<Employee> getEmployeeList() throws SQLException {
+        List<Employee> list = new ArrayList<>();
+        String sql = "SELECT EMPNO, NAME FROM emp ORDER BY EMPNO";
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Employee emp = new Employee();
+                emp.setEmpNo(rs.getString("EMPNO"));
+                emp.setName(rs.getString("NAME"));
+                list.add(emp);
+            }
+        }
+        return list;
+    }
+
+    // 11. 部署一覧（重複なし）を取得する
+    public List<String> getDepartmentList() throws SQLException {
+        List<String> list = new ArrayList<>();
+        String sql = "SELECT DISTINCT DEPT_NAME FROM emp ORDER BY DEPT_NAME";
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                list.add(rs.getString("DEPT_NAME"));
+            }
+        }
+        return list;
+    }
+
+    // 12. 休暇種別一覧を取得する
+    public List<LeaveType> getLeaveTypeList() throws SQLException {
+        List<LeaveType> list = new ArrayList<>();
+        String sql = "SELECT LEAVE_TYPE_ID, LEAVE_TYPE_NAME FROM leave_type ORDER BY LEAVE_TYPE_ID";
+        try (Connection conn = getConnection(); PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                LeaveType lt = new LeaveType();
+                lt.setLeaveTypeId(rs.getInt("LEAVE_TYPE_ID"));
+                lt.setLeaveTypeName(rs.getString("LEAVE_TYPE_NAME"));
+                list.add(lt);
+            }
+        }
+        return list;
     }
 }
