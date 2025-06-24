@@ -34,6 +34,8 @@
     // 修正箇所: userRole を userRoleId に変更
     // int userRole = (Integer) request.getAttribute("userRole"); // 旧変数
     Integer retrievedUserRoleId = (Integer) request.getAttribute("userRoleId"); // サーブレットから取得
+    Boolean isSelfMode = (Boolean) request.getAttribute("isSelfMode"); // 自分モードかどうか
+    if (isSelfMode == null) isSelfMode = false;
 
     // nullチェックと初期化
     if (kintaiRecords == null) kintaiRecords = new java.util.ArrayList<>();
@@ -255,70 +257,73 @@
             </div>
         <% } %>
 
-        <%-- フィルター/検索エリア (管理者向けにのみ表示) --%>
-        <%-- userRole から userRoleId へ変更 --%>
-        <% if (userRoleId == 1) { %>
-            <div class="filter-form">
-                <form action="<%= request.getContextPath() %>/KintaiRecServlet" method="get" style="display: flex; flex-wrap: wrap; gap: 15px;">
-                    <div class="filter-group">
-                        <label for="empNoFilter">従業員番号 / 氏名:</label>
-                        <select id="empNoFilter" name="empNoFilter">
-                            <option value="">全ての従業員</option>
-                            <% for (EmpBean emp : allEmpList) { %>
-                                <option value="<%= emp.getEmpNo() %>" <%= emp.getEmpNo().equals(empNoFilter != null ? empNoFilter : "") ? "selected" : "" %>>
-                                    <%= emp.getEmpNo() %> <%= emp.getEmpName() %>
-                                </option>
-                            <% } %>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="deptNoFilter">部署:</label>
-                        <select id="deptNoFilter" name="deptNoFilter">
-                            <option value="">全ての部署</option>
-                            <% for (DeptBean dept : deptList) { %>
-                                <option value="<%= dept.getDeptNo() %>" <%= dept.getDeptNo().equals(deptNoFilter != null ? deptNoFilter : "") ? "selected" : "" %>>
-                                    <%= dept.getDeptName() %>
-                                </option>
-                            <% } %>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="postNoFilter">役職:</label>
-                        <select id="postNoFilter" name="postNoFilter">
-                            <option value="">全ての役職</option>
-                            <% for (PostBean post : postList) { %>
-                                <option value="<%= post.getPostNo() %>" <%= post.getPostNo().equals(postNoFilter != null ? postNoFilter : "") ? "selected" : "" %>>
-                                    <%= post.getPostName() %>
-                                </option>
-                            <% } %>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label for="startDate">期間(開始):</label>
-                        <input type="date" id="startDate" name="startDate" value="<%= startDate != null ? startDate : "" %>">
-                    </div>
-                    <div class="filter-group">
-                        <label for="endDate">期間(終了):</label>
-                        <input type="date" id="endDate" name="endDate" value="<%= endDate != null ? endDate : "" %>">
-                    </div>
-                    <button type="submit">検索</button>
-                </form>
-            </div>
-        <% } else { %>
-            <%-- 一般社員は日付フィルターのみ --%>
-            <div class="filter-form">
-                <form action="<%= request.getContextPath() %>/KintaiRecServlet" method="get" style="display: flex; flex-wrap: wrap; gap: 15px;">
-                    <div class="filter-group">
-                        <label for="startDate">期間(開始):</label>
-                        <input type="date" id="startDate" name="startDate" value="<%= startDate != null ? startDate : "" %>">
-                    </div>
-                    <div class="filter-group">
-                        <label for="endDate">期間(終了):</label>
-                        <input type="date" id="endDate" name="endDate" value="<%= endDate != null ? endDate : "" %>">
-                    </div>
-                    <button type="submit">検索</button>
-                </form>
-            </div>
+        <%-- フィルター/検索エリア --%>
+        <%-- 自分モードの場合は検索フォームを表示しない --%>
+        <% if (!isSelfMode) { %>
+            <% if (userRoleId == 1) { %>
+                <%-- 管理者の全員モード --%>
+                <div class="filter-form">
+                    <form action="<%= request.getContextPath() %>/KintaiRecServlet" method="get" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                        <div class="filter-group">
+                            <label for="empNoFilter">従業員番号 / 氏名:</label>
+                            <select id="empNoFilter" name="empNoFilter">
+                                <option value="">全ての従業員</option>
+                                <% for (EmpBean emp : allEmpList) { %>
+                                    <option value="<%= emp.getEmpNo() %>" <%= emp.getEmpNo().equals(empNoFilter != null ? empNoFilter : "") ? "selected" : "" %>>
+                                        <%= emp.getEmpNo() %> <%= emp.getEmpName() %>
+                                    </option>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="deptNoFilter">部署:</label>
+                            <select id="deptNoFilter" name="deptNoFilter">
+                                <option value="">全ての部署</option>
+                                <% for (DeptBean dept : deptList) { %>
+                                    <option value="<%= dept.getDeptNo() %>" <%= dept.getDeptNo().equals(deptNoFilter != null ? deptNoFilter : "") ? "selected" : "" %>>
+                                        <%= dept.getDeptName() %>
+                                    </option>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="postNoFilter">役職:</label>
+                            <select id="postNoFilter" name="postNoFilter">
+                                <option value="">全ての役職</option>
+                                <% for (PostBean post : postList) { %>
+                                    <option value="<%= post.getPostNo() %>" <%= post.getPostNo().equals(postNoFilter != null ? postNoFilter : "") ? "selected" : "" %>>
+                                        <%= post.getPostName() %>
+                                    </option>
+                                <% } %>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="startDate">期間(開始):</label>
+                            <input type="date" id="startDate" name="startDate" value="<%= startDate != null ? startDate : "" %>">
+                        </div>
+                        <div class="filter-group">
+                            <label for="endDate">期間(終了):</label>
+                            <input type="date" id="endDate" name="endDate" value="<%= endDate != null ? endDate : "" %>">
+                        </div>
+                        <button type="submit">検索</button>
+                    </form>
+                </div>
+            <% } else { %>
+                <%-- 一般社員は日付フィルターのみ --%>
+                <div class="filter-form">
+                    <form action="<%= request.getContextPath() %>/KintaiRecServlet" method="get" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                        <div class="filter-group">
+                            <label for="startDate">期間(開始):</label>
+                            <input type="date" id="startDate" name="startDate" value="<%= startDate != null ? startDate : "" %>">
+                        </div>
+                        <div class="filter-group">
+                            <label for="endDate">期間(終了):</label>
+                            <input type="date" id="endDate" name="endDate" value="<%= endDate != null ? endDate : "" %>">
+                        </div>
+                        <button type="submit">検索</button>
+                    </form>
+                </div>
+            <% } %>
         <% } %>
 
         <%-- 勤怠記録一覧テーブル --%>
@@ -327,8 +332,8 @@
                 <tr>
                     <th>日付</th>
                     <th>曜日</th>
-                    <%-- userRole から userRoleId へ変更 --%>
-                    <% if (userRoleId == 1) { %>
+                    <%-- 自分モードでは従業員情報列を表示しない --%>
+                    <% if (userRoleId == 1 && !isSelfMode) { %>
                         <th>従業員番号</th>
                         <th>氏名</th>
                         <th>部署</th>
@@ -357,8 +362,8 @@
                         <tr class="<%= dayClass %>">
                             <td><%= record.getKintaiDate() != null ? record.getKintaiDate().toString() : "---" %></td>
                             <td><%= record.getKintaiDate() != null ? dayOfWeekMap.get(record.getKintaiDate().getDayOfWeek()) : "---" %></td>
-                            <%-- userRole から userRoleId へ変更 --%>
-                            <% if (userRoleId == 1) { %>
+                            <%-- 自分モードでは従業員情報列を表示しない --%>
+                            <% if (userRoleId == 1 && !isSelfMode) { %>
                                 <td><%= record.getEmpno() != null ? record.getEmpno() : "---" %></td>
                                 <td><%= record.getEmpName() != null ? record.getEmpName() : "---" %></td>
                                 <td><%= record.getDeptName() != null ? record.getDeptName() : "---" %></td>
@@ -372,8 +377,8 @@
                     <% } %>
                 <% } else { %>
                     <tr>
-                        <%-- userRole から userRoleId へ変更 --%>
-                        <td colspan="<%= (userRoleId == 1) ? 10 : 6 %>" style="text-align: center;">
+                        <%-- 自分モードかどうかでcolspan数を調整 --%>
+                        <td colspan="<%= (userRoleId == 1 && !isSelfMode) ? 10 : 6 %>" style="text-align: center;">
                             勤怠記録がありません。
                         </td>
                     </tr>

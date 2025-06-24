@@ -52,6 +52,10 @@ public class KintaiRecServlet extends HttpServlet {
         String loggedInEmpno = user.getEmpno(); // ログイン中の従業員番号
         int userRoleId = user.getRoleId();          // ログイン中のユーザー権限 (旧userRoleからuserRoleIdへ変更)
 
+        // --- モード判定（自分モードか全員モードか） ---
+        String viewMode = request.getParameter("mode");
+        boolean isSelfMode = "self".equals(viewMode);
+
         // --- フィルター条件の取得 ---
         String empNoFilter = request.getParameter("empNoFilter");
         String deptNoFilter = request.getParameter("deptNoFilter");
@@ -89,13 +93,22 @@ public class KintaiRecServlet extends HttpServlet {
             deptNoFilter = null;
             postNoFilter = null;
         } else if (userRoleId == 1) { // 管理者の場合 (ROLEIDが1)
-            // 全ての従業員の勤怠記録を検索可能。
-            // empNoFilter が指定されていれば、そのempNoのみをtargetEmpNosに追加
-            if (empNoFilter != null && !empNoFilter.trim().isEmpty()) {
-                targetEmpNos.add(empNoFilter);
+            if (isSelfMode) {
+                // 自分モード：管理者自身の勤怠記録のみを表示
+                targetEmpNos.add(loggedInEmpno);
+                // 自分モードの場合、フィルターを無効化
+                empNoFilter = null;
+                deptNoFilter = null;
+                postNoFilter = null;
+            } else {
+                // 全員モード：全ての従業員の勤怠記録を検索可能
+                // empNoFilter が指定されていれば、そのempNoのみをtargetEmpNosに追加
+                if (empNoFilter != null && !empNoFilter.trim().isEmpty()) {
+                    targetEmpNos.add(empNoFilter);
+                }
+                // empNoFilter が指定されていなければ、targetEmpNosは空のまま。
+                // KintaiRecDaoはtargetEmpNosが空の場合に全従業員を対象として検索する
             }
-            // empNoFilter が指定されていなければ、targetEmpNosは空のまま。
-            // KintaiRecDaoはtargetEmpNosが空の場合に全従業員を対象として検索する
         }
         // TODO: 承認者（ROLEID=2）の場合のロジックをここに追加
         //       else if (userRoleId == 2) {
@@ -119,7 +132,7 @@ public class KintaiRecServlet extends HttpServlet {
 
 
         // ドロップダウンリスト用のデータ（管理者向け）
-        if (userRoleId == 1) { // 管理者のみフィルター用データを提供
+        if (userRoleId == 1 && !isSelfMode) { // 管理者かつ全員モードの場合のみフィルター用データを提供
             request.setAttribute("deptList", deptDao.findAll());
             request.setAttribute("postList", postDao.findAll());
             request.setAttribute("allEmpList", empDao.findAll()); // 従業員名フィルター用（全従業員）
@@ -134,6 +147,7 @@ public class KintaiRecServlet extends HttpServlet {
         request.setAttribute("startDate", startDateStr);
         request.setAttribute("endDate", endDateStr);
         request.setAttribute("userRoleId", userRoleId); // JSPで権限に応じた表示を制御するためにロールIDを渡す
+        request.setAttribute("isSelfMode", isSelfMode); // 自分モードかどうかをJSPに渡す
 
 
         // 勤怠記録表示画面にフォワード
