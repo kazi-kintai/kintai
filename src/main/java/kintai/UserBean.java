@@ -13,7 +13,7 @@ public class UserBean implements Serializable {
     private String deptNo;      // empテーブルの「DEPTNO」列に対応 (旧deptId)
     private String postNo;      // empテーブルの「POSTNO」列に対応 (旧postId)
     private int roleId;         // empテーブルの「ROLEID」列に対応 (旧role)
-    private int gradeNo;        // empテーブルの「GRADENO」列に対応 (新規追加)
+    private String empType;        // empテーブルの「GRADENO」列に対応 (新規追加)
     // PASS, MAIL, EMPDATE はUserBeanのログイン情報として必要であれば追加可能だが、
     // 認証には直接使用しないため、ここでは省略。
 
@@ -57,10 +57,10 @@ public class UserBean implements Serializable {
         this.roleId = roleId;
     }
 
-    public int getGradeNo() {
-        return gradeNo;
+    public String getEmpType() {
+        return empType;
     }
-    public void setGradeNo(int gradeNo) {
-        this.gradeNo = gradeNo;
+    public void setEmpType(String empType) {
+        this.empType = empType;
     }
 }

@@ -14,6 +14,30 @@ import jakarta.servlet.http.HttpServletResponse;
 public class LeaveRecServlet extends HttpServlet {
 
     private LeaveRecDAO dao = new LeaveRecDAO();
+    private EmpDao empDao = new EmpDao(); // 社員リスト取得用
+    private DeptDao deptDao = new DeptDao(); // 部署リスト取得用
+    private LeaveTypeDao typeDao = new LeaveTypeDao(); // 休暇種別取得用
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
+        // 初期表示：全社員・部署・休暇種別リストの準備
+        try {
+            List<EmpBean> empList = empDao.findAll(); // 全社員
+            List<DeptBean> deptList = deptDao.findAll(); // 部署名一覧
+            List<LeaveTypeBean> leaveTypeList = typeDao.findAll(); // 休暇種別
+
+            request.setAttribute("empList", empList);
+            request.setAttribute("deptList", deptList);
+            request.setAttribute("leaveTypeList", leaveTypeList);
+        } catch (Exception e) {
+            request.setAttribute("errorMessage", "初期表示時にエラーが発生しました: " + e.getMessage());
+        }
+
+        // JSPへフォワード
+        request.getRequestDispatcher("/web/leave_main.jsp").forward(request, response);
+    }
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -24,7 +48,6 @@ public class LeaveRecServlet extends HttpServlet {
         String empNo = request.getParameter("empNo");
 
         try {
-            // 操作別処理
             if ("add".equals(mode)) {
                 LeaveRequest bean = buildBean(request, false);
                 dao.insertLeave(bean);
@@ -41,25 +64,20 @@ public class LeaveRecServlet extends HttpServlet {
                 request.setAttribute("message", "休暇申請を削除しました。");
 
             } else if ("search".equals(mode)) {
-                // 検索時に渡されたempNoをそのまま扱う（"all"なら一覧取得スキップも可）
                 request.setAttribute("selectedEmpNo", empNo);
                 request.setAttribute("selectedDept", request.getParameter("dept"));
-                // 氏名取得処理など追加するならここ
             }
 
-            // 有給・特別・代休 すべての残数を算出
+            // 休暇残日数の再取得
             int paid = dao.fetchTotalPaidLeave(empNo);
-//            int used = dao.countUsedPaidLeave(empNo);
             int special = dao.fetchTotalSpecialLeave(empNo);
-            int comp = dao.fetchTotalCompLeave(empNo); // ← 実装していない場合は省略可
+            int comp = dao.fetchTotalCompLeave(empNo);
 
-            request.setAttribute("totalPaidLeave", paid);
-//            request.setAttribute("usedPaidLeave", used);
-//            request.setAttribute("remainingPaidLeave", paid - used);
+            request.setAttribute("remainingPaidLeave", paid); // ここで used 計算も可
             request.setAttribute("remainingSpecialLeave", special);
             request.setAttribute("remainingCompLeave", comp);
 
-            // 申請一覧取得
+            // 検索対象者の休暇申請一覧
             List<LeaveRequest> leaveList = dao.getLeaveList(empNo);
             request.setAttribute("leaveList", leaveList);
 
@@ -67,7 +85,8 @@ public class LeaveRecServlet extends HttpServlet {
             request.setAttribute("errorMessage", "処理中にエラーが発生しました: " + e.getMessage());
         }
 
-        request.getRequestDispatcher("leave_main.jsp").forward(request, response);
+        // 画面表示に必要な共通情報（初期表示の情報）を再設定
+        doGet(request, response);
     }
 
     private LeaveRequest buildBean(HttpServletRequest req, boolean includeId) {

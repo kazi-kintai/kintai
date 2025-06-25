@@ -17,24 +17,22 @@ public class EmpBean implements Serializable {
     private String deptNo;      // empテーブルの「DEPTNO」列に対応
     private String postNo;      // empテーブルの「POSTNO」列に対応
     private int roleId;         // empテーブルの「ROLEID」列に対応
-    private int gradeNo;        // empテーブルの「GRADENO」列に対応 (新規追加)
+//    private int gradeNo;        // empテーブルの「GRADENO」列に対応 (新規追加)
     private String pass;        // empテーブルの「PASS」列に対応
     private String mail;        // empテーブルの「MAIL」列に対応 (新規追加)
     private LocalDate empDate;  // empテーブルの「EMPDATE」列に対応 (新規追加)
+    private String empType;     // empテーブルの「EMP_TYPE」列に対応 (新規追加)
     
     // --- 表示用の追加フィールド（JOINで取得） ---
     private String deptName;    // 部署名（dept.DEPTNAME）
     private String postName;    // 役職名（post.POSTNAME）
     private String roleName;    // ロール名（role.ROLENAME） (新規追加)
-    private String gradeName;   // 等級名（grade.GRADENAME） (新規追加)
 
     /**
      * デフォルトコンストラクタ
      */
     public EmpBean() {
     }
-
-    // --- 以下、各フィールドのアクセサメソッド (getter/setter) ---
 
     public String getEmpNo() {
         return empNo;
@@ -68,7 +66,6 @@ public class EmpBean implements Serializable {
         this.postNo = postNo;
     }
 
-    // 旧getRole/setRoleからgetRoleId/setRoleIdへ変更
     public int getRoleId() {
         return roleId;
     }
@@ -77,14 +74,13 @@ public class EmpBean implements Serializable {
         this.roleId = roleId;
     }
 
-    // 新規追加
-    public int getGradeNo() {
-        return gradeNo;
-    }
+//    public int getGradeNo() {          // ← ★削除
+//        return gradeNo;
+//    }
 
-    public void setGradeNo(int gradeNo) {
-        this.gradeNo = gradeNo;
-    }
+//    public void setGradeNo(int gradeNo) {
+//        this.gradeNo = gradeNo;
+//    }
 
     public String getPass() {
         return pass;
@@ -94,7 +90,6 @@ public class EmpBean implements Serializable {
         this.pass = pass;
     }
 
-    // 新規追加
     public String getMail() {
         return mail;
     }
@@ -103,13 +98,20 @@ public class EmpBean implements Serializable {
         this.mail = mail;
     }
 
-    // 新規追加
     public LocalDate getEmpDate() {
         return empDate;
     }
 
     public void setEmpDate(LocalDate empDate) {
         this.empDate = empDate;
+    }
+
+    public String getEmpType() {
+        return empType;
+    }
+
+    public void setEmpType(String empType) {
+        this.empType = empType;
     }
 
     public String getDeptName() {
@@ -128,7 +130,6 @@ public class EmpBean implements Serializable {
         this.postName = postName;
     }
 
-    // 新規追加
     public String getRoleName() {
         return roleName;
     }
@@ -137,12 +138,11 @@ public class EmpBean implements Serializable {
         this.roleName = roleName;
     }
 
-    // 新規追加
-    public String getGradeName() {
-        return gradeName;
-    }
+//    public String getGradeName() {     // ← ★削除
+//        return gradeName;
+//    }
 
-    public void setGradeName(String gradeName) {
-        this.gradeName = gradeName;
-    }
+//    public void setGradeName(String gradeName) {
+//        this.gradeName = gradeName;
+//    }
 }

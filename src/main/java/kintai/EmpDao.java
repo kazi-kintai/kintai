@@ -24,30 +24,29 @@ public class EmpDao {
     public List<EmpBean> findAll() {
         List<EmpBean> empList = new ArrayList<>();
         // 新しいER図のempテーブルの列と結合するテーブルに合わせてSQLを修正
-        String sql = "SELECT e.EMPNO, e.EMPNAME, e.DEPTNO, e.POSTNO, e.ROLEID, e.GRADENO, " +
-                     "e.PASS, e.MAIL, e.EMPDATE, " +
-                     "d.DEPTNAME, p.POSTNAME, r.ROLENAME, g.GRADENAME " +
-                     "FROM emp e " +
-                     "LEFT JOIN dept d ON e.DEPTNO = d.DEPTNO " +
-                     "LEFT JOIN post p ON e.POSTNO = p.POSTNO " +
-                     "LEFT JOIN role r ON e.ROLEID = r.ROLEID " +
-                     "LEFT JOIN grade g ON e.GRADENO = g.GRADENO " +
-                     "ORDER BY e.EMPNO";
+        String sql = "SELECT e.EMPNO, e.EMPNAME, e.DEPTNO, e.POSTNO, e.ROLEID, " +
+                "e.PASS, e.MAIL, e.EMPDATE, e.emp_type, " +
+                "d.DEPTNAME, p.POSTNAME, r.ROLENAME " +
+                "FROM emp e " +
+                "LEFT JOIN dept d ON e.DEPTNO = d.DEPTNO " +
+                "LEFT JOIN post p ON e.POSTNO = p.POSTNO " +
+                "LEFT JOIN role r ON e.ROLEID = r.ROLEID " +
+                "ORDER BY e.EMPNO";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             
-            while (rs.next()) {
-                EmpBean emp = new EmpBean();
-                emp.setEmpNo(rs.getString("EMPNO"));
-                emp.setEmpName(rs.getString("EMPNAME"));
-                emp.setDeptNo(rs.getString("DEPTNO"));
-                emp.setPostNo(rs.getString("POSTNO"));
-                emp.setRoleId(rs.getInt("ROLEID"));
-                emp.setGradeNo(rs.getInt("GRADENO"));
-                emp.setPass(rs.getString("PASS"));
-                emp.setMail(rs.getString("MAIL"));
+        	 while (rs.next()) {
+                 EmpBean emp = new EmpBean();
+                 emp.setEmpNo(rs.getString("EMPNO"));
+                 emp.setEmpName(rs.getString("EMPNAME"));
+                 emp.setDeptNo(rs.getString("DEPTNO"));
+                 emp.setPostNo(rs.getString("POSTNO"));
+                 emp.setRoleId(rs.getInt("ROLEID"));
+                 emp.setPass(rs.getString("PASS"));
+                 emp.setMail(rs.getString("MAIL"));
+                 emp.setEmpType(rs.getString("emp_type"));
                 
                 // EMPDATEはNULLの場合もあるので、nullチェック
                 Date empDateSql = rs.getDate("EMPDATE");
@@ -60,7 +59,6 @@ public class EmpDao {
                 emp.setDeptName(rs.getString("DEPTNAME"));
                 emp.setPostName(rs.getString("POSTNAME"));
                 emp.setRoleName(rs.getString("ROLENAME")); // 新規追加
-                emp.setGradeName(rs.getString("GRADENAME")); // 新規追加
                 empList.add(emp);
             }
             
@@ -78,15 +76,14 @@ public class EmpDao {
      */
     public EmpBean findByEmpNo(String empNo) {
         EmpBean emp = null;
-        String sql = "SELECT e.EMPNO, e.EMPNAME, e.DEPTNO, e.POSTNO, e.ROLEID, e.GRADENO, " +
-                     "e.PASS, e.MAIL, e.EMPDATE, " +
-                     "d.DEPTNAME, p.POSTNAME, r.ROLENAME, g.GRADENAME " +
-                     "FROM emp e " +
-                     "LEFT JOIN dept d ON e.DEPTNO = d.DEPTNO " +
-                     "LEFT JOIN post p ON e.POSTNO = p.POSTNO " +
-                     "LEFT JOIN role r ON e.ROLEID = r.ROLEID " +
-                     "LEFT JOIN grade g ON e.GRADENO = g.GRADENO " +
-                     "WHERE e.EMPNO = ?";
+        String sql = "SELECT e.EMPNO, e.EMPNAME, e.DEPTNO, e.POSTNO, e.ROLEID, " +
+                "e.PASS, e.MAIL, e.EMPDATE, e.emp_type, " +
+                "d.DEPTNAME, p.POSTNAME, r.ROLENAME " +
+                "FROM emp e " +
+                "LEFT JOIN dept d ON e.DEPTNO = d.DEPTNO " +
+                "LEFT JOIN post p ON e.POSTNO = p.POSTNO " +
+                "LEFT JOIN role r ON e.ROLEID = r.ROLEID " +
+                "WHERE e.EMPNO = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -101,9 +98,9 @@ public class EmpDao {
                     emp.setDeptNo(rs.getString("DEPTNO"));
                     emp.setPostNo(rs.getString("POSTNO"));
                     emp.setRoleId(rs.getInt("ROLEID"));
-                    emp.setGradeNo(rs.getInt("GRADENO"));
                     emp.setPass(rs.getString("PASS"));
                     emp.setMail(rs.getString("MAIL"));
+                    emp.setEmpType(rs.getString("emp_type"));
                     
                     // EMPDATEはNULLの場合もあるので、nullチェック
                     Date empDateSql = rs.getDate("EMPDATE");
@@ -116,7 +113,6 @@ public class EmpDao {
                     emp.setDeptName(rs.getString("DEPTNAME"));
                     emp.setPostName(rs.getString("POSTNAME"));
                     emp.setRoleName(rs.getString("ROLENAME")); // 新規追加
-                    emp.setGradeName(rs.getString("GRADENAME")); // 新規追加
                 }
             }
             
@@ -134,27 +130,28 @@ public class EmpDao {
      */
     public boolean insert(EmpBean emp) {
         // 新しいER図のempテーブルの列に合わせてSQLを修正
-        String sql = "INSERT INTO emp (EMPNO, EMPNAME, DEPTNO, POSTNO, ROLEID, GRADENO, PASS, MAIL, EMPDATE) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO emp (EMPNO, EMPNAME, DEPTNO, POSTNO, ROLEID, PASS, MAIL, EMPDATE, emp_type) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, emp.getEmpNo());
+        	ps.setString(1, emp.getEmpNo());
             ps.setString(2, emp.getEmpName());
             ps.setString(3, emp.getDeptNo());
             ps.setString(4, emp.getPostNo());
             ps.setInt(5, emp.getRoleId());
-            ps.setInt(6, emp.getGradeNo());
-            ps.setString(7, emp.getPass());
-            ps.setString(8, emp.getMail());
+            ps.setString(6, emp.getPass());
+            ps.setString(7, emp.getMail());
             
             // EMPDATEはNULL許容
             if (emp.getEmpDate() != null) {
-                ps.setDate(9, Date.valueOf(emp.getEmpDate()));
+                ps.setDate(8, Date.valueOf(emp.getEmpDate()));
             } else {
-                ps.setNull(9, java.sql.Types.DATE); // nullの場合はSQLのDATE型でnullをセット
+                ps.setNull(8, java.sql.Types.DATE); // nullの場合はSQLのDATE型でnullをセット
             }
+            
+            ps.setString(9, emp.getEmpType());
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -180,27 +177,27 @@ public class EmpDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(EmpBean emp) {
-        String sql = "UPDATE emp SET EMPNAME = ?, DEPTNO = ?, POSTNO = ?, ROLEID = ?, GRADENO = ?, PASS = ?, MAIL = ?, EMPDATE = ? " +
-                     "WHERE EMPNO = ?";
+        String sql = "UPDATE emp SET EMPNAME = ?, DEPTNO = ?, POSTNO = ?, ROLEID = ?, PASS = ?, MAIL = ?, EMPDATE = ?, emp_type = ? " +
+                "WHERE EMPNO = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, emp.getEmpName());
-            ps.setString(2, emp.getDeptNo());
-            ps.setString(3, emp.getPostNo());
-            ps.setInt(4, emp.getRoleId());
-            ps.setInt(5, emp.getGradeNo());
-            ps.setString(6, emp.getPass());
-            ps.setString(7, emp.getMail());
+        	 ps.setString(1, emp.getEmpName());
+             ps.setString(2, emp.getDeptNo());
+             ps.setString(3, emp.getPostNo());
+             ps.setInt(4, emp.getRoleId());
+             ps.setString(5, emp.getPass());
+             ps.setString(6, emp.getMail());
             
             // EMPDATEはNULL許容
             if (emp.getEmpDate() != null) {
-                ps.setDate(8, Date.valueOf(emp.getEmpDate()));
+                ps.setDate(7, Date.valueOf(emp.getEmpDate()));
             } else {
-                ps.setNull(8, java.sql.Types.DATE); // nullの場合はSQLのDATE型でnullをセット
+                ps.setNull(7, java.sql.Types.DATE); // nullの場合はSQLのDATE型でnullをセット
             }
             
+            ps.setString(8, emp.getEmpType());
             ps.setString(9, emp.getEmpNo());
             
             int count = ps.executeUpdate();
@@ -241,6 +238,34 @@ public class EmpDao {
         }
         
         return false;
+    }
+    
+    
+    /* 正社員の社員情報を取得する */
+    public List<EmpBean> findAllFullTimeEmployees() {
+        List<EmpBean> list = new ArrayList<>();
+        String sql = "SELECT EMPNO, EMPNAME, EMPDATE FROM emp WHERE emp_type = '正社員'";
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                EmpBean emp = new EmpBean();
+                emp.setEmpNo(rs.getString("EMPNO"));
+                emp.setEmpName(rs.getString("EMPNAME"));
+                Date empDate = rs.getDate("EMPDATE");
+                if (empDate != null) {
+                    emp.setEmpDate(empDate.toLocalDate());
+                }
+                list.add(emp);
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return list;
     }
     
     /**

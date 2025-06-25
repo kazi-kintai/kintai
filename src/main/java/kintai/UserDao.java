@@ -28,7 +28,7 @@ public class UserDao {
         // 検索列: EMPNO, PASS
         // 取得列: EMPNO, EMPNAME, DEPTNO, POSTNO, ROLEID, GRADENO, PASS
         // ※PASS列は認証のためだけに取得し、UserBeanには格納しない（セキュリティのため）。
-        String sql = "SELECT EMPNO, EMPNAME, DEPTNO, POSTNO, ROLEID, GRADENO, PASS FROM emp WHERE EMPNO = ?";
+        String sql = "SELECT EMPNO, EMPNAME, DEPTNO, POSTNO, ROLEID, PASS, EMP_TYPE FROM emp WHERE EMPNO = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -51,7 +51,7 @@ public class UserDao {
                         user.setDeptNo(rs.getString("DEPTNO"));   
                         user.setPostNo(rs.getString("POSTNO"));   
                         user.setRoleId(rs.getInt("ROLEID"));      
-                        user.setGradeNo(rs.getInt("GRADENO"));    
+                        user.setEmpType(rs.getString("EMP_TYPE"));    
                     }
                 }
             }

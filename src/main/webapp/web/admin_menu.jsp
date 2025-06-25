@@ -103,8 +103,8 @@
 		<p><a href="<%= request.getContextPath() %>/deptManage">部署登録・変更・削除</a></p>
 		<p><a href="<%= request.getContextPath() %>/empManage">従業員登録・変更・削除</a></p>
 		<p><a href="<%= request.getContextPath() %>/postManage">役職登録・変更・削除</a></p>
-		<p><a href="">プロジェクト管理</a></p>
-		<p><a href="<%= request.getContextPath() %>/leaveTypeManage">休日種別管理</a></p>
+		<p><a href="<%= request.getContextPath() %>"">プロジェクト管理</a></p>
+		<p><a href="<%= request.getContextPath() %>/LeaveRecServlet">休日種別管理</a></p>
 		<p><a href="">会社カレンダー管理</a></p>
 	</div>
 </body>
