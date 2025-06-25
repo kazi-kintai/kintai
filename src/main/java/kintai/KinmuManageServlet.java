@@ -117,11 +117,17 @@ public class KinmuManageServlet extends HttpServlet {
         // gyomuListはもう使用しないため削除
 
 
-        // メッセージの引き渡し
-        String successMessage = (String) request.getAttribute("successMessage");
-        String errorMessage = (String) request.getAttribute("errorMessage");
-        if (successMessage != null) request.setAttribute("successMessage", successMessage);
-        if (errorMessage != null) request.setAttribute("errorMessage", errorMessage);
+        // セッションからメッセージを取得し、リクエスト属性に設定
+        String successMessage = (String) session.getAttribute("successMessage");
+        String errorMessage = (String) session.getAttribute("errorMessage");
+        if (successMessage != null) {
+            request.setAttribute("successMessage", successMessage);
+            session.removeAttribute("successMessage"); // セッションからクリア
+        }
+        if (errorMessage != null) {
+            request.setAttribute("errorMessage", errorMessage);
+            session.removeAttribute("errorMessage"); // セッションからクリア
+        }
 
 
         // 勤務時間管理画面にフォワード
@@ -190,7 +196,7 @@ public class KinmuManageServlet extends HttpServlet {
                     }
                     
                     workTimeDao.saveWorkTime(workTime); // 保存または更新
-                    successMessage = "出退勤時間を更新しました。";
+                    successMessage = "出退勤時間を更新しました";
                     break;
 
                 case "add_break": // 休憩時間の追加
@@ -203,10 +209,40 @@ public class KinmuManageServlet extends HttpServlet {
                         break;
                     }
 
+                    // 出勤時間が未設定の場合のチェック
+                    if (currentWorkTime.getClockIn() == null) {
+                        errorMessage = "出勤時間が未設定のため、休憩を追加できません。先に出勤してください。";
+                        break;
+                    }
+
+                    Time breakStart = parseTime(breakStartStr);
+                    Time breakEnd = parseTime(breakEndStr);
+
+                    // 休憩時間が出勤退勤時間範囲内かチェック
+                    if (currentWorkTime.getClockOut() != null) {
+                        if (breakStart.before(currentWorkTime.getClockIn()) || 
+                            breakEnd.after(currentWorkTime.getClockOut()) ||
+                            breakStart.after(currentWorkTime.getClockOut()) ||
+                            breakEnd.before(currentWorkTime.getClockIn())) {
+                            errorMessage = "休憩時間が出勤・退勤時間の範囲外です。出勤時間: " + 
+                                         currentWorkTime.getClockIn() + " ～ 退勤時間: " + 
+                                         currentWorkTime.getClockOut() + " の範囲内で設定してください。";
+                            break;
+                        }
+                    } else {
+                        // 退勤時間が未設定の場合は出勤時間以降かのみチェック
+                        if (breakStart.before(currentWorkTime.getClockIn()) || 
+                            breakEnd.before(currentWorkTime.getClockIn())) {
+                            errorMessage = "休憩時間は出勤時間以降に設定してください。出勤時間: " + 
+                                         currentWorkTime.getClockIn();
+                            break;
+                        }
+                    }
+
                     BreakBean newBreak = new BreakBean();
                     newBreak.setRecId(currentWorkTime.getRecId());
-                    newBreak.setBreakStart(parseTime(breakStartStr));
-                    newBreak.setBreakEnd(parseTime(breakEndStr));
+                    newBreak.setBreakStart(breakStart);
+                    newBreak.setBreakEnd(breakEnd);
                     
                     workTimeDao.addBreak(newBreak); // 休憩を追加
                     successMessage = "休憩時間を追加しました。";
@@ -273,9 +309,14 @@ public class KinmuManageServlet extends HttpServlet {
             e.printStackTrace();
         }
 
-        // 処理結果をリクエスト属性に設定し、GETにリダイレクトして画面を再表示
-        request.setAttribute("successMessage", successMessage);
-        request.setAttribute("errorMessage", errorMessage);
+        // 処理結果をセッションに設定し、GETにリダイレクトして画面を再表示
+        HttpSession httpSession = request.getSession();
+        if (successMessage != null) {
+            httpSession.setAttribute("successMessage", successMessage);
+        }
+        if (errorMessage != null) {
+            httpSession.setAttribute("errorMessage", errorMessage);
+        }
         response.sendRedirect(request.getContextPath() + "/KinmuManageServlet?targetDate=" + targetDate.toString());
     }
 

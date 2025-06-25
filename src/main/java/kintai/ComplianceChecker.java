@@ -1,12 +1,11 @@
 package kintai;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.DayOfWeek;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
-import java.math.BigDecimal;
 
 /**
  * 法令遵守チェックと会社規則チェック機能
@@ -111,8 +110,8 @@ public class ComplianceChecker {
                 violation.setViolationType("法定労働時間超過");
                 violation.setDate(record.getKintaiDate());
                 violation.setSeverity("高");
-                violation.setDescription(String.format("実働時間%sが法定労働時間8時間を超過しています", 
-                    record.getActualWorkTimeFormatted()));
+                violation.setDescription(String.format("実働時間%s（%d分）が法定労働時間8時間（480分）を超過しています", 
+                    record.getActualWorkTimeFormatted(), record.getActualWorkMinutes()));
                 violation.setLegalBasis("労働基準法第32条");
                 return violation;
             })
@@ -245,8 +244,8 @@ public class ComplianceChecker {
                 long lateMinutes = java.time.Duration.between(COMPANY_START_TIME, clockIn).toMinutes();
                 
                 violation.setSeverity(lateMinutes > COMPANY_MAX_LATE_MINUTES ? "高" : "低");
-                violation.setDescription(String.format("出勤時刻%sが標準時刻9:00より%d分遅れています", 
-                    clockIn, lateMinutes));
+                violation.setDescription(String.format("出勤時刻%s（%d分遅刻）が標準時刻9:00を超過しています", 
+                    clockIn.toString().substring(0, 5), lateMinutes));
                 violation.setLegalBasis("就業規則第○条");
                 return violation;
             })
@@ -272,8 +271,8 @@ public class ComplianceChecker {
                 LocalTime clockOut = record.getClockOut().toLocalTime();
                 long earlyMinutes = java.time.Duration.between(clockOut, COMPANY_END_TIME).toMinutes();
                 
-                violation.setDescription(String.format("退勤時刻%sが標準時刻18:00より%d分早いです", 
-                    clockOut, earlyMinutes));
+                violation.setDescription(String.format("退勤時刻%s（%d分早退）が標準時刻18:00を下回っています", 
+                    clockOut.toString().substring(0, 5), earlyMinutes));
                 violation.setLegalBasis("就業規則第○条");
                 return violation;
             })

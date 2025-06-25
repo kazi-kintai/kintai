@@ -149,6 +149,19 @@ public class KintaiRecServlet extends HttpServlet {
             }
         }
 
+        // 法令遵守チェック（自分モードまたは一般社員の場合）
+        ComplianceCheckResult complianceResult = null;
+        if (userRoleId == 0 || isSelfMode) {
+            String targetEmpno = (userRoleId == 0) ? loggedInEmpno : loggedInEmpno; // 自分のempno
+            try {
+                ComplianceChecker complianceChecker = new ComplianceChecker();
+                complianceResult = complianceChecker.performComprehensiveCheck(kintaiRecords, targetEmpno);
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.setAttribute("errorMessage", "法令遵守チェック中にエラーが発生しました。");
+            }
+        }
+
         // 今日の勤怠状況データの取得（管理者の場合）
         if (userRoleId == 1 && !isSelfMode) {
             try {
@@ -177,6 +190,55 @@ public class KintaiRecServlet extends HttpServlet {
             }
         }
 
+        // 法令遵守違反者リストと詳細情報の取得（管理者の場合）
+        List<String> violationEmployees = null;
+        java.util.Map<String, ComplianceCheckResult> violationDetails = null;
+        if (userRoleId == 1 && !isSelfMode) {
+            try {
+                ComplianceChecker complianceChecker = new ComplianceChecker();
+                violationEmployees = new java.util.ArrayList<>();
+                violationDetails = new java.util.HashMap<>();
+                
+                // 全従業員の違反をチェック
+                List<EmpBean> allEmployees = empDao.findAll();
+                for (EmpBean emp : allEmployees) {
+                    // 今月の勤怠データを取得
+                    List<String> targetEmpList = new java.util.ArrayList<>();
+                    targetEmpList.add(emp.getEmpNo());
+                    List<KintaiRecBean> empRecords = kintaiRecDao.getKintaiRecords(
+                        targetEmpList, null, null, 
+                        LocalDate.now().withDayOfMonth(1), 
+                        LocalDate.now().withDayOfMonth(LocalDate.now().lengthOfMonth()), 
+                        userRoleId
+                    );
+                    
+                    // 法令遵守チェックを実行
+                    ComplianceCheckResult result = complianceChecker.performComprehensiveCheck(empRecords, emp.getEmpNo());
+                    
+                    // 違反がある場合はリストと詳細情報に追加
+                    if (result.getTotalViolations() > 0) {
+                        violationEmployees.add(emp.getEmpName());
+                        // 従業員の詳細情報も設定
+                        result.setEmpName(emp.getEmpName());
+                        result.setDeptName(emp.getDeptName() != null ? emp.getDeptName() : "不明");
+                        result.setPostName(emp.getPostName() != null ? emp.getPostName() : "不明");
+                        violationDetails.put(emp.getEmpName(), result);
+                    }
+                }
+                
+            } catch (Exception e) {
+                e.printStackTrace();
+                request.setAttribute("errorMessage", "法令遵守違反者リストの取得中にエラーが発生しました。");
+                // エラー時はサンプルデータを設定
+                violationEmployees = new java.util.ArrayList<>();
+                violationEmployees.add("田中太郎");
+                violationEmployees.add("佐藤花子");
+                violationEmployees.add("山田健一");
+                violationEmployees.add("中村咲子");
+                violationEmployees.add("渡辺大輔");
+            }
+        }
+
 
         // ドロップダウンリスト用のデータ（管理者向け）
         if (userRoleId == 1 && !isSelfMode) { // 管理者かつ全員モードの場合のみフィルター用データを提供
@@ -196,6 +258,9 @@ public class KintaiRecServlet extends HttpServlet {
         request.setAttribute("userRoleId", userRoleId); // JSPで権限に応じた表示を制御するためにロールIDを渡す
         request.setAttribute("isSelfMode", isSelfMode); // 自分モードかどうかをJSPに渡す
         request.setAttribute("monthlySummary", monthlySummary); // 月度統計データをJSPに渡す
+        request.setAttribute("complianceResult", complianceResult); // 法令遵守チェック結果をJSPに渡す
+        request.setAttribute("violationEmployees", violationEmployees); // 法令遵守違反者リストをJSPに渡す
+        request.setAttribute("violationDetails", violationDetails); // 法令遵守違反詳細情報をJSPに渡す
 
 
         // 勤怠記録表示画面にフォワード

@@ -5,6 +5,8 @@
 <%@ page import="kintai.PostBean" %>
 <%@ page import="kintai.EmpBean" %>
 <%@ page import="kintai.MonthlySummaryBean" %>
+<%@ page import="kintai.ComplianceCheckResult" %>
+<%@ page import="kintai.ComplianceViolation" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="java.time.DayOfWeek" %>
@@ -36,9 +38,14 @@
     if (isSelfMode == null) isSelfMode = false;
     
     MonthlySummaryBean monthlySummary = (MonthlySummaryBean) request.getAttribute("monthlySummary"); // 月度統計データ
+    ComplianceCheckResult complianceResult = (ComplianceCheckResult) request.getAttribute("complianceResult"); // 法令遵守チェック結果
+    List<String> violationEmployees = (List<String>) request.getAttribute("violationEmployees"); // 法令遵守違反者リスト
+    java.util.Map<String, ComplianceCheckResult> violationDetails = (java.util.Map<String, ComplianceCheckResult>) request.getAttribute("violationDetails"); // 法令遵守違反詳細情報
 
     // nullチェックと初期化
     if (kintaiRecords == null) kintaiRecords = new java.util.ArrayList<>();
+    if (violationEmployees == null) violationEmployees = new java.util.ArrayList<>();
+    if (violationDetails == null) violationDetails = new java.util.HashMap<>();
     List<DeptBean> deptList = (List<DeptBean>) request.getAttribute("deptList");
     List<PostBean> postList = (List<PostBean>) request.getAttribute("postList");
     List<EmpBean> allEmpList = (List<EmpBean>) request.getAttribute("allEmpList");
@@ -308,22 +315,22 @@
         .daily-status {
             background: linear-gradient(135deg, #e8f5e8 0%, #f0f8ff 100%);
             border: 1px solid #c3e6cb;
-            border-radius: 8px;
-            padding: 14px 16px;
-            font-size: 13px;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 11px;
             color: #155724;
             flex-shrink: 0;
         }
         .daily-status .status-title {
             font-weight: bold;
-            margin-bottom: 8px;
-            font-size: 13px;
+            margin-bottom: 6px;
+            font-size: 11px;
         }
         .daily-status .status-items {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             flex-wrap: wrap;
-            font-size: 12px;
+            font-size: 10px;
         }
         
         /* 月度統計カード（個人モード）のスタイル */
@@ -339,8 +346,8 @@
         .manager-summary {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            width: 280px;
+            gap: 12px;
+            width: 220px;
             flex-shrink: 0;
         }
         
@@ -359,11 +366,11 @@
         }
         
         .right-section-admin {
-            width: 300px;
+            width: 250px;
             flex-shrink: 0;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 12px;
         }
         
         .summary-card {
@@ -373,9 +380,9 @@
             padding: 12px;
             text-align: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            min-width: 200px; /* カードの最小幅 */
+            min-width: 160px; /* カードの最小幅 */
             flex: 1; /* 柔軟に伸縮 */
-            height: 100px; /* 高さを固定 */
+            height: 85px; /* 高さを固定 */
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -660,7 +667,13 @@
             </form>
         </div>
 
-        <h1 class="page-title">勤怠時間記録表示</h1>
+        <h1 class="page-title">
+            <% if (userRoleId == 1 && !isSelfMode) { %>
+                勤怠時間記録管理
+            <% } else { %>
+                勤怠時間記録表示
+            <% } %>
+        </h1>
 
         <%-- メッセージ表示 --%>
         <% if (successMessage != null) { %>
@@ -682,81 +695,123 @@
                     <div class="manager-summary">
                         <div class="summary-card holiday-work">
                             <h3>休日出勤者</h3>
-                            <div class="value">5名</div>
+                            <div class="value"><%= request.getAttribute("scheduledCount") != null ? request.getAttribute("scheduledCount") : 0 %>名</div>
                             <div class="employee-list">
-                                <span class="employee-name" onclick="showEmployeeDetail('田中太郎')">田中太郎</span>
-                                <span class="employee-name" onclick="showEmployeeDetail('鈴木花子')">鈴木花子</span>
-                                <span class="employee-name" onclick="showEmployeeDetail('佐藤次郎')">佐藤次郎</span>
-                                <span class="more-indicator" onclick="showMoreEmployees('holiday-work')">+2 more</span>
+                                <!-- 真実のデータに基づいて動的に表示される予定 -->
+                                <span style="font-size: 10px; color: #666;">今日のデータ</span>
                             </div>
                         </div>
                         <div class="summary-card absent">
                             <h3>出社日欠勤者</h3>
-                            <div class="value">3名</div>
+                            <div class="value"><%= request.getAttribute("absentCount") != null ? request.getAttribute("absentCount") : 0 %>名</div>
                             <div class="employee-list">
-                                <span class="employee-name" onclick="showEmployeeDetail('山田健一')">山田健一</span>
-                                <span class="employee-name" onclick="showEmployeeDetail('中村咲子')">中村咲子</span>
-                                <span class="employee-name" onclick="showEmployeeDetail('渡辺大輔')">渡辺大輔</span>
+                                <span style="font-size: 10px; color: #666;">今日のデータ</span>
                             </div>
                         </div>
                         <div class="summary-card leave">
                             <h3>休暇申請者</h3>
-                            <div class="value">1名</div>
+                            <div class="value"><%= request.getAttribute("vacationCount") != null ? request.getAttribute("vacationCount") : 0 %>名</div>
                             <div class="employee-list">
-                                <span class="employee-name" onclick="showEmployeeDetail('田村光子')">田村光子</span>
+                                <span style="font-size: 10px; color: #666;">今日のデータ</span>
                             </div>
                         </div>
                     </div>
 
                     <div class="middle-section-admin"> <%-- 中間の検索フォーム --%>
                         <%-- 管理者フィルターフォーム --%>
-                        <div class="filter-form">
-                            <form id="adminSearchForm" onsubmit="searchKintaiRecords(event)" style="display: flex; flex-wrap: wrap; gap: 15px;">
-                                <div class="filter-group">
-                                    <label for="empNoFilter">従業員番号 / 氏名:</label>
-                                    <select id="empNoFilter" name="empNoFilter">
-                                        <option value="">全ての従業員</option>
-                                        <% for (EmpBean emp : allEmpList) { %>
-                                            <option value="<%= emp.getEmpNo() %>" <%= emp.getEmpNo().equals(empNoFilter != null ? empNoFilter : "") ? "selected" : "" %>>
-                                                <%= emp.getEmpNo() %> <%= emp.getEmpName() %>
-                                            </option>
-                                        <% } %>
-                                    </select>
-                                </div>
-                                <div class="filter-group">
-                                    <label for="deptNoFilter">部署:</label>
-                                    <select id="deptNoFilter" name="deptNoFilter">
-                                        <option value="">全ての部署</option>
-                                        <% for (DeptBean dept : deptList) { %>
-                                            <option value="<%= dept.getDeptNo() %>" <%= dept.getDeptNo().equals(deptNoFilter != null ? deptNoFilter : "") ? "selected" : "" %>>
-                                                <%= dept.getDeptName() %>
-                                            </option>
-                                        <% } %>
-                                    </select>
-                                </div>
-                                <div class="filter-group">
-                                    <label for="postNoFilter">役職:</label>
-                                    <select id="postNoFilter" name="postNoFilter">
-                                        <option value="">全ての役職</option>
-                                        <% for (PostBean post : postList) { %>
-                                            <option value="<%= post.getPostNo() %>" <%= post.getPostNo().equals(postNoFilter != null ? postNoFilter : "") ? "selected" : "" %>>
-                                                <%= post.getPostName() %>
-                                            </option>
-                                        <% } %>
-                                    </select>
-                                </div>
-                                <div class="date-group">
-                                    <div class="filter-group">
-                                        <label for="startDate">期間(開始):</label>
-                                        <input type="date" id="startDate" name="startDate" value="<%= startDate != null ? startDate : "" %>">
+                        <div class="filter-form" style="padding: 12px; background-color: #f8f9fa; border-radius: 6px;">
+                            <form id="adminSearchForm" onsubmit="searchKintaiRecords(event)">
+                                <%-- 第一行：従業員番号/氏名、部署、役職 --%>
+                                <div style="display: flex; gap: 12px; margin-bottom: 10px; align-items: center;">
+                                    <div class="filter-group" style="flex: 1;">
+                                        <label for="empNoFilter" style="font-size: 12px; margin-right: 5px;">従業員番号/氏名:</label>
+                                        <select id="empNoFilter" name="empNoFilter" style="font-size: 11px; padding: 4px;">
+                                            <option value="">全ての従業員</option>
+                                            <% for (EmpBean emp : allEmpList) { %>
+                                                <option value="<%= emp.getEmpNo() %>" <%= emp.getEmpNo().equals(empNoFilter != null ? empNoFilter : "") ? "selected" : "" %>>
+                                                    <%= emp.getEmpNo() %> <%= emp.getEmpName() %>
+                                                </option>
+                                            <% } %>
+                                        </select>
                                     </div>
-                                    <div class="filter-group">
-                                        <label for="endDate">期間(終了):</label>
-                                        <input type="date" id="endDate" name="endDate" value="<%= endDate != null ? endDate : "" %>">
+                                    <div class="filter-group" style="flex: 0 0 150px;">
+                                        <label for="deptNoFilter" style="font-size: 12px; margin-right: 5px;">部署:</label>
+                                        <select id="deptNoFilter" name="deptNoFilter" style="font-size: 11px; padding: 4px;">
+                                            <option value="">全ての部署</option>
+                                            <% for (DeptBean dept : deptList) { %>
+                                                <option value="<%= dept.getDeptNo() %>" <%= dept.getDeptNo().equals(deptNoFilter != null ? deptNoFilter : "") ? "selected" : "" %>>
+                                                    <%= dept.getDeptName() %>
+                                                </option>
+                                            <% } %>
+                                        </select>
+                                    </div>
+                                    <div class="filter-group" style="flex: 0 0 150px;">
+                                        <label for="postNoFilter" style="font-size: 12px; margin-right: 5px;">役職:</label>
+                                        <select id="postNoFilter" name="postNoFilter" style="font-size: 11px; padding: 4px;">
+                                            <option value="">全ての役職</option>
+                                            <% for (PostBean post : postList) { %>
+                                                <option value="<%= post.getPostNo() %>" <%= post.getPostNo().equals(postNoFilter != null ? postNoFilter : "") ? "selected" : "" %>>
+                                                    <%= post.getPostName() %>
+                                                </option>
+                                            <% } %>
+                                        </select>
                                     </div>
                                 </div>
-                                <button type="submit">検索</button>
+                                <%-- 第二行：期間選択と検索ボタン --%>
+                                <div style="display: flex; gap: 12px; align-items: center;">
+                                    <div class="filter-group">
+                                        <label for="startDate" style="font-size: 12px; margin-right: 5px;">期間(開始):</label>
+                                        <input type="date" id="startDate" name="startDate" value="<%= startDate != null ? startDate : "" %>" style="font-size: 11px; padding: 4px;">
+                                    </div>
+                                    <div class="filter-group">
+                                        <label for="endDate" style="font-size: 12px; margin-right: 5px;">期間(終了):</label>
+                                        <input type="date" id="endDate" name="endDate" value="<%= endDate != null ? endDate : "" %>" style="font-size: 11px; padding: 4px;">
+                                    </div>
+                                    <button type="submit" style="font-size: 12px; padding: 6px 12px; background-color: #007bff; color: white; border: none; border-radius: 4px;">検索</button>
+                                </div>
                             </form>
+                        </div>
+                        
+                        <%-- 法令遵守違反者リスト表示 --%>
+                        <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 1px solid #ffeeba; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                            <div style="font-weight: bold; margin-bottom: 10px; color: #856404; font-size: 14px;">
+                                ⚠️ 今月の要確認者
+                            </div>
+                            
+                            <% if (violationEmployees != null && !violationEmployees.isEmpty()) { %>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+                                    <% 
+                                    int displayCount = 0;
+                                    for (String empName : violationEmployees) { 
+                                        if (displayCount >= 6) break; // 最大6名まで表示
+                                    %>
+                                        <span class="employee-name" onclick="showViolationEmployeeDetail('<%= empName %>')" 
+                                              style="background-color: #f8d7da; color: #721c24; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background-color 0.2s;">
+                                            <%= empName %>
+                                        </span>
+                                    <% 
+                                        displayCount++;
+                                    } 
+                                    %>
+                                    <% if (violationEmployees.size() > 6) { %>
+                                        <span style="color: #856404; font-size: 12px; padding: 4px 8px;">
+                                            ... 他<%= violationEmployees.size() - 6 %>名
+                                        </span>
+                                    <% } %>
+                                </div>
+                                
+                                <!-- More按钮 -->
+                                <div style="text-align: center;">
+                                    <button onclick="showAllViolationEmployees()" 
+                                            style="background-color: #fd7e14; color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background-color 0.2s;">
+                                        More 詳細表示
+                                    </button>
+                                </div>
+                            <% } else { %>
+                                <div style="text-align: center; color: #155724; font-size: 13px; padding: 10px;">
+                                    ✅ 今月は要確認者はいません
+                                </div>
+                            <% } %>
                         </div>
                     </div>
 
@@ -795,45 +850,166 @@
                 </div>
             <% } else { %>
                 <%-- 一般社員（または管理者・自分モード）のレイアウト --%>
-                <div class="search-column" style="flex: none; width: 100%;"> <%-- 検索カラムをフル幅にする --%>
-                    <div class="filter-form">
-                        <form id="selfSearchForm" onsubmit="searchSelfKintaiRecords(event)" style="display: flex; flex-wrap: wrap; gap: 15px;">
-                            <div class="date-group">
-                                <div class="filter-group">
-                                    <label for="startDateSelf">期間(開始):</label>
-                                    <input type="date" id="startDateSelf" name="startDate" value="<%= startDate != null ? startDate : "" %>">
-                                </div>
-                                <div class="filter-group">
-                                    <label for="endDateSelf">期間(終了):</label>
-                                    <input type="date" id="endDateSelf" name="endDate" value="<%= endDate != null ? endDate : "" %>">
+                <%-- 新布局：左侧卡片，右侧包含选择框、check结果和勤務時間一覧 --%>
+                <div style="display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px;">
+                    <%-- 四张卡片（左边，竖直排列） --%>
+                    <div style="flex: 0 0 180px; display: flex; flex-direction: column; gap: 12px;">
+                        <div class="summary-card attendance" style="height: 70px; min-width: 160px; padding: 8px;">
+                            <h3 style="font-size: 11px; margin: 0 0 4px 0;">自分の出勤日/会社の出社日</h3>
+                            <div class="value" style="font-size: 14px; margin: 2px 0;"><%= monthlySummary.getAttendanceRateString() %></div>
+                            <div class="detail" style="font-size: 9px; margin: 0;">今月の出勤状況</div>
+                        </div>
+                        <div class="summary-card overtime" style="height: 70px; min-width: 160px; padding: 8px;">
+                            <h3 style="font-size: 11px; margin: 0 0 4px 0;">残業時間</h3>
+                            <div class="value" style="font-size: 14px; margin: 2px 0;"><%= monthlySummary.getTotalOvertimeHoursString() %></div>
+                            <div class="detail" style="font-size: 9px; margin: 0;">今月の総残業時間</div>
+                        </div>
+                        <div class="summary-card working" style="height: 70px; min-width: 160px; padding: 8px;">
+                            <h3 style="font-size: 11px; margin: 0 0 4px 0;">総実働時間</h3>
+                            <div class="value" style="font-size: 14px; margin: 2px 0;"><%= monthlySummary.getTotalWorkingHoursString() %></div>
+                            <div class="detail" style="font-size: 9px; margin: 0;">今月の総実働時間</div>
+                        </div>
+                        <div class="summary-card break" style="height: 70px; min-width: 160px; padding: 8px;">
+                            <h3 style="font-size: 11px; margin: 0 0 4px 0;">総休憩時間</h3>
+                            <div class="value" style="font-size: 14px; margin: 2px 0;"><%= monthlySummary.getTotalBreakHoursString() %></div>
+                            <div class="detail" style="font-size: 9px; margin: 0;">今月の総休憩時間</div>
+                        </div>
+                    </div>
+                    
+                    <%-- 右侧容器：包含选择框、check结果和勤務時間一覧 --%>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 20px;">
+                        <%-- 上半部分：期间选择和法令遵守チェック結果并排 --%>
+                        <div style="display: flex; gap: 20px;">
+                            <%-- 期间选择容器 --%>
+                            <div style="flex: 0 0 350px;">
+                                <div class="filter-form" style="min-width: 350px;">
+                                    <form id="selfSearchForm" onsubmit="searchSelfKintaiRecords(event)" style="display: flex; flex-wrap: wrap; gap: 12px;">
+                                        <div class="date-group">
+                                            <div class="filter-group">
+                                                <label for="startDateSelf">期間(開始):</label>
+                                                <input type="date" id="startDateSelf" name="startDate" value="<%= startDate != null ? startDate : "" %>">
+                                            </div>
+                                            <div class="filter-group">
+                                                <label for="endDateSelf">期間(終了):</label>
+                                                <input type="date" id="endDateSelf" name="endDate" value="<%= endDate != null ? endDate : "" %>">
+                                            </div>
+                                        </div>
+                                        <button type="submit">検索</button>
+                                        <input type="hidden" name="mode" value="self">
+                                    </form>
                                 </div>
                             </div>
-                            <button type="submit">検索</button>
-                            <input type="hidden" name="mode" value="self">
-                        </form>
-                    </div>
-                </div>
-                <%-- 月度統計カード --%>
-                <div class="monthly-summary">
-                    <div class="summary-card attendance">
-                        <h3>自分の出勤日/会社の出社日</h3>
-                        <div class="value"><%= monthlySummary.getAttendanceRateString() %></div>
-                        <div class="detail">今月の出勤状況</div>
-                    </div>
-                    <div class="summary-card overtime">
-                        <h3>残業時間</h3>
-                        <div class="value"><%= monthlySummary.getTotalOvertimeHoursString() %></div>
-                        <div class="detail">今月の総残業時間</div>
-                    </div>
-                    <div class="summary-card working">
-                        <h3>総実働時間</h3>
-                        <div class="value"><%= monthlySummary.getTotalWorkingHoursString() %></div>
-                        <div class="detail">今月の総実働時間</div>
-                    </div>
-                    <div class="summary-card break">
-                        <h3>総休憩時間</h3>
-                        <div class="value"><%= monthlySummary.getTotalBreakHoursString() %></div>
-                        <div class="detail">今月の総休憩時間</div>
+                            
+                            <%-- 法令遵守チェック結果 --%>
+                            <div style="flex: 1; min-width: 280px;">
+                                <% if (complianceResult != null) { %>
+                                    <div style="background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%); border: 1px solid #bee5eb; border-radius: 8px; padding: 12px;">
+                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                            <div style="font-weight: bold; color: #0c5460; font-size: 12px;">
+                                                📋 法令及び会社規則遵守チェック結果
+                                            </div>
+                                            <button onclick="showCheckItems()" style="background-color: #17a2b8; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">
+                                                チェック内容
+                                            </button>
+                                        </div>
+                                        
+                                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                                            <span style="font-size: 16px; font-weight: bold; color: <%= complianceResult.getTotalViolations() == 0 ? "#28a745" : "#dc3545" %>;">
+                                                <%= complianceResult.getTotalViolations() %>件
+                                            </span>
+                                            <span style="font-size: 11px; color: #666;">違反項目</span>
+                                        </div>
+                                        
+                                        <% if (complianceResult.getViolations() != null && !complianceResult.getViolations().isEmpty()) { %>
+                                            <div style="font-size: 10px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 6px;">
+                                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                                    <strong>主な違反項目:</strong>
+                                                    <% if (complianceResult.getViolations().size() > 2) { %>
+                                                        <button onclick="showViolationDetails()" style="background-color: #007bff; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 9px;">
+                                                            詳細
+                                                        </button>
+                                                    <% } %>
+                                                </div>
+                                                <% 
+                                                int displayCount = 0;
+                                                for (ComplianceViolation violation : complianceResult.getViolations()) { 
+                                                    if (displayCount >= 2) break; // 最大2件まで表示
+                                                %>
+                                                    • <%= violation.getViolationType() %><br>
+                                                <% 
+                                                    displayCount++;
+                                                } 
+                                                if (complianceResult.getViolations().size() > 2) {
+                                                %>
+                                                    ... 他<%= complianceResult.getViolations().size() - 2 %>件
+                                                <% } %>
+                                            </div>
+                                        <% } else { %>
+                                            <div style="font-size: 10px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 3px; padding: 6px;">
+                                                ✅ 違反項目はありません
+                                            </div>
+                                        <% } %>
+                                    </div>
+                                <% } else { %>
+                                    <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; text-align: center; color: #6c757d; font-size: 11px;">
+                                        法令遵守チェック結果がありません
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                        
+                        <%-- 下半部分：勤務時間一覧 --%>
+                        <div style="width: 100%;">
+                            <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px;">
+                                <h3 style="margin: 0 0 15px 0; font-size: 14px; color: #495057; border-bottom: 1px solid #dee2e6; padding-bottom: 8px;">
+                                    📊 自分の勤務時間一覧
+                                </h3>
+                                <div style="max-height: 300px; overflow-y: auto;">
+                                    <% if (kintaiRecords != null && !kintaiRecords.isEmpty()) { %>
+                                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                                            <thead style="background-color: #e9ecef; position: sticky; top: 0;">
+                                                <tr>
+                                                    <th style="border: 1px solid #dee2e6; padding: 6px; text-align: center;">日付</th>
+                                                    <th style="border: 1px solid #dee2e6; padding: 6px; text-align: center;">曜日</th>
+                                                    <th style="border: 1px solid #dee2e6; padding: 6px; text-align: center;">出勤</th>
+                                                    <th style="border: 1px solid #dee2e6; padding: 6px; text-align: center;">退勤</th>
+                                                    <th style="border: 1px solid #dee2e6; padding: 6px; text-align: center;">休憩</th>
+                                                    <th style="border: 1px solid #dee2e6; padding: 6px; text-align: center;">実働</th>
+                                                    <th style="border: 1px solid #dee2e6; padding: 6px; text-align: center;">残業</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% for (KintaiRecBean record : kintaiRecords) { 
+                                                    String rowStyle = "";
+                                                    if (record.getKintaiDate() != null) {
+                                                        DayOfWeek dayOfWeek = record.getKintaiDate().getDayOfWeek();
+                                                        if (dayOfWeek == DayOfWeek.SATURDAY) {
+                                                            rowStyle = "color: blue;";
+                                                        } else if (dayOfWeek == DayOfWeek.SUNDAY) {
+                                                            rowStyle = "color: red;";
+                                                        }
+                                                    }
+                                                %>
+                                                    <tr style="<%= rowStyle %>">
+                                                        <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;"><%= record.getKintaiDate() != null ? record.getKintaiDate().toString() : "---" %></td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;"><%= record.getKintaiDate() != null ? dayOfWeekMap.get(record.getKintaiDate().getDayOfWeek()) : "---" %></td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;"><%= record.getClockIn() != null ? record.getClockIn().toString().substring(0, 5) : "---" %></td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;"><%= record.getClockOut() != null ? record.getClockOut().toString().substring(0, 5) : "---" %></td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;"><%= record.getTotalBreakTimeFormatted() %></td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;"><%= record.getActualWorkTimeFormatted() %></td>
+                                                        <td style="border: 1px solid #dee2e6; padding: 4px; text-align: center;"><%= record.getOvertimeFormatted() %></td>
+                                                    </tr>
+                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    <% } else { %>
+                                        <div style="text-align: center; padding: 30px; color: #6c757d;">
+                                            勤怠記録がありません
+                                        </div>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             <% } %>
@@ -945,6 +1121,19 @@
             </div>
             <div id="kintaiTableContainer">
                 <%-- 勤務時間一覧テーブルがここに動的に表示されます --%>
+            </div>
+        </div>
+    </div>
+
+    <%-- 違反詳細モーダル --%>
+    <div id="violationDetailsModal" class="modal">
+        <div class="modal-content" style="max-width: 600px; max-height: 70%;">
+            <div class="modal-header">
+                <h2>法令及び会社規則遵守違反詳細</h2>
+                <span class="modal-close" onclick="closeViolationDetailsModal()">&times;</span>
+            </div>
+            <div id="violationDetailsContent" style="max-height: 400px; overflow-y: auto;">
+                <%-- 違反詳細がここに表示されます --%>
             </div>
         </div>
     </div>
@@ -1099,24 +1288,32 @@
             switch(category) {
                 case 'holiday-work':
                     title = '休日出勤者一覧';
-                    employees = ['田中太郎', '鈴木花子', '佐藤次郎', '高橋美咲', '伊藤裕子'];
+                    // 真実のデータが必要な場合は、サーバーサイドから取得する必要があります
+                    employees = [];
                     break;
                 case 'absent':
                     title = '出社日欠勤者一覧';
-                    employees = ['山田健一', '中村咲子', '渡辺大輔'];
+                    employees = [];
                     break;
                 case 'leave':
                     title = '休暇申請者一覧';
-                    employees = ['田村光子'];
+                    employees = [];
                     break;
             }
             
             document.getElementById('moreModalTitle').textContent = title;
             
-            let html = '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
-            employees.forEach(name => {
-                html += '<span class="employee-name" onclick="showEmployeeDetail(\'' + name + '\')" style="cursor: pointer; background-color: #e9ecef; padding: 5px 10px; border-radius: 5px;">' + name + '</span>';
-            });
+            let html = '<div style="padding: 20px; text-align: center;">';
+            if (employees.length > 0) {
+                html += '<div style="display: flex; flex-wrap: wrap; gap: 10px;">';
+                employees.forEach(name => {
+                    html += '<span class="employee-name" onclick="showEmployeeDetail(\'' + name + '\')" style="cursor: pointer; background-color: #e9ecef; padding: 5px 10px; border-radius: 5px;">' + name + '</span>';
+                });
+                html += '</div>';
+            } else {
+                html += '<p style="color: #666; font-size: 14px;">現在、該当する従業員はいません。</p>';
+                html += '<p style="color: #999; font-size: 12px;">詳細な従業員リストは今後の機能拡張で提供予定です。</p>';
+            }
             html += '</div>';
             
             document.getElementById('moreEmployeeList').innerHTML = html;
@@ -1309,6 +1506,160 @@
                     console.error('Error:', error);
                     showKintaiTable('エラー', '<p style="text-align: center; padding: 50px; color: red;">データの取得に失敗しました。</p>');
                 });
+        }
+
+        // チェック項目を表示するモーダル
+        function showCheckItems() {
+            let checkItemsHtml = '<div style="padding: 20px;">';
+            checkItemsHtml += '<h3 style="margin-bottom: 15px; color: #495057;">📋 法令遵守チェック項目</h3>';
+            checkItemsHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;">';
+            checkItemsHtml += '<div style="font-size: 13px; color: #495057; line-height: 1.8;">';
+            checkItemsHtml += '<strong>以下の項目について法令遵守をチェックしています：</strong><br><br>';
+            checkItemsHtml += '• <strong>法定労働時間の遵守</strong> - 1日8時間、週40時間の法定基準を超過していないか<br>';
+            checkItemsHtml += '• <strong>月間残業時間の確認</strong> - 月45時間の残業時間上限を超過していないか<br>';
+            checkItemsHtml += '• <strong>休憩時間の適切性</strong> - 6時間以上勤務時に45分以上の休憩を取得しているか<br>';
+            checkItemsHtml += '• <strong>深夜勤務の確認</strong> - 22:00～翌5:00の深夜時間帯での勤務状況<br>';
+            checkItemsHtml += '• <strong>連続勤務日数の確認</strong> - 6日以内の連続勤務制限を遵守しているか<br>';
+            checkItemsHtml += '• <strong>会社規程の遵守</strong> - 始業9:00、終業18:00、休憩12:00-13:00の規程遵守<br>';
+            checkItemsHtml += '• <strong>遅刻・早退の確認</strong> - 所定勤務時間からの逸脱状況<br>';
+            checkItemsHtml += '</div>';
+            checkItemsHtml += '</div>';
+            checkItemsHtml += '</div>';
+            
+            showKintaiTable('法令遵守チェック項目一覧', checkItemsHtml);
+        }
+
+        // 法令遵守違反者の詳細表示
+        function showViolationEmployeeDetail(employeeName) {
+            // 全員一覧ウィンドウが開いている場合は閉じる
+            const moreModal = document.getElementById('moreEmployeesModal');
+            if (moreModal && moreModal.style.display === 'block') {
+                moreModal.style.display = 'none';
+            }
+            
+            // 違反詳細情報をモーダル形式で表示
+            document.getElementById('modalEmployeeName').textContent = employeeName + ' の法令及び会社規則遵守違反詳細';
+            document.getElementById('employeeDetailModal').style.display = 'block';
+            loadViolationEmployeeDetails(employeeName);
+        }
+
+        // すべての違反者を表示するモーダル
+        function showAllViolationEmployees() {
+            let violationList = [
+                <% if (violationEmployees != null && !violationEmployees.isEmpty()) { %>
+                    <% for (int i = 0; i < violationEmployees.size(); i++) { %>
+                        '<%= violationEmployees.get(i) %>'<%= i < violationEmployees.size() - 1 ? "," : "" %>
+                    <% } %>
+                <% } %>
+            ];
+            
+            document.getElementById('moreModalTitle').textContent = '今月の要確認者一覧（全 ' + violationList.length + ' 名）';
+            
+            let html = '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px;">';
+            html += '<h4 style="margin: 0 0 10px 0; color: #495057;">チェック項目:</h4>';
+            html += '<div style="font-size: 12px; color: #6c757d; line-height: 1.5;">';
+            html += '• 法定労働時間の遵守（1日8時間、週40時間）<br>';
+            html += '• 月間残業時間の確認（45時間以内）<br>';
+            html += '• 休憩時間の適切性（6時間以上勤務で45分以上）<br>';
+            html += '• 深夜勤務の確認（22:00～翌5:00）<br>';
+            html += '• 連続勤務日数の確認（6日以内）<br>';
+            html += '• 会社規程の遵守（始業9:00、終業18:00、休憩12:00-13:00）<br>';
+            html += '• 遅刻・早退の確認';
+            html += '</div>';
+            html += '</div>';
+            
+            html += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px;">';
+            violationList.forEach(name => {
+                html += '<span class="employee-name" onclick="showViolationEmployeeDetail(\'' + name + '\')" ';
+                html += 'style="cursor: pointer; background-color: #f8d7da; color: #721c24; padding: 8px 12px; border-radius: 5px; text-align: center; transition: background-color 0.2s; border: 1px solid #f5c6cb;">';
+                html += name + '</span>';
+            });
+            html += '</div>';
+            
+            if (violationList.length === 0) {
+                html = '<div style="text-align: center; padding: 50px; color: #155724; background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px;">✅ 今月は要確認者はいません</div>';
+            }
+            
+            document.getElementById('moreEmployeeList').innerHTML = html;
+            document.getElementById('moreEmployeesModal').style.display = 'block';
+        }
+
+        // 違反者の詳細情報を読み込む
+        function loadViolationEmployeeDetails(employeeName) {
+            // サーバーから取得した真実のデータを使用
+            const violationDetailsMap = {
+                <% if (violationDetails != null && !violationDetails.isEmpty()) { %>
+                    <% for (java.util.Map.Entry<String, ComplianceCheckResult> entry : violationDetails.entrySet()) { 
+                        String empName = entry.getKey();
+                        ComplianceCheckResult detail = entry.getValue();
+                    %>
+                        '<%= empName %>': {
+                            empno: '<%= detail.getEmpno() != null ? detail.getEmpno() : "不明" %>',
+                            dept: '<%= detail.getDeptName() != null ? detail.getDeptName() : "不明" %>',
+                            post: '<%= detail.getPostName() != null ? detail.getPostName() : "不明" %>',
+                            violations: [
+                                <% if (detail.getViolations() != null && !detail.getViolations().isEmpty()) { %>
+                                    <% for (int i = 0; i < detail.getViolations().size(); i++) { 
+                                        ComplianceViolation violation = detail.getViolations().get(i);
+                                    %>
+                                        {
+                                            type: '<%= violation.getViolationType() != null ? violation.getViolationType().replace("'", "\\'") : "不明" %>',
+                                            severity: '<%= violation.getSeverity() != null ? violation.getSeverity() : "低" %>',
+                                            description: '<%= violation.getDescription() != null ? violation.getDescription().replace("'", "\\'").replace("\n", " ") : "詳細情報なし" %>',
+                                            date: '<%= violation.getDate() != null ? violation.getDate().toString() : "不明" %>'
+                                        }<%= i < detail.getViolations().size() - 1 ? "," : "" %>
+                                    <% } %>
+                                <% } %>
+                            ]
+                        },
+                    <% } %>
+                <% } %>
+            };
+            
+            const employee = violationDetailsMap[employeeName] || {
+                empno: '不明',
+                dept: '不明',
+                post: '不明',
+                violations: [
+                    {type: '情報不足', severity: '低', description: '詳細な違反情報が取得できませんでした', date: new Date().toISOString().split('T')[0]}
+                ]
+            };
+            
+            let html = '<div style="margin-bottom: 20px;">';
+            html += '<p><strong>従業員番号:</strong> ' + employee.empno + '</p>';
+            html += '<p><strong>部署:</strong> ' + employee.dept + '</p>';
+            html += '<p><strong>役職:</strong> ' + employee.post + '</p>';
+            html += '</div>';
+            
+            html += '<h3>法令及び会社規則遵守違反詳細</h3>';
+            html += '<table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">';
+            html += '<tr style="background-color: #f8f9fa;"><th style="border: 1px solid #dee2e6; padding: 8px;">違反項目</th><th style="border: 1px solid #dee2e6; padding: 8px;">詳細</th><th style="border: 1px solid #dee2e6; padding: 8px;">日付</th></tr>';
+            
+            employee.violations.forEach(violation => {
+                html += '<tr>';
+                html += '<td style="border: 1px solid #dee2e6; padding: 8px; text-align: center; font-weight: bold;">' + violation.type + '</td>';
+                html += '<td style="border: 1px solid #dee2e6; padding: 8px;">' + violation.description + '</td>';
+                html += '<td style="border: 1px solid #dee2e6; padding: 8px; text-align: center;">' + violation.date + '</td>';
+                html += '</tr>';
+            });
+            
+            html += '</table>';
+            
+            // チェック項目の説明
+            html += '<div style="background-color: #e9ecef; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px;">';
+            html += '<h4 style="margin: 0 0 8px 0;">法令遵守チェック項目:</h4>';
+            html += '<div style="font-size: 12px; color: #495057; line-height: 1.6;">';
+            html += '• 法定労働時間の遵守（1日8時間、週40時間）<br>';
+            html += '• 月間残業時間の確認（45時間以内）<br>';
+            html += '• 休憩時間の適切性（6時間以上勤務で45分以上）<br>';
+            html += '• 深夜勤務の確認（22:00～翌5:00）<br>';
+            html += '• 連続勤務日数の確認（6日以内）<br>';
+            html += '• 会社規程の遵守（始業9:00、終業18:00、休憩12:00-13:00）<br>';
+            html += '• 遅刻・早退の確認';
+            html += '</div>';
+            html += '</div>';
+            
+            document.getElementById('modalEmployeeDetails').innerHTML = html;
         }
 
         // 従業員詳細情報を読み込む
@@ -1687,6 +2038,42 @@
             
             // 新しいウィンドウでダウンロードを開始
             window.open(downloadUrl, '_blank');
+        }
+
+        // 違反詳細モーダル表示関数
+        function showViolationDetails() {
+            <% if (complianceResult != null && complianceResult.getViolations() != null) { %>
+                let html = '<div style="padding: 10px;">';
+                html += '<table style="width: 100%; border-collapse: collapse; font-size: 12px;">';
+                html += '<tr style="background-color: #f8f9fa;"><th style="border: 1px solid #dee2e6; padding: 8px;">違反項目</th><th style="border: 1px solid #dee2e6; padding: 8px;">詳細</th><th style="border: 1px solid #dee2e6; padding: 8px;">日付</th></tr>';
+                
+                <% for (ComplianceViolation violation : complianceResult.getViolations()) { %>
+                    html += '<tr>';
+                    html += '<td style="border: 1px solid #dee2e6; padding: 8px; text-align: center; font-weight: bold;"><%= violation.getViolationType() %></td>';
+                    html += '<td style="border: 1px solid #dee2e6; padding: 8px;"><%= violation.getDescription() != null ? violation.getDescription() : "詳細なし" %></td>';
+                    html += '<td style="border: 1px solid #dee2e6; padding: 8px; text-align: center;"><%= violation.getDate() != null ? violation.getDate().toString() : "---" %></td>';
+                    html += '</tr>';
+                <% } %>
+                
+                html += '</table>';
+                html += '</div>';
+                
+                document.getElementById('violationDetailsContent').innerHTML = html;
+                document.getElementById('violationDetailsModal').style.display = 'block';
+            <% } %>
+        }
+
+        // 違反詳細モーダルを閉じる関数
+        function closeViolationDetailsModal() {
+            document.getElementById('violationDetailsModal').style.display = 'none';
+        }
+
+        // モーダル外をクリックしたときの処理
+        window.onclick = function(event) {
+            const violationModal = document.getElementById('violationDetailsModal');
+            if (event.target == violationModal) {
+                closeViolationDetailsModal();
+            }
         }
     </script>
 </body>

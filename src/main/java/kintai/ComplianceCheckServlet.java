@@ -13,8 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 /**
- * 合规检查功能的Servlet
- * 处理法令遵守チェック和会社規則チェック的请求
+ * 法令遵守チェックと会社規則チェックのリクエスト
  */
 @WebServlet("/ComplianceCheckServlet")
 public class ComplianceCheckServlet extends HttpServlet {

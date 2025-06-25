@@ -1,14 +1,17 @@
 package kintai;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
- * 合规检查结果数据模型
+ *
  */
 public class ComplianceCheckResult {
     private String empno;                           // 従業員番号
+    private String empName;                         // 従業員名
+    private String deptName;                        // 部署名
+    private String postName;                        // 役職名
     private LocalDate checkDate;                   // チェック実行日
     private String checkType;                      // チェック種別（法令遵守/会社規則/総合）
     private List<ComplianceViolation> violations;  // 違反項目リスト
@@ -28,6 +31,30 @@ public class ComplianceCheckResult {
     
     public void setEmpno(String empno) {
         this.empno = empno;
+    }
+    
+    public String getEmpName() {
+        return empName;
+    }
+    
+    public void setEmpName(String empName) {
+        this.empName = empName;
+    }
+    
+    public String getDeptName() {
+        return deptName;
+    }
+    
+    public void setDeptName(String deptName) {
+        this.deptName = deptName;
+    }
+    
+    public String getPostName() {
+        return postName;
+    }
+    
+    public void setPostName(String postName) {
+        this.postName = postName;
     }
     
     public LocalDate getCheckDate() {
