@@ -693,6 +693,19 @@
                 <div class="admin-top-layout"> <%-- 新しいコンテナで横並びを実現 --%>
                     <%-- 管理者統計カード (左側) --%>
                     <div class="manager-summary">
+                        <div class="summary-card lateness" style="border-left: 4px solid #dc3545;">
+                            <h3>🕒 遅刻者</h3>
+                            <div class="value" style="color: #dc3545;">
+                                <% 
+                                    // 这里需要从后端获取迟到者数据，暂时使用示例
+                                    int lateEmployeeCount = 0; // 将由后端提供
+                                %>
+                                <%= lateEmployeeCount %>名
+                            </div>
+                            <div class="employee-list">
+                                <span style="font-size: 10px; color: #666;">今日のデータ</span>
+                            </div>
+                        </div>
                         <div class="summary-card holiday-work">
                             <h3>休日出勤者</h3>
                             <div class="value"><%= request.getAttribute("scheduledCount") != null ? request.getAttribute("scheduledCount") : 0 %>名</div>
@@ -841,9 +854,7 @@
                             </div>
                             <div class="format-options">
                                 <span>出力形式:</span>
-                                <button class="format-btn" onclick="setFormat('pdf')">📄 HTML</button>
                                 <button class="format-btn" onclick="setFormat('excel')">📊 Excel</button>
-                                <button class="format-btn" onclick="setFormat('csv')">📝 CSV</button>
                             </div>
                         </div>
                     </div>
@@ -924,11 +935,9 @@
                                             <div style="font-size: 10px; color: #721c24; background-color: #f8d7da; border: 1px solid #f5c6cb; border-radius: 3px; padding: 6px;">
                                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                                                     <strong>主な違反項目:</strong>
-                                                    <% if (complianceResult.getViolations().size() > 2) { %>
-                                                        <button onclick="showViolationDetails()" style="background-color: #007bff; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 9px;">
-                                                            詳細
-                                                        </button>
-                                                    <% } %>
+                                                    <button onclick="showViolationDetails()" style="background-color: #007bff; color: white; border: none; padding: 2px 6px; border-radius: 3px; cursor: pointer; font-size: 9px;">
+                                                        詳細表示
+                                                    </button>
                                                 </div>
                                                 <% 
                                                 int displayCount = 0;
@@ -1515,13 +1524,11 @@
             checkItemsHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;">';
             checkItemsHtml += '<div style="font-size: 13px; color: #495057; line-height: 1.8;">';
             checkItemsHtml += '<strong>以下の項目について法令遵守をチェックしています：</strong><br><br>';
-            checkItemsHtml += '• <strong>法定労働時間の遵守</strong> - 1日8時間、週40時間の法定基準を超過していないか<br>';
-            checkItemsHtml += '• <strong>月間残業時間の確認</strong> - 月45時間の残業時間上限を超過していないか<br>';
-            checkItemsHtml += '• <strong>休憩時間の適切性</strong> - 6時間以上勤務時に45分以上の休憩を取得しているか<br>';
+            checkItemsHtml += '• <strong>休憩時間の適切性</strong> - 6-8時間勤務時に45分以上、8時間超勤務時に60分以上の休憩を取得しているか<br>';
             checkItemsHtml += '• <strong>深夜勤務の確認</strong> - 22:00～翌5:00の深夜時間帯での勤務状況<br>';
-            checkItemsHtml += '• <strong>連続勤務日数の確認</strong> - 6日以内の連続勤務制限を遵守しているか<br>';
-            checkItemsHtml += '• <strong>会社規程の遵守</strong> - 始業9:00、終業18:00、休憩12:00-13:00の規程遵守<br>';
-            checkItemsHtml += '• <strong>遅刻・早退の確認</strong> - 所定勤務時間からの逸脱状況<br>';
+            checkItemsHtml += '• <strong>連続勤務日数の確認</strong> - 10日以内の連続勤務制限を遵守しているか<br>';
+            checkItemsHtml += '• <strong>2週間時間外労働の確認</strong> - 2週間で40時間を超過し80時間超過防止アラート<br>';
+            checkItemsHtml += '• <strong>遅刻の確認</strong> - 始業時刻9:00からの遅刻状況<br>';
             checkItemsHtml += '</div>';
             checkItemsHtml += '</div>';
             checkItemsHtml += '</div>';
@@ -1558,13 +1565,11 @@
             let html = '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 15px;">';
             html += '<h4 style="margin: 0 0 10px 0; color: #495057;">チェック項目:</h4>';
             html += '<div style="font-size: 12px; color: #6c757d; line-height: 1.5;">';
-            html += '• 法定労働時間の遵守（1日8時間、週40時間）<br>';
-            html += '• 月間残業時間の確認（45時間以内）<br>';
-            html += '• 休憩時間の適切性（6時間以上勤務で45分以上）<br>';
-            html += '• 深夜勤務の確認（22:00～翌5:00）<br>';
-            html += '• 連続勤務日数の確認（6日以内）<br>';
-            html += '• 会社規程の遵守（始業9:00、終業18:00、休憩12:00-13:00）<br>';
-            html += '• 遅刻・早退の確認';
+            html += '• <strong>休憩時間の適切性</strong> - 6-8時間勤務時に45分以上、8時間超勤務時に60分以上の休憩を取得しているか<br>';
+            html += '• <strong>深夜勤務の確認</strong> - 22:00～翌5:00の深夜時間帯での勤務状況<br>';
+            html += '• <strong>連続勤務日数の確認</strong> - 10日以内の連続勤務制限を遵守しているか<br>';
+            html += '• <strong>2週間時間外労働の確認</strong> - 2週間で40時間を超過し80時間超過防止アラート<br>';
+            html += '• <strong>遅刻の確認</strong> - 始業時刻9:00からの遅刻状況';
             html += '</div>';
             html += '</div>';
             
@@ -1649,13 +1654,11 @@
             html += '<div style="background-color: #e9ecef; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px;">';
             html += '<h4 style="margin: 0 0 8px 0;">法令遵守チェック項目:</h4>';
             html += '<div style="font-size: 12px; color: #495057; line-height: 1.6;">';
-            html += '• 法定労働時間の遵守（1日8時間、週40時間）<br>';
-            html += '• 月間残業時間の確認（45時間以内）<br>';
-            html += '• 休憩時間の適切性（6時間以上勤務で45分以上）<br>';
+            html += '• 休憩時間の適切性（6-8時間勤務で45分以上、8時間超で60分以上）<br>';
             html += '• 深夜勤務の確認（22:00～翌5:00）<br>';
-            html += '• 連続勤務日数の確認（6日以内）<br>';
-            html += '• 会社規程の遵守（始業9:00、終業18:00、休憩12:00-13:00）<br>';
-            html += '• 遅刻・早退の確認';
+            html += '• 連続勤務日数の確認（10日以内）<br>';
+            html += '• 2週間時間外労働の確認（40時間超過で80時間超過防止アラート）<br>';
+            html += '• 遅刻の確認（始業時刻9:00から）';
             html += '</div>';
             html += '</div>';
             
@@ -1763,12 +1766,11 @@
                 resultHtml += '</div>';
                 resultHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px;">';
                 resultHtml += '<strong>チェック項目:</strong><br>';
-                resultHtml += '• 法定労働時間の遵守（1日8時間、週40時間）<br>';
-                resultHtml += '• 月間残業時間の確認（45時間以内）<br>';
-                resultHtml += '• 休憩時間の適切性（6時間以上勤務で45分以上）<br>';
+                resultHtml += '• 休憩時間の適切性（6-8時間勤務で45分以上、8時間超で60分以上）<br>';
                 resultHtml += '• 深夜勤務の確認（22:00～翌5:00）<br>';
-                resultHtml += '• 連続勤務日数の確認（6日以内）<br>';
-                resultHtml += '• 会社規程の遵守（始業9:00、終業18:00、休憩12:00-13:00）';
+                resultHtml += '• 連続勤務日数の確認（10日以内）<br>';
+                resultHtml += '• 2週間時間外労働の確認（40時間超過で80時間超過防止アラート）<br>';
+                resultHtml += '• 遅刻の確認（始業時刻9:00から）';
                 resultHtml += '</div>';
                 resultHtml += '</div>';
                 resultHtml += '</div>';
@@ -1790,9 +1792,7 @@
             reportHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #007bff; padding-bottom: 10px;">';
             reportHtml += '<h3>📋 個人別月次報告</h3>';
             reportHtml += '<div style="display: flex; gap: 10px;">';
-            reportHtml += '<button class="format-btn" onclick="downloadIndividualReport(\'pdf\')" style="background-color: #dc3545;">📄 HTML出力</button>';
             reportHtml += '<button class="format-btn" onclick="downloadIndividualReport(\'excel\')" style="background-color: #28a745;">📊 Excel出力</button>';
-            reportHtml += '<button class="format-btn" onclick="downloadIndividualReport(\'csv\')" style="background-color: #fd7e14;">📝 CSV出力</button>';
             reportHtml += '</div>';
             reportHtml += '</div>';
             
@@ -1895,9 +1895,7 @@
             reportHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #007bff; padding-bottom: 10px;">';
             reportHtml += '<h3>📊 部署別集計報告</h3>';
             reportHtml += '<div style="display: flex; gap: 10px;">';
-            reportHtml += '<button class="format-btn" onclick="downloadDepartmentReport(\'pdf\')" style="background-color: #dc3545;">📄 HTML出力</button>';
             reportHtml += '<button class="format-btn" onclick="downloadDepartmentReport(\'excel\')" style="background-color: #28a745;">📊 Excel出力</button>';
-            reportHtml += '<button class="format-btn" onclick="downloadDepartmentReport(\'csv\')" style="background-color: #fd7e14;">📝 CSV出力</button>';
             reportHtml += '</div>';
             reportHtml += '</div>';
             

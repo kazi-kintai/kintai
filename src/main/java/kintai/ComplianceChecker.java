@@ -13,12 +13,9 @@ import java.util.stream.Collectors;
  */
 public class ComplianceChecker {
     
-    // 労働基準法の基準値
-    private static final int LEGAL_DAILY_WORK_HOURS = 8;        // 法定労働時間（日）
-    private static final int LEGAL_WEEKLY_WORK_HOURS = 40;      // 法定労働時間（週）
-    private static final int LEGAL_MONTHLY_OVERTIME_LIMIT = 45; // 月間残業時間上限
-    private static final int LEGAL_YEARLY_OVERTIME_LIMIT = 360; // 年間残業時間上限
-    private static final int CONTINUOUS_WORK_LIMIT = 6;         // 連続勤務日数上限
+    // 更新されたコンプライアンスチェック基準値
+    private static final int CONTINUOUS_WORK_LIMIT = 10;        // 連続勤務日数上限（新規則：10日）
+    private static final int TWO_WEEK_OVERTIME_LIMIT = 40;      // 2週間時間外労働上限（80時間超過禁止のため）
     
     // 会社規則の基準値（第15条に基づく）
     private static final LocalTime COMPANY_START_TIME = LocalTime.of(9, 0);     // 始業時刻 午前9時00分
@@ -28,7 +25,10 @@ public class ComplianceChecker {
     private static final int COMPANY_LUNCH_BREAK_MINUTES = 60;                  // 昼休憩時間（分）
     private static final int COMPANY_MAX_LATE_MINUTES = 0;                      // 遅刻許容時間（分）規程上は厳格
     private static final int COMPANY_STANDARD_WORK_HOURS = 8;                   // 1日の標準労働時間
-    private static final int COMPANY_MAX_MONTHLY_ABSENT_DAYS = 3;               // 月間欠勤日数上限
+    
+    // 休憩時間チェックの新基準
+    private static final int MIN_BREAK_FOR_6_8_HOURS = 45;                     // 6-8時間勤務時の最低休憩時間（分）
+    private static final int MIN_BREAK_FOR_OVER_8_HOURS = 60;                  // 8時間超勤務時の最低休憩時間（分）
     
     /**
      * 法令遵守チェックの実行
@@ -41,20 +41,17 @@ public class ComplianceChecker {
         
         List<ComplianceViolation> violations = new ArrayList<>();
         
-        // 1. 日次労働時間チェック（8時間超過）
-        violations.addAll(checkDailyWorkHours(records));
+        // 1. 休憩時間チェック（新基準）
+        violations.addAll(checkBreakTimeNew(records));
         
-        // 2. 月間残業時間チェック（45時間超過）
-        violations.addAll(checkMonthlyOvertime(records));
+        // 2. 深夜勤務チェック（22時〜5時）
+        violations.addAll(checkNightWork(records));
         
-        // 3. 連続勤務日数チェック（6日超過）
+        // 3. 連続勤務日数チェック（10日超過）
         violations.addAll(checkContinuousWorkDays(records));
         
-        // 4. 休憩時間チェック（6時間以上勤務で休憩なし）
-        violations.addAll(checkBreakTime(records));
-        
-        // 5. 深夜勤務チェック（22時〜5時）
-        violations.addAll(checkNightWork(records));
+        // 4. 2週間内の80時間超過チェック
+        violations.addAll(checkTwoWeekOvertime(records));
         
         result.setViolations(violations);
         result.setTotalViolations(violations.size());
@@ -74,23 +71,11 @@ public class ComplianceChecker {
         
         List<ComplianceViolation> violations = new ArrayList<>();
         
-        // 1. 遅刻チェック
+        // 1. 遅刻チェック（残す）
         violations.addAll(checkLateness(records));
         
-        // 2. 早退チェック
-        violations.addAll(checkEarlyLeaving(records));
-        
-        // 3. 欠勤チェック
-        violations.addAll(checkAbsence(records));
-        
-        // 4. 休憩時間の適切性チェック
-        violations.addAll(checkProperBreakTime(records));
-        
-        // 5. 勤務態度チェック（頻繁な遅刻・早退）
-        violations.addAll(checkWorkAttitude(records));
-        
-        // 6. 休日勤務チェック（第16条に基づく）
-        violations.addAll(checkHolidayWork(records));
+        // 2. 会社規程遵守チェック（始業9:00、終業18:00、休憩12:00-13:00）- 遅刻以外は不要のためコメントアウト
+        // violations.addAll(checkCompanyRules(records));
         
         result.setViolations(violations);
         result.setTotalViolations(violations.size());
@@ -99,9 +84,10 @@ public class ComplianceChecker {
         return result;
     }
     
-    /**
-     * 日次労働時間チェック（法定8時間超過）
+    /*
+     * 日次労働時間チェック（法定8時間超過）- 不要のためコメントアウト
      */
+    /*
     private List<ComplianceViolation> checkDailyWorkHours(List<KintaiRecBean> records) {
         return records.stream()
             .filter(record -> record.getActualWorkMinutes() > LEGAL_DAILY_WORK_HOURS * 60)
@@ -117,10 +103,12 @@ public class ComplianceChecker {
             })
             .collect(Collectors.toList());
     }
+    */
     
-    /**
-     * 月間残業時間チェック（45時間超過）
+    /*
+     * 月間残業時間チェック（45時間超過）- 不要のためコメントアウト
      */
+    /*
     private List<ComplianceViolation> checkMonthlyOvertime(List<KintaiRecBean> records) {
         List<ComplianceViolation> violations = new ArrayList<>();
         
@@ -143,9 +131,10 @@ public class ComplianceChecker {
         
         return violations;
     }
+    */
     
     /**
-     * 連続勤務日数チェック（6日超過）
+     * 連続勤務日数チェック（10日超過）
      */
     private List<ComplianceViolation> checkContinuousWorkDays(List<KintaiRecBean> records) {
         List<ComplianceViolation> violations = new ArrayList<>();
@@ -166,7 +155,7 @@ public class ComplianceChecker {
                     violation.setViolationType("連続勤務日数超過");
                     violation.setDate(record.getKintaiDate());
                     violation.setSeverity("中");
-                    violation.setDescription(String.format("連続勤務%d日が法定上限6日を超過しています", 
+                    violation.setDescription(String.format("連続勤務%d日が上限10日を超過しています", 
                         continuousWorkDays));
                     violation.setLegalBasis("労働基準法第35条");
                     violations.add(violation);
@@ -182,9 +171,10 @@ public class ComplianceChecker {
         return violations;
     }
     
-    /**
-     * 休憩時間チェック（6時間以上勤務で休憩なし）
+    /*
+     * 休憩時間チェック（6時間以上勤務で休憩なし）- 新基準のcheckBreakTimeNewに置き換え
      */
+    /*
     private List<ComplianceViolation> checkBreakTime(List<KintaiRecBean> records) {
         return records.stream()
             .filter(record -> record.getActualWorkMinutes() > 6 * 60 && 
@@ -201,6 +191,7 @@ public class ComplianceChecker {
             })
             .collect(Collectors.toList());
     }
+    */
     
     /**
      * 深夜勤務チェック（22時〜5時）
@@ -252,9 +243,10 @@ public class ComplianceChecker {
             .collect(Collectors.toList());
     }
     
-    /**
-     * 早退チェック
+    /*
+     * 早退チェック - 不要のためコメントアウト
      */
+    /*
     private List<ComplianceViolation> checkEarlyLeaving(List<KintaiRecBean> records) {
         return records.stream()
             .filter(record -> {
@@ -278,10 +270,12 @@ public class ComplianceChecker {
             })
             .collect(Collectors.toList());
     }
+    */
     
-    /**
-     * 欠勤チェック
+    /*
+     * 欠勤チェック - 不要のためコメントアウト
      */
+    /*
     private List<ComplianceViolation> checkAbsence(List<KintaiRecBean> records) {
         List<ComplianceViolation> violations = new ArrayList<>();
         
@@ -304,10 +298,12 @@ public class ComplianceChecker {
         
         return violations;
     }
+    */
     
-    /**
-     * 適切な休憩時間チェック
+    /*
+     * 適切な休憩時間チェック - 不要のためコメントアウト
      */
+    /*
     private List<ComplianceViolation> checkProperBreakTime(List<KintaiRecBean> records) {
         return records.stream()
             .filter(record -> record.getActualWorkMinutes() > 6 * 60)
@@ -324,10 +320,12 @@ public class ComplianceChecker {
             })
             .collect(Collectors.toList());
     }
+    */
     
-    /**
-     * 勤務態度チェック（頻繁な遅刻・早退）
+    /*
+     * 勤務態度チェック（頻繁な遅刻・早退） - 不要のためコメントアウト
      */
+    /*
     private List<ComplianceViolation> checkWorkAttitude(List<KintaiRecBean> records) {
         List<ComplianceViolation> violations = new ArrayList<>();
         
@@ -363,10 +361,12 @@ public class ComplianceChecker {
         
         return violations;
     }
+    */
     
-    /**
-     * 休日勤務チェック（第16条に基づく：土曜日、日曜日、国民の祝日）
+    /*
+     * 休日勤務チェック（第16条に基づく：土曜日、日曜日、国民の祝日） - 不要のためコメントアウト
      */
+    /*
     private List<ComplianceViolation> checkHolidayWork(List<KintaiRecBean> records) {
         return records.stream()
             .filter(record -> {
@@ -388,6 +388,7 @@ public class ComplianceChecker {
             })
             .collect(Collectors.toList());
     }
+    */
     
     /**
      * 合規スコアの計算
@@ -435,5 +436,122 @@ public class ComplianceChecker {
         comprehensiveResult.setComplianceScore(averageScore);
         
         return comprehensiveResult;
+    }
+    
+    /**
+     * 新しい休憩時間チェック（6-8時間勤務で45分以上、8時間超勤務で60分以上）
+     */
+    private List<ComplianceViolation> checkBreakTimeNew(List<KintaiRecBean> records) {
+        return records.stream()
+            .filter(record -> {
+                long workMinutes = record.getActualWorkMinutes();
+                long breakMinutes = record.getTotalBreakMinutes();
+                
+                // 6-8時間勤務で45分未満の休憩
+                if (workMinutes >= 6 * 60 && workMinutes <= 8 * 60 && breakMinutes < MIN_BREAK_FOR_6_8_HOURS) {
+                    return true;
+                }
+                // 8時間超勤務で60分未満の休憩
+                if (workMinutes > 8 * 60 && breakMinutes < MIN_BREAK_FOR_OVER_8_HOURS) {
+                    return true;
+                }
+                return false;
+            })
+            .map(record -> {
+                ComplianceViolation violation = new ComplianceViolation();
+                violation.setViolationType("休憩時間不足");
+                violation.setDate(record.getKintaiDate());
+                violation.setSeverity("高");
+                
+                long workMinutes = record.getActualWorkMinutes();
+                long breakMinutes = record.getTotalBreakMinutes();
+                String workHours = String.format("%.1f", workMinutes / 60.0);
+                String breakTime = record.getTotalBreakTimeFormatted();
+                
+                if (workMinutes <= 8 * 60) {
+                    violation.setDescription(String.format("6-8時間勤務（%s時間）に対し休憩時間%sが45分未満です", 
+                        workHours, breakTime));
+                } else {
+                    violation.setDescription(String.format("8時間超勤務（%s時間）に対し休憩時間%sが60分未満です", 
+                        workHours, breakTime));
+                }
+                violation.setLegalBasis("労働基準法第34条");
+                return violation;
+            })
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * 2週間内の80時間超過チェック（2週間で40時間超過時アラート）
+     */
+    private List<ComplianceViolation> checkTwoWeekOvertime(List<KintaiRecBean> records) {
+        List<ComplianceViolation> violations = new ArrayList<>();
+        
+        // レコードを日付順にソート
+        List<KintaiRecBean> sortedRecords = records.stream()
+            .sorted((r1, r2) -> r1.getKintaiDate().compareTo(r2.getKintaiDate()))
+            .collect(Collectors.toList());
+        
+        // 14日間のスライディングウィンドウで残業時間をチェック
+        for (int i = 0; i <= sortedRecords.size() - 14; i++) {
+            long totalOvertimeMinutes = 0;
+            LocalDate startDate = sortedRecords.get(i).getKintaiDate();
+            LocalDate endDate = sortedRecords.get(i + 13).getKintaiDate();
+            
+            for (int j = i; j < i + 14 && j < sortedRecords.size(); j++) {
+                totalOvertimeMinutes += sortedRecords.get(j).getOvertimeMinutes();
+            }
+            
+            double totalOvertimeHours = totalOvertimeMinutes / 60.0;
+            
+            if (totalOvertimeHours > TWO_WEEK_OVERTIME_LIMIT) {
+                ComplianceViolation violation = new ComplianceViolation();
+                violation.setViolationType("2週間時間外労働超過警告");
+                violation.setDate(endDate);
+                violation.setSeverity("高");
+                violation.setDescription(String.format("2週間（%s〜%s）の時間外労働%.1f時間が40時間を超過（80時間超過防止アラート）", 
+                    startDate, endDate, totalOvertimeHours));
+                violation.setLegalBasis("特別条項付き36協定");
+                violations.add(violation);
+            }
+        }
+        
+        return violations;
+    }
+    
+    /**
+     * 会社規程遵守チェック（始業9:00、終業18:00、休憩12:00-13:00）
+     */
+    private List<ComplianceViolation> checkCompanyRules(List<KintaiRecBean> records) {
+        return records.stream()
+            .filter(record -> {
+                // 早退時間のみをチェック（遅刻は別のcheckLatenessで処理）
+                if (record.getClockOut() != null) {
+                    LocalTime clockOut = record.getClockOut().toLocalTime();
+                    if (clockOut.isBefore(COMPANY_END_TIME)) {
+                        return true;
+                    }
+                }
+                return false;
+            })
+            .map(record -> {
+                ComplianceViolation violation = new ComplianceViolation();
+                violation.setViolationType("会社規程不遵守");
+                violation.setDate(record.getKintaiDate());
+                violation.setSeverity("中");
+                
+                // 早退のみを記述
+                if (record.getClockOut() != null) {
+                    LocalTime clockOut = record.getClockOut().toLocalTime();
+                    if (clockOut.isBefore(COMPANY_END_TIME)) {
+                        long earlyMinutes = java.time.Duration.between(clockOut, COMPANY_END_TIME).toMinutes();
+                        violation.setDescription(String.format("退勤時刻%s（%d分早退）が標準時刻18:00を下回っています", 
+                            clockOut.toString().substring(0, 5), earlyMinutes));
+                    }
+                }
+                violation.setLegalBasis("就業規則第15条");
+                return violation;
+            })
+            .collect(Collectors.toList());
     }
 }

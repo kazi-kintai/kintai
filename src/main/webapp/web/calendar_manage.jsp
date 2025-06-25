@@ -64,7 +64,7 @@
             font-size: 14px;
         }
         .container {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -73,7 +73,7 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            height: 95vh;
+            height: 90vh;
             overflow: hidden;
         }
         .header {
@@ -92,6 +92,7 @@
             flex-direction: column;
             line-height: 1.5;
             text-align: left;
+            font-size: 13px;
         }
         .logout-button {
             background-color: #dc3545;
@@ -149,11 +150,15 @@
             flex-grow: 1;
             height: 100%;
             overflow: hidden;
-            transition: margin-right 0.3s ease;
+            transition: margin-left 0.3s ease, margin-right 0.3s ease;
         }
 
-        #calendar-container.panel-expanded {
-            margin-right: 400px; /* サイドパネルの幅分マージンを追加 */
+        #calendar-container.list-panel-expanded {
+            margin-left: 420px; /* 左侧パネルの幅分マージンを追加 */
+        }
+        
+        #calendar-container.add-panel-expanded {
+            margin-right: 420px; /* 右侧パネルの幅分マージンを追加 */
         }
 
         /* FullCalendarコンテナのスタイル */
@@ -233,16 +238,43 @@
         }
 
         /* 侧边栏打开时的按钮位置调整 */
-        .button-container.panel-expanded {
-            margin-right: 420px; /* 为侧边栏让出空间 */
+        .button-container.list-panel-expanded {
+            margin-left: 420px; /* 左侧パネル分のマージンを追加 */
+            transition: margin-left 0.3s ease;
+        }
+        
+        .button-container.add-panel-expanded {
+            margin-right: 420px; /* 右侧パネル分のマージンを追加 */
             transition: margin-right 0.3s ease;
         }
 
 
-        /* サイドパネルのスタイル */
-        #event-management-panel {
+        /* 左侧边栏（イベント一覧）のスタイル */
+        #event-list-panel {
             position: fixed;
-            right: -450px; /* 完全に隠す */
+            left: -450px; /* 初期は隠す */
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+            transition: left 0.3s ease;
+            z-index: 999;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #event-list-panel.panel-open {
+            left: 0;
+        }
+        
+        /* 右侧边栏（新規イベント追加）のスタイル */
+        #event-add-panel {
+            position: fixed;
+            right: -450px; /* 初期は隠す */
             top: 0;
             width: 400px;
             height: 100vh;
@@ -257,11 +289,11 @@
             flex-direction: column;
         }
 
-        #event-management-panel.panel-open {
+        #event-add-panel.panel-open {
             right: 0;
         }
 
-        #event-management-panel h2 {
+        #event-list-panel h2, #event-add-panel h2 {
             margin-top: 0;
             color: #495057;
             border-bottom: 1px solid #ddd;
@@ -520,19 +552,58 @@
 
         <!-- サイドパネル切り替えボタン -->
         <div class="button-container">
-            <button class="panel-toggle-btn" id="panelToggleBtn" onclick="togglePanel()">
-                管理
-            </button>
+            <button class="panel-toggle-btn" id="addToggleBtn" onclick="toggleAddPanel()" style="margin-right: 10px;">新規追加</button>
+            <button class="panel-toggle-btn" id="listToggleBtn" onclick="toggleListPanel()">一覧</button>
         </div>
 
         <div class="main-content-wrapper">
+            <!-- 左侧边栏（イベント一覧） -->
+            <div id="event-list-panel">
+                <h2>イベント一覧</h2>
+                <div style="max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;"> <%-- リスト表示エリアのスクロール --%>
+                    <table class="event-list-table">
+                        <thead>
+                        <tr>
+                            <th>日付</th>
+                            <th>イベント名</th>
+                            <th>種別</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <% if (eventList != null && !eventList.isEmpty()) { %>
+                            <% for (CalendarEventBean event : eventList) { %>
+                                <tr>
+                                    <td><%= event.getEventDate() %></td>
+                                    <td><%= event.getEventName() %></td>
+                                    <td><%= event.isWork() ? "出勤日" : "休日" %></td>
+                                    <td class="action-cell">
+                                        <button type="button" class="btn btn-success" onclick="openEditModal('<%= event.getEventDate() %>', '<%= event.getEventName() %>', '<%= event.isWork() %>', <%= event.getRepeatRuleId() %>)">編集</button>
+                                        <button type="button" class="btn btn-danger" onclick="confirmDelete('<%= event.getEventDate() %>', '<%= event.getEventName() %>')">削除</button>
+                                        <%-- 削除用フォーム（非表示） --%>
+                                        <form id="deleteForm-<%= event.getEventDate().toString().replace("-", "_") %>" method="post" 
+                                            action="<%= request.getContextPath() %>/CalendarManageServlet" style="display: none;">
+                                            <input type="hidden" name="action" value="delete">
+                                            <input type="hidden" name="eventDate" value="<%= event.getEventDate() %>">
+                                        </form>
+                                    </td>
+                                </tr>
+                            <% } %>
+                        <% } else { %>
+                            <tr><td colspan="4" style="text-align: center; color: #6c757d; font-style: italic;">イベントなし</td></tr>
+                        <% } %>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
             <div id='calendar-container'>
                 <div id='calendar'></div>
             </div>
         </div>
 
-        <!-- サイドパネル（固定位置） -->
-        <div id="event-management-panel">
+        <!-- 右侧边栏（新規イベント追加） -->
+        <div id="event-add-panel">
                 <h2>新規イベント追加</h2>
                 <form id="addEventForm" method="post" action="<%= request.getContextPath() %>/CalendarManageServlet" onsubmit="return confirmAdd(this)">
                     <input type="hidden" name="action" value="add">
@@ -594,72 +665,6 @@
                     </div>
                 </form>
 
-                <h2 style="margin-top: 30px;">イベント一覧</h2>
-                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;"> <%-- リスト表示エリアのスクロール --%>
-                    <table class="event-list-table">
-                        <thead>
-                            <tr>
-                                <th>日付</th>
-                                <th>イベント名</th>
-                                <th>種別</th>
-                                <th>繰り返し</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <% if (eventList != null && !eventList.isEmpty()) { %>
-                                <% for (CalendarEventBean event : eventList) { 
-                                    // 日付をYYYY-MM-DD形式の文字列に変換し、HTML IDの一部として使用
-                                    String formattedEventDateId = event.getEventDate().toString().replace("-", "_");
-                                    // このイベントに紐づく繰り返しルールを取得
-                                    EventRepeatRuleBean eventRule = rulesByRuleId.get(event.getRepeatRuleId());
-                                %>
-                                    <tr>
-                                        <td><%= event.getEventDate() %></td>
-                                        <td><%= event.getEventName() %></td>
-                                        <td><%= event.getWorkStatusName() %></td>
-                                        <td>
-                                            <%-- 繰り返し表示 --%>
-                                            <% if (eventRule != null) { %>
-                                                <%= eventRule.getRepeatTypeJapanese() %>
-                                                <% if (!"NONE".equals(eventRule.getRepeatType())) { %>
-                                                    <% if (eventRule.getRepeatInterval() > 1) { %>
-                                                        （<%= eventRule.getRepeatInterval() %>ごと）
-                                                    <% } %>
-                                                    <% if (eventRule.getRepeatDaysOfWeek() != null && !eventRule.getRepeatDaysOfWeek().isEmpty()) { %>
-                                                        （<%= String.join("・", eventRule.getSelectedDaysOfWeekNames()) %>）
-                                                    <% } %>
-                                                    <% if (eventRule.getRepeatEndDate() != null) { %>
-                                                        ～<%= eventRule.getRepeatEndDate() %>
-                                                    <% } else { %>
-                                                        （無期限）
-                                                    <% } %>
-                                                <% } %>
-                                            <% } else { %>
-                                                単発
-                                            <% } %>
-                                        </td>
-                                        <td class="action-cell">
-                                            <button class="btn btn-success" onclick="openEditModal('<%= event.getEventDate() %>', '<%= event.getEventName() %>', '<%= event.isWork() %>', <%= event.getRepeatRuleId() %>)">編集</button>
-                                            <button class="btn btn-danger" onclick="confirmDelete('<%= event.getEventDate() %>', '<%= event.getEventName() %>')">削除</button>
-                                            
-                                            <%-- 削除用フォーム（非表示） --%>
-                                            <form id="deleteForm-<%= formattedEventDateId %>" method="post" 
-                                                action="<%= request.getContextPath() %>/CalendarManageServlet" style="display: none;">
-                                                <input type="hidden" name="action" value="delete">
-                                                <input type="hidden" name="eventDate" value="<%= event.getEventDate() %>">
-                                            </form>
-                                        </td>
-                                    </tr>
-                                <% } %>
-                            <% } else { %>
-                                <tr>
-                                    <td colspan="5" style="text-align: center;">イベントデータがありません</td>
-                                </tr>
-                            <% } %>
-                        </tbody>
-                    </table>
-                </div>
             </div>
         </div>
 
@@ -743,21 +748,56 @@
     <!-- FullCalendar JavaScript -->
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
     <script>
-        // サイドパネルの切り替え機能
-        function togglePanel() {
-            var panel = document.getElementById('event-management-panel');
+        // 左侧边栏（イベント一覧）の切り替え機能
+        function toggleListPanel() {
+            var listPanel = document.getElementById('event-list-panel');
             var calendarContainer = document.getElementById('calendar-container');
             var buttonContainer = document.querySelector('.button-container');
-            var toggleBtn = document.getElementById('panelToggleBtn');
+            var listToggleBtn = document.getElementById('listToggleBtn');
             
-            panel.classList.toggle('panel-open');
-            calendarContainer.classList.toggle('panel-expanded');
-            buttonContainer.classList.toggle('panel-expanded');
+            // 左侧パネルを開く前に右侧パネルを閉じる
+            var addPanel = document.getElementById('event-add-panel');
+            if (addPanel.classList.contains('panel-open')) {
+                toggleAddPanel();
+            }
             
-            if (panel.classList.contains('panel-open')) {
-                toggleBtn.textContent = '閉じる';
+            listPanel.classList.toggle('panel-open');
+            calendarContainer.classList.toggle('list-panel-expanded');
+            buttonContainer.classList.toggle('list-panel-expanded');
+            
+            if (listPanel.classList.contains('panel-open')) {
+                listToggleBtn.textContent = '閉じる';
             } else {
-                toggleBtn.textContent = '管理';
+                listToggleBtn.textContent = '一覧';
+            }
+            
+            // カレンダーのリサイズを通知
+            setTimeout(function() {
+                calendar.updateSize();
+            }, 300);
+        }
+        
+        // 右侧边栏（新規イベント追加）の切り替え機能
+        function toggleAddPanel() {
+            var addPanel = document.getElementById('event-add-panel');
+            var calendarContainer = document.getElementById('calendar-container');
+            var buttonContainer = document.querySelector('.button-container');
+            var addToggleBtn = document.getElementById('addToggleBtn');
+            
+            // 右侧パネルを開く前に左侧パネルを閉じる
+            var listPanel = document.getElementById('event-list-panel');
+            if (listPanel.classList.contains('panel-open')) {
+                toggleListPanel();
+            }
+            
+            addPanel.classList.toggle('panel-open');
+            calendarContainer.classList.toggle('add-panel-expanded');
+            buttonContainer.classList.toggle('add-panel-expanded');
+            
+            if (addPanel.classList.contains('panel-open')) {
+                addToggleBtn.textContent = '閉じる';
+            } else {
+                addToggleBtn.textContent = '新規追加';
             }
             
             // カレンダーのリサイズを通知
@@ -770,7 +810,8 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
-            var eventManagementPanel = document.getElementById('event-management-panel');
+            var eventListPanel = document.getElementById('event-list-panel');
+            var eventAddPanel = document.getElementById('event-add-panel');
             
             // モーダル関連のDOM要素
             var modal = document.getElementById('eventModal');
@@ -799,11 +840,11 @@
                 headerToolbar: {
                     left: 'prev,next today',
                     center: 'title',
-                    right: 'dayGridMonth,timeGridWeek,timeGridDay' // 月、週、日ビューの切り替え
+                    right: 'dayGridMonth' // 月ビューのみ
                 },
                 height: '100%', // コンテナの高さを100%使用
                 expandRows: true, // 行の高さを均等に広げる
-                navLinks: true, // 日付クリックで日ビューに遷移
+                navLinks: false, // 日付クリック無効
                 editable: true, // ドラッグ＆ドロップでイベント移動（今回の要件では不要だが、汎用的に）
                 selectable: true, // 日付範囲選択
                 dayMaxEvents: 3, // 最大3個のイベントを表示、それ以上は「+N more」表示
@@ -987,6 +1028,14 @@
                 title: eventName,
                 extendedProps: { isWork: isWork, repeatRuleId: repeatRuleId }
             });
+        }
+        
+        // 削除確認関数
+        function confirmDelete(eventDate, eventName) {
+            if (confirm('イベント（日付：「' + eventDate + '」、イベント名：「' + eventName + '」）を削除してもよろしいですか？')) {
+                var formattedEventDateId = eventDate.replace(/-/g, '_');
+                document.getElementById('deleteForm-' + formattedEventDateId).submit();
+            }
         }
 
         // フォーム送信時の確認（EventManageServletのconfirmAdd/confirmUpdateと連携）
