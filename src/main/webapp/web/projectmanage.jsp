@@ -6,6 +6,8 @@
 <%@ page import="kintai.RoleBean" %>    <%-- 新規追加 --%>
 <%@ page import="kintai.GradeBean" %>   <%-- 新規追加 --%>
 <%@ page import="kintai.UserBean" %>
+<%@ page import="kintai.ProjectManageBean" %>
+
 <jsp:useBean id="today" class="java.util.Date" />
 <%
     // ログインチェック
@@ -13,10 +15,14 @@
     if (user == null || user.getRoleId() != 1) { // getRole()からgetRoleId()へ変更
         response.sendRedirect(request.getContextPath() + "/web/login.jsp");
         return;
-        
-        List<ProjectManageBean> projectmanagelist = (List<ProjectManageBean>) request.getAttribute("projectmanagelist");
+       
     }
+    
+    List<ProjectManageBean> projectmanagelist = (List<ProjectManageBean>) request.getAttribute("projectmanagelist");
+    String message = (String) request.getAttribute("message");
+    Boolean success = (Boolean) request.getAttribute("success");
 %>
+
     
    <%--// リストを取得
    List<EmpBean> empList = (List<EmpBean>) request.getAttribute("empList");
@@ -26,8 +32,7 @@
     List<GradeBean> gradeList = (List<GradeBean>) request.getAttribute("gradeList"); // 新規追加
 --%>    
 
-    String message = (String) request.getAttribute("message");
-    Boolean success = (Boolean) request.getAttribute("success");
+    
     
     
 <%--
@@ -324,52 +329,52 @@
         <table class="emp-table">
             <thead>
                 <tr>
+                	<th>プロジェクト</th>
                     <th>期間</th>
-                    <th>プロジェクト</th>
                     <th>申請日</th>
                     <th>操作</th>
                 </tr>
             </thead>
             <tbody>
-                <% if (empList != null && !empList.isEmpty()) { %>
-                    <% for (EmpBean emp : empList) { %>
+                <% if (projectmanagelist != null && !projectmanagelist.isEmpty()) { %>
+                    <% for (ProjectBean emp : projectmanagelist) { %>
                         <%-- 表示行 --%>
-                        <tr id="display-<%= emp.getEmpNo() %>">
-                            <td><%= emp.getEmpNo() %></td>
-                            <td><%= emp.getEmpName() %></td>
-                            <%-- 部署名の表示（nullの場合の処理） --%>
-                            <td><%= (emp.getDeptName() != null) ? emp.getDeptName() : "情報なし" %></td>
+                        <tr id="display-<%= emp.getProjectManageId() %>">
+                            <td><%= emp.getProjectManageId() %></td>
+                            <%--<td><%= emp.getProjectManageId() %></td> --%>
+                            <%-- プロジェクト名の表示（nullの場合の処理） --%>
+                            <td><%= (emp.getProjectManageName() != null) ? emp.getProjectManageName() : "情報なし" %></td>
                             <%-- 入社年月日の表示（新規追加） --%>
-                            <td><%= (emp.getEmpDate() != null) ? emp.getEmpDate().toString() : "---" %></td>
+                            <td><%= (emp.getStartDate() != null) ? emp.getStartDate() : "---" %></td>
                             <%-- 入社年月日の表示（新規追加） --%>
-                            <td><%= (emp.getEmpDate() != null) ? emp.getEmpDate().toString() : "---" %></td>
+                            <td><%= (emp.getEndDate() != null) ? emp.getEndDate(): "---" %></td>
                             <td>
-                                <button class="btn btn-success" onclick="toggleEdit('<%= emp.getEmpNo() %>')">編集</button>
-                                <button class="btn btn-danger" onclick="confirmDelete('<%= emp.getEmpNo() %>', '<%= emp.getEmpName() %>')">削除</button>
+                                <button class="btn btn-success" onclick="toggleEdit('<%= emp.getProjectManageId() %>')">編集</button>
+                                <button class="btn btn-danger" onclick="confirmDelete('<%= emp.getProjectManageId() %>', '<%= emp.getProjectManageName() %>')">削除</button>
                                 
                                 <%-- 削除用フォーム（非表示） --%>
-                                <form id="deleteForm-<%= emp.getEmpNo() %>" method="post" 
+                                <form id="deleteForm-<%= emp.getProjectManageId() %>" method="post" 
                                       action="<%= request.getContextPath() %>/empManage" style="display: none;">
                                     <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="empNo" value="<%= emp.getEmpNo() %>">
+                                    <input type="hidden" name="empNo" value="<%= emp.getProjectManageId() %>">
                                 </form>
                             </td>
                         </tr>
                         
                         <%-- 編集行（初期状態では非表示） --%>
-                        <tr id="edit-<%= emp.getEmpNo() %>" class="edit-row" style="display: none;">
-                            <td><%= emp.getEmpNo() %></td>
+                        <tr id="edit-<%= emp.getProjectManageId() %>" class="edit-row" style="display: none;">
+                            <td><%= emp.getProjectManageId() %></td>
                             <td colspan="8"> <%-- 列数を調整 --%>
-                                <form method="post" action="<%= request.getContextPath() %>/empManage" class="form-inline" onsubmit="return confirmUpdate('<%= emp.getEmpName() %>');">
+                                <form method="post" action="<%= request.getContextPath() %>/empManage" class="form-inline" onsubmit="return confirmUpdate('<%= emp.getProjectManageName() %>');">
                                     <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="empNo" value="<%= emp.getEmpNo() %>">
+                                    <input type="hidden" name="empNo" value="<%= emp.getProjectManageId() %>">
                                     
-                                    <label>プロジェクト名：</label><input type="text" name="empName" value="<%= emp.getEmpName() %>" maxlength="50" required>
-                                    <label>期間：</label><input type="date" name="empDate" value="<%= emp.getEmpDate() != null ? emp.getEmpDate().toString() : "" %>"> <%-- 新規追加 --%>
-                                    <label>申請日：</label><input type="date" name="empDate" value="<%= emp.getEmpDate() != null ? emp.getEmpDate().toString() : "" %>"> <%-- 新規追加 --%>
+                                    <label>プロジェクト名：</label><input type="text" name="empName" value="<%= emp.getProjectManageName() %>" maxlength="50" required>
+                                    <label>期間：</label><input type="date" name="empDate" value="<%= emp.getStartDate() != null ? emp.getStartDate().toString() : "" %>"> <%-- 新規追加 --%>
+                                    <label>申請日：</label><input type="date" name="empDate" value="<%= emp.getEndDate() != null ? emp.getEndDate().toString() : "" %>"> <%-- 新規追加 --%>
                                     
                                     <button type="submit" class="btn btn-primary">保存</button>
-                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= emp.getEmpNo() %>')">キャンセル</button>
+                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= emp.getProjectManageId() %>')">キャンセル</button>
                                 </form>
                             </td>
                         </tr>
