@@ -76,7 +76,7 @@
 	<div class="menu">
 		<h1>基本メニュー</h1>
 
-		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet">勤怠記録表示</a></p>
+		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet?mode=self">勤怠記録表示</a></p>
 		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
 		<p><a href="<%= request.getContextPath() %>/KinmuManageServlet">勤務時間管理</a></p>
 		<p><a href="<%= request.getContextPath() %>/PasswordChangeServlet">パスワード変更</a></p>

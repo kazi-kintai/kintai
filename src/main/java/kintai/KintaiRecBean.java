@@ -29,6 +29,7 @@ public class KintaiRecBean implements Serializable {
     // --- 計算済みの集計情報 ---
     private long totalBreakMinutes; // 総休憩時間（分単位）
     private long actualWorkMinutes; // 実働時間（分単位）
+    private long overtimeMinutes;   // 残業時間（分単位）
 
     /**
      * デフォルトコンストラクタ
@@ -148,6 +149,22 @@ public class KintaiRecBean implements Serializable {
      */
     public String getActualWorkTimeFormatted() {
         return formatMinutesToHHMM(actualWorkMinutes);
+    }
+
+    public long getOvertimeMinutes() {
+        return overtimeMinutes;
+    }
+
+    public void setOvertimeMinutes(long overtimeMinutes) {
+        this.overtimeMinutes = overtimeMinutes;
+    }
+
+    /**
+     * 残業時間をHH:mm形式で返すメソッド。
+     * @return 残業時間のHH:mm形式文字列
+     */
+    public String getOvertimeFormatted() {
+        return formatMinutesToHHMM(overtimeMinutes);
     }
 
     /**
