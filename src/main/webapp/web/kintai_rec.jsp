@@ -68,7 +68,14 @@
     dayOfWeekMap.put(DayOfWeek.SUNDAY, "日");
 
     // メニューへ戻るリンクのURLを権限に応じて設定
-    String backUrl = (userRoleId == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
+    String backUrl;
+    if (userRoleId == 1) {
+        backUrl = request.getContextPath() + "/web/admin_menu.jsp";
+    } else if (userRoleId == 2) {
+        backUrl = request.getContextPath() + "/web/manager_menu.jsp";
+    } else {
+        backUrl = request.getContextPath() + "/web/menu.jsp";
+    }
 %>
 <!DOCTYPE html>
 <html>
@@ -668,7 +675,7 @@
         </div>
 
         <h1 class="page-title">
-            <% if (userRoleId == 1 && !isSelfMode) { %>
+            <% if ((userRoleId == 1 || userRoleId == 2) && !isSelfMode) { %>
                 勤怠時間記録管理
             <% } else { %>
                 勤怠時間記録表示
@@ -689,7 +696,7 @@
 
         <div class="main-content">
             <%-- 管理者（全員モード）のレイアウト --%>
-            <% if (userRoleId == 1 && !isSelfMode) { %>
+            <% if ((userRoleId == 1 || userRoleId == 2) && !isSelfMode) { %>
                 <div class="admin-top-layout"> <%-- 新しいコンテナで横並びを実現 --%>
                     <%-- 管理者統計カード (左側) --%>
                     <div class="manager-summary">
@@ -750,11 +757,26 @@
                                     <div class="filter-group" style="flex: 0 0 150px;">
                                         <label for="deptNoFilter" style="font-size: 12px; margin-right: 5px;">部署:</label>
                                         <select id="deptNoFilter" name="deptNoFilter" style="font-size: 11px; padding: 4px;">
-                                            <option value="">全ての部署</option>
-                                            <% for (DeptBean dept : deptList) { %>
-                                                <option value="<%= dept.getDeptNo() %>" <%= dept.getDeptNo().equals(deptNoFilter != null ? deptNoFilter : "") ? "selected" : "" %>>
-                                                    <%= dept.getDeptName() %>
-                                                </option>
+                                            <% if (userRoleId == 1) { %>
+                                                <option value="">全ての部署</option>
+                                                <% for (DeptBean dept : deptList) { %>
+                                                    <option value="<%= dept.getDeptNo() %>" <%= dept.getDeptNo().equals(deptNoFilter != null ? deptNoFilter : "") ? "selected" : "" %>>
+                                                        <%= dept.getDeptName() %>
+                                                    </option>
+                                                <% } %>
+                                            <% } else if (userRoleId == 2) { %>
+                                                <%-- 部長の場合は自分の部署のみ表示 --%>
+                                                <% 
+                                                    String userDeptNo = user.getDeptNo();
+                                                    String userDeptName = ""; 
+                                                    for (DeptBean dept : deptList) {
+                                                        if (dept.getDeptNo().equals(userDeptNo)) {
+                                                            userDeptName = dept.getDeptName();
+                                                            break;
+                                                        }
+                                                    }
+                                                %>
+                                                <option value="<%= userDeptNo %>" selected><%= userDeptName %></option>
                                             <% } %>
                                         </select>
                                     </div>
@@ -1033,7 +1055,7 @@
                         <th>日付</th>
                         <th>曜日</th>
                         <%-- 自分モードでは従業員情報列を表示しない --%>
-                        <% if (userRoleId == 1 && !isSelfMode) { %>
+                        <% if ((userRoleId == 1 || userRoleId == 2) && !isSelfMode) { %>
                             <th>従業員番号</th>
                             <th>氏名</th>
                             <th>部署</th>
@@ -1064,7 +1086,7 @@
                                 <td><%= record.getKintaiDate() != null ? record.getKintaiDate().toString() : "---" %></td>
                                 <td><%= record.getKintaiDate() != null ? dayOfWeekMap.get(record.getKintaiDate().getDayOfWeek()) : "---" %></td>
                                 <%-- 自分モードでは従業員情報列を表示しない --%>
-                                <% if (userRoleId == 1 && !isSelfMode) { %>
+                                <% if ((userRoleId == 1 || userRoleId == 2) && !isSelfMode) { %>
                                     <td><%= record.getEmpno() != null ? record.getEmpno() : "---" %></td>
                                     <td><%= record.getEmpName() != null ? record.getEmpName() : "---" %></td>
                                     <td><%= record.getDeptName() != null ? record.getDeptName() : "---" %></td>
@@ -1080,7 +1102,7 @@
                     <% } else { %>
                         <tr>
                             <%-- 自分モードかどうかでcolspan数を調整（残業時間列追加により+1）--%>
-                            <td colspan="<%= (userRoleId == 1 && !isSelfMode) ? 11 : 7 %>" style="text-align: center;">
+                            <td colspan="<%= ((userRoleId == 1 || userRoleId == 2) && !isSelfMode) ? 11 : 7 %>" style="text-align: center;">
                                 勤怠記録がありません。
                             </td>
                         </tr>

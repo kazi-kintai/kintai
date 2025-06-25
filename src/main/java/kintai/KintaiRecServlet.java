@@ -115,6 +115,25 @@ public class KintaiRecServlet extends HttpServlet {
                 // empNoFilter が指定されていなければ、targetEmpNosは空のまま。
                 // KintaiRecDaoはtargetEmpNosが空の場合に全従業員を対象として検索する
             }
+        } else if (userRoleId == 2) { // 部長の場合（ROLEID=2）
+            if (isSelfMode) {
+                // 自分モード：部長自身の勤怠記録のみを表示
+                targetEmpNos.add(loggedInEmpno);
+                // 自分モードの場合、フィルターを無効化
+                empNoFilter = null;
+                deptNoFilter = null;
+                postNoFilter = null;
+            } else {
+                // 部門モード：同じ部門の従業員の勤怠記録を検索可能
+                // 部門フィルターを自動的にログインユーザーの部門に設定
+                deptNoFilter = user.getDeptNo();
+                // empNoFilter が指定されていれば、そのempNoのみをtargetEmpNosに追加
+                if (empNoFilter != null && !empNoFilter.trim().isEmpty()) {
+                    targetEmpNos.add(empNoFilter);
+                }
+                // empNoFilter が指定されていなければ、targetEmpNosは空のまま。
+                // KintaiRecDaoは部門フィルターに基づいて同部門の従業員を対象として検索する
+            }
         }
         // TODO: 承認者（ROLEID=2）の場合のロジックをここに追加
         //       else if (userRoleId == 2) {
@@ -240,11 +259,20 @@ public class KintaiRecServlet extends HttpServlet {
         }
 
 
-        // ドロップダウンリスト用のデータ（管理者向け）
-        if (userRoleId == 1 && !isSelfMode) { // 管理者かつ全員モードの場合のみフィルター用データを提供
-            request.setAttribute("deptList", deptDao.findAll());
-            request.setAttribute("postList", postDao.findAll());
-            request.setAttribute("allEmpList", empDao.findAll()); // 従業員名フィルター用（全従業員）
+        // ドロップダウンリスト用のデータ（管理者・部長向け）
+        if ((userRoleId == 1 || userRoleId == 2) && !isSelfMode) { 
+            // 管理者（ROLEID=1）または部長（ROLEID=2）かつ全員モードの場合のみフィルター用データを提供
+            if (userRoleId == 1) {
+                // 管理者の場合：全データを提供
+                request.setAttribute("deptList", deptDao.findAll());
+                request.setAttribute("postList", postDao.findAll());
+                request.setAttribute("allEmpList", empDao.findAll()); // 従業員名フィルター用（全従業員）
+            } else if (userRoleId == 2) {
+                // 部長の場合：自部門のデータのみを提供
+                request.setAttribute("deptList", deptDao.findAll()); // 部署リストは全体を表示（フィルター用）
+                request.setAttribute("postList", postDao.findAll()); // 役職リストは全体を表示（フィルター用）
+                request.setAttribute("allEmpList", empDao.findByFilters(user.getDeptNo(), null)); // 同部門の従業員のみ
+            }
         }
 
 
