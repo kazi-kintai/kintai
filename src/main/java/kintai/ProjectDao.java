@@ -52,16 +52,18 @@ public class ProjectDao {
      */
     public boolean insert(ProjectBean projectNo) {
         // 新しいER図のprojectテーブルの列に合わせてSQLを修正
-        String sql = "INSERT INTO project (PROJECTNO, PROJECTNAME, BUDGET_AMOUNT,START_DATE, END_DATE) " +
-                     "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO project (PROJECT_NAME, BUDGET_AMOUNT,START_DATE, END_DATE) " +
+                     "VALUES (?, ?, ?, ?)";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setInt(1, projectNo.getProjectId());
-            ps.setString(2, projectNo.getProjectName());
-            ps.setInt(3, projectNo.getProjectBudget());
-//            ps.setDate(4, projectNo.getStartDate());
+            ps.setString(1, projectNo.getProjectName());
+            if (projectNo.getProjectBudget() != null) {
+                ps.setInt(2, projectNo.getProjectBudget());
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }//            ps.setDate(4, projectNo.getStartDate());
 //            ps.setDate(5, projectNo.getEndDate());
 //            
 //            // EMPDATEはNULL許容
@@ -72,18 +74,16 @@ public class ProjectDao {
 //            }
             
             if (projectNo.getStartDate() != null) {
-                ps.setDate(4,java.sql.Date.valueOf(projectNo.getStartDate()));
+                ps.setDate(3,java.sql.Date.valueOf(projectNo.getStartDate()));
             } else {
-                ps.setNull(4, java.sql.Types.DATE);
+                ps.setNull(3, java.sql.Types.DATE);
             }
 
             if (projectNo.getEndDate() != null) {
-                ps.setDate(5, java.sql.Date.valueOf(projectNo.getEndDate()));
+                ps.setDate(4, java.sql.Date.valueOf(projectNo.getEndDate()));
             } else {
-                ps.setNull(5, java.sql.Types.DATE);
+                ps.setNull(4, java.sql.Types.DATE);
             }
-            
-            ps.setInt(6, projectNo.getProjectId());
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -103,22 +103,23 @@ public class ProjectDao {
     }
     
     /**
-     * 社員情報を更新する
+     * プロジェクト情報を更新する
      * 新しいER図のempテーブルの構造に合わせて修正。
-     * @param updateProject 更新する社員情報
+     * @param updateProject 更新するプロジェクト情報
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(ProjectBean updateProject) {
-        String sql = "UPDATE project SET PROJECTNO=?, PROJECTNAME=?, BUDGET_AMOUNT=?,START_DATE=?, END_DATE=? " +
-                     "WHERE PROJECTNO = ?";
+        String sql = "UPDATE project SET PROJECT_NAME=?, BUDGET_AMOUNT=?, START_DATE=?, END_DATE=? WHERE PROJECT_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setInt(1, updateProject.getProjectId());
-            ps.setString(2, updateProject.getProjectName());
-            ps.setInt(3, updateProject.getProjectBudget());
-//            ps.setDate(4, updateProject.getStartDate());
+            ps.setString(1, updateProject.getProjectName());
+            if (updateProject.getProjectBudget() != null) {
+                ps.setInt(2, updateProject.getProjectBudget());
+            } else {
+                ps.setNull(2, java.sql.Types.INTEGER);
+            }//            ps.setDate(4, updateProject.getStartDate());
 //            ps.setDate(5, updateProject.getEndDate());
             
             
@@ -132,18 +133,18 @@ public class ProjectDao {
 //            ps.setString(9, updateProject.getEmpNo());
             
             if (updateProject.getStartDate() != null) {
-                ps.setDate(4,java.sql.Date.valueOf(updateProject.getStartDate()));
+                ps.setDate(3,java.sql.Date.valueOf(updateProject.getStartDate()));
             } else {
-                ps.setNull(4, java.sql.Types.DATE);
+                ps.setNull(3, java.sql.Types.DATE);
             }
 
             if (updateProject.getEndDate() != null) {
-                ps.setDate(5, java.sql.Date.valueOf(updateProject.getEndDate()));
+                ps.setDate(4, java.sql.Date.valueOf(updateProject.getEndDate()));
             } else {
-                ps.setNull(5, java.sql.Types.DATE);
+                ps.setNull(4, java.sql.Types.DATE);
             }
             
-            ps.setInt(6, updateProject.getProjectId());
+            ps.setInt(5, updateProject.getProjectId());
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -156,12 +157,12 @@ public class ProjectDao {
     }
     
     /**
-     * 社員を削除する
-     * @param empNo 削除する社員番号
+     * プロジェクトを削除する
+     * @param projectId 削除する社員番号
      * @return 削除に成功した場合true、失敗した場合false
      */
     public boolean delete(String projectNo) {
-        String sql = "DELETE FROM project WHERE PROJECTNO = ?";
+        String sql = "DELETE FROM project WHERE PROJECT_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -172,7 +173,7 @@ public class ProjectDao {
             return count > 0;
             
         } catch (SQLException e) {
-            // 外部キー制約エラーの場合（この社員に関連する勤怠データなどがある場合）
+            // 外部キー制約エラーの場合（このプロジェクトに関連する勤怠データなどがある場合）
             if (e.getSQLState().startsWith("23")) {
                 System.err.println("このプロジェクトに関連するデータが存在するため削除できません: " + projectNo);
             } else {
@@ -186,8 +187,8 @@ public class ProjectDao {
     }
     
     /**
-     * 社員番号の重複をチェックする
-     * @param empNo チェックする社員番号
+     * プロジェクト番号の重複をチェックする
+     * @param projectId チェックするプロジェクトID
      * @return 既に存在する場合true、存在しない場合false
      */
 //    public boolean exists(String projectNo) {
@@ -229,10 +230,14 @@ public class ProjectDao {
         return project;
     }
 
-	public boolean exists(String updateProjectId) {
-		// TODO 自動生成されたメソッド・スタブ
-		return false;
-	}
+    public boolean exists(String projectId) {
+        try {
+            int id = Integer.parseInt(projectId);
+            return findByProjectId(id) != null;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
     
 }
     

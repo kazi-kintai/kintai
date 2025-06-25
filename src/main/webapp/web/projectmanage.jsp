@@ -3,10 +3,9 @@
 <%@ page import="kintai.EmpBean" %>
 <%@ page import="kintai.DeptBean" %>
 <%@ page import="kintai.PostBean" %>
-<%@ page import="kintai.RoleBean" %>    <%-- 新規追加 --%>
-<%@ page import="kintai.GradeBean" %>   <%-- 新規追加 --%>
 <%@ page import="kintai.UserBean" %>
-<%@ page import="kintai.ProjectManageBean" %>
+<%@ page import="kintai.ProjectBean" %>
+<%@ page import="java.text.NumberFormat" %>
 
 <jsp:useBean id="today" class="java.util.Date" />
 <%
@@ -18,7 +17,7 @@
        
     }
     
-    List<ProjectManageBean> projectmanagelist = (List<ProjectManageBean>) request.getAttribute("projectmanagelist");
+    List<ProjectBean> projectmanagelist = (List<ProjectBean>) request.getAttribute("projectmanagelist");
     String message = (String) request.getAttribute("message");
     Boolean success = (Boolean) request.getAttribute("success");
 %>
@@ -210,10 +209,14 @@
             display: none;
         }
         
-        .edit-row input[type="text"],
-        .edit-row input[type="password"],
-        .edit-row input[type="email"], /* 新規追加 */
-        .edit-row input[type="date"],   /* 新規追加 */
+        .edit-row input[type="number"]{
+ 		    width: 120px; /* 編集行の入力フィールドの幅 */
+            padding: 3px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin-right: 5px; /* 要素間のスペース */
+ 		    text-align: right;/* 右寄せ */
+		}
         .edit-row select {
             width: 120px; /* 編集行の入力フィールドの幅 */
             padding: 3px;
@@ -295,27 +298,27 @@
         <%-- 新規追加フォーム --%>
         <div class="add-form">
     <h2>新規プロジェクト追加</h2>
-    <form method="post" action="<%= request.getContextPath() %>/ProjectManageServlet" onsubmit="return confirmAdd();">
+    <form method="post" action="<%= request.getContextPath() %>/projectManage" onsubmit="return confirmAdd();">
         <input type="hidden" name="action" value="add">
 
         <div class="form-group">
             <label for="newPrjName">プロジェクト名：</label>
-            <input type="text" id="newPrjName" name="prjName" maxlength="10" required>
+            <input type="text" id="ProjectName" name="ProjectName" maxlength="10" required>
         </div>
         
         <div class="form-group">
             <label for="newPrjName">予算：</label>
-            <input type="number" id="newPrjbudget" name="prjbudget" maxlength="10" required>
+            <input type="number" id="BudgetAmount" name="BudgetAmount" maxlength="10">
         </div>
 
         <div class="form-group">
             <label for="startDate">期間(開始日)：</label>
-            <input type="date" id="startDate" name="startDate" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(today) %>">
+            <input type="date" id="StartDate" name="StartDate" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(today) %>">
         </div>
 
         <div class="form-group">
             <label for="endDate">期間(終了日)：</label>
-            <input type="date" id="endDate" name="endDate" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(today) %>">
+            <input type="date" id="EndDate" name="EndDate" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(today) %>">
         </div>
 
         <div style="margin-top: 15px;">
@@ -329,52 +332,66 @@
         <table class="emp-table">
             <thead>
                 <tr>
-                	<th>プロジェクト</th>
-                    <th>期間</th>
-                    <th>申請日</th>
+                	<th>プロジェクトID</th>
+                    <th>プロジェクト名</th>
+                    <th>予算</th>
+                    <th>開始日</th>
+                    <th>終了日</th>
                     <th>操作</th>
                 </tr>
             </thead>
             <tbody>
                 <% if (projectmanagelist != null && !projectmanagelist.isEmpty()) { %>
-                    <% for (ProjectBean emp : projectmanagelist) { %>
+                    <% for (ProjectBean project : projectmanagelist) { %>
                         <%-- 表示行 --%>
-                        <tr id="display-<%= emp.getProjectManageId() %>">
-                            <td><%= emp.getProjectManageId() %></td>
-                            <%--<td><%= emp.getProjectManageId() %></td> --%>
+                        <tr id="display-<%= project.getProjectId() %>">
+                            <td><%= project.getProjectId() %></td>
+                            <%--<td><%= project.getProjectId() %></td> --%>
                             <%-- プロジェクト名の表示（nullの場合の処理） --%>
-                            <td><%= (emp.getProjectManageName() != null) ? emp.getProjectManageName() : "情報なし" %></td>
-                            <%-- 入社年月日の表示（新規追加） --%>
-                            <td><%= (emp.getStartDate() != null) ? emp.getStartDate() : "---" %></td>
-                            <%-- 入社年月日の表示（新規追加） --%>
-                            <td><%= (emp.getEndDate() != null) ? emp.getEndDate(): "---" %></td>
+                            <td><%= (project.getProjectName() != null) ? project.getProjectName() : "情報なし" %></td>
+                            <%-- プロジェクト予算の表示（0の場合の処理） --%>
+                            <%
+						    NumberFormat nf = NumberFormat.getInstance();
+						    nf.setGroupingUsed(true); // 3桁区切りを有効にする
+							%>
+							<td style="text-align: right;">
+							    <%
+						        int budget = project.getProjectBudget();
+						        out.print(budget != 0 ? nf.format(budget) + "円" : "情報なし");
+							    %>
+							</td>
+							<%-- プロジェクト開始日の表示（新規追加） --%>
+                            <td><%= (project.getStartDate() != null) ? project.getStartDate() : "---" %></td>
+                            <%-- プロジェクト終了日の表示（新規追加） --%>
+                            <td><%= (project.getEndDate() != null) ? project.getEndDate(): "---" %></td>
                             <td>
-                                <button class="btn btn-success" onclick="toggleEdit('<%= emp.getProjectManageId() %>')">編集</button>
-                                <button class="btn btn-danger" onclick="confirmDelete('<%= emp.getProjectManageId() %>', '<%= emp.getProjectManageName() %>')">削除</button>
+                                <button class="btn btn-success" onclick="toggleEdit('<%= project.getProjectId() %>')">編集</button>
+                                <button class="btn btn-danger" onclick="confirmDelete('<%= project.getProjectId() %>', '<%= project.getProjectName() %>')">削除</button>
                                 
                                 <%-- 削除用フォーム（非表示） --%>
-                                <form id="deleteForm-<%= emp.getProjectManageId() %>" method="post" 
-                                      action="<%= request.getContextPath() %>/empManage" style="display: none;">
+                                <form id="deleteForm-<%= project.getProjectId() %>" method="post" 
+                                      action="<%= request.getContextPath() %>/projectManage" style="display: none;">
                                     <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="empNo" value="<%= emp.getProjectManageId() %>">
+                                    <input type="hidden" name="ProjectId" value="<%= project.getProjectId() %>">
                                 </form>
                             </td>
                         </tr>
                         
                         <%-- 編集行（初期状態では非表示） --%>
-                        <tr id="edit-<%= emp.getProjectManageId() %>" class="edit-row" style="display: none;">
-                            <td><%= emp.getProjectManageId() %></td>
+                        <tr id="edit-<%= project.getProjectId() %>" class="edit-row" style="display: none;">
+                            <td><%= project.getProjectId() %></td>
                             <td colspan="8"> <%-- 列数を調整 --%>
-                                <form method="post" action="<%= request.getContextPath() %>/empManage" class="form-inline" onsubmit="return confirmUpdate('<%= emp.getProjectManageName() %>');">
+                                <form method="post" action="<%= request.getContextPath() %>/projectManage" class="form-inline" onsubmit="return confirmUpdate('<%= project.getProjectName() %>');">
                                     <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="empNo" value="<%= emp.getProjectManageId() %>">
+                                    <input type="hidden" name="ProjectId" value="<%= project.getProjectId() %>">
                                     
-                                    <label>プロジェクト名：</label><input type="text" name="empName" value="<%= emp.getProjectManageName() %>" maxlength="50" required>
-                                    <label>期間：</label><input type="date" name="empDate" value="<%= emp.getStartDate() != null ? emp.getStartDate().toString() : "" %>"> <%-- 新規追加 --%>
-                                    <label>申請日：</label><input type="date" name="empDate" value="<%= emp.getEndDate() != null ? emp.getEndDate().toString() : "" %>"> <%-- 新規追加 --%>
+                                    <label>プロジェクト名：</label><input type="text" name="ProjectName" value="<%= project.getProjectName() %>" maxlength="50" required>
+                                    <label>予算：</label><input type="number" name="BudgetAmount" value="<%= project.getProjectBudget() %>" maxlength="50" style="text-align: right;">
+                                    <label>開始日：</label><input type="date" name="StartDate" value="<%= project.getStartDate() != null ? project.getStartDate().toString() : "" %>"> <%-- 新規追加 --%>
+                                    <label>終了日：</label><input type="date" name="EndDate" value="<%= project.getEndDate() != null ? project.getEndDate().toString() : "" %>"> <%-- 新規追加 --%>
                                     
                                     <button type="submit" class="btn btn-primary">保存</button>
-                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= emp.getProjectManageId() %>')">キャンセル</button>
+                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= project.getProjectId() %>')">キャンセル</button>
                                 </form>
                             </td>
                         </tr>

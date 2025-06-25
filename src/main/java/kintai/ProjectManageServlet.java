@@ -2,8 +2,7 @@ package kintai;
 
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.servlet.RequestDispatcher;
@@ -15,7 +14,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 
-@WebServlet("/ProjectManageServlet")
+@WebServlet("/projectManage")
 public class ProjectManageServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	
@@ -60,61 +59,46 @@ public class ProjectManageServlet extends HttpServlet {
             switch (action) {
                 case "add":
                     // 新規追加処理
-                    String newProjectId = request.getParameter("ProjectId");
+//                    String newProjectId = request.getParameter("ProjectId");
                     String newProjectName = request.getParameter("ProjectName");
+                    String newBudgetAmount = request.getParameter("BudgetAmount");
                     String newStartDate = request.getParameter("StartDate");
                     String newEndDate = request.getParameter("EndDate");
                   
                     // 入力チェック (最低限のチェック、詳細なビジネスロジックはDAOやサービス層で)
-                    if (newProjectId == null || newProjectId.trim().isEmpty() || 
-                        newProjectName == null || newProjectName.trim().isEmpty() ||
-                        newStartDate == null || newStartDate.trim().isEmpty() ||
-                        newEndDate == null || newEndDate.trim().isEmpty()) {
-//                        newRoleIdStr == null || newRoleIdStr.trim().isEmpty() ||
-//                        newGradeNoStr == null || newGradeNoStr.trim().isEmpty() ||
-//                        newPass == null || newPass.trim().isEmpty()
+                    if (//newProjectId == null || newProjectId.trim().isEmpty() || 
+                        newProjectName == null || newProjectName.trim().isEmpty() //||
+//                        newBudgetAmount == null || newBudgetAmount.trim().isEmpty() ||
+//                        newStartDate == null || newStartDate.trim().isEmpty() ||
+//                        newEndDate == null || newEndDate.trim().isEmpty())
+                        ){
                         message = "必須項目をすべて入力してください";
                         break;
                     }
-
-                    // プロジェクト番号の重複チェック
-                    if (ProjectDao.exists(newProjectId)) {
-                        message = "プロジェクト：「" + newProjectId + "」は既に存在します";
-                        break;
-                    }
                     
-                   
-//                    java.util.LocalDate newStartdateDate = null;
-//                    java.util.LocalDate newEnddateDate = null;
-//              
-////                        String dateStr = request.getParameter("date");  // 例: "2025-06-24"
-//                        try {
-//                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-//                            newStartdateDate = sdf.parse(newStartDate);
-//                            newEnddateDate = sdf.parse(newEndDate);
-//                            // 処理例: データベースに登録など
-//                            // PreparedStatementで setDate(new java.sql.Date(date.getTime())) として渡す
-//                        } catch (ParseException e) {
-//                            e.printStackTrace();
-//                            // エラー処理
-//                        }
-//             
+                    // 日付の前後チェック
+                    if (newStartDate != null && !newStartDate.trim().isEmpty()
+                    		 && newEndDate != null && !newEndDate.trim().isEmpty()) {
+                    		    LocalDate start = LocalDate.parse(newStartDate);
+                    		    LocalDate end = LocalDate.parse(newEndDate);
+                    		    if (start.isAfter(end)) {
+                    		        message = "開始日は終了日以前に設定してください。";
+                    		        break;
+                    		    }
+                    		}
                     
                     ProjectBean newProject = new ProjectBean();
-                    newProject.setProjectId(Integer.parseInt(newProjectId));
+//					newProject.setProjectId(Integer.parseInt(newProjectId));
                     newProject.setProjectName(newProjectName);
-//                    newProject.setStartDate(newStartdateDate);
-//                    newProject.setEndDate(newEnddateDate);
-//                    newEmp.setRoleId(Integer.parseInt(newRoleIdStr)); // 旧setRoleから変更
-//                    newEmp.setGradeNo(Integer.parseInt(newGradeNoStr)); // 新規追加
-//                    newEmp.setPass(newPass);
-//                    newEmp.setMail(newMail); // 新規追加
-                    // EMPDATEはnull許容として、JSPからの入力がない場合はnull
-//                    if (newEmpDateStr != null && !newEmpDateStr.trim().isEmpty()) {
-//                        newEmp.setEmpDate(java.time.LocalDate.parse(newEmpDateStr));
-//                    }
+                    Integer budget = null;
+                    if (newBudgetAmount != null && !newBudgetAmount.trim().isEmpty()) {
+                        budget = Integer.parseInt(newBudgetAmount);
+                    }
+                    newProject.setProjectBudget(budget != null ? budget : 0);
+//                  newProject.setStartDate(newStartdateDate);
+//                  newProject.setEndDate(newEnddateDate);
                     
-                    // EMPDATEはnull許容として、JSPからの入力がない場合はnull
+                    // StartDateとEndDateはnull許容として、JSPからの入力がない場合はnull
                     if (newStartDate != null && !newStartDate.trim().isEmpty()) {
                         newProject.setStartDate(java.time.LocalDate.parse(newStartDate));
                     }
@@ -133,63 +117,55 @@ public class ProjectManageServlet extends HttpServlet {
                     // 更新処理
                     String updateProjectId = request.getParameter("ProjectId");
                     String updateProjectName = request.getParameter("ProjectName");
+                    String updateBudgetAmount = request.getParameter("BudgetAmount");
                     String updateStartDate = request.getParameter("StartDate");
                     String updateEndDate = request.getParameter("EndDate");
-//                    String updateRoleIdStr = request.getParameter("roleId"); // 旧roleから変更
-//                    String updateGradeNoStr = request.getParameter("gradeNo"); // 新規追加
-//                    String updatePass = request.getParameter("pass"); // パスワードは更新時も入力させる想定
-//                    String updateMail = request.getParameter("mail"); // 新規追加
-//                    String updateEmpDateStr = request.getParameter("empDate"); // 新規追加
-                    
+                  
                     // 入力チェック
-                    if (updateProjectName == null || updateProjectName.trim().isEmpty() ||
-                        updateStartDate == null || updateStartDate.trim().isEmpty() ||
-                        updateEndDate == null || updateEndDate.trim().isEmpty() ) {
-//                        updateRoleIdStr == null || updateRoleIdStr.trim().isEmpty() ||
-//                        updateGradeNoStr == null || updateGradeNoStr.trim().isEmpty() ||
-//                        updatePass == null || updatePass.trim().isEmpty()
-                        // パスワードも必須
+                    if (updateProjectName == null || updateProjectName.trim().isEmpty() //||
+//                    	updateBudgetAmount == null || updateBudgetAmount.trim().isEmpty() ||
+//                        updateStartDate == null || updateStartDate.trim().isEmpty() ||
+//                        updateEndDate == null || updateEndDate.trim().isEmpty() ) {
+                    	) {
                         message = "必須項目をすべて入力してください";
                         break;
                     }
                     
-                    // プロジェクト番号の重複チェック
-                    if (ProjectDao.exists(updateProjectId)) {
-                        message = "プロジェクト：「" + updateProjectId + "」は既に存在します";
-                        break;
-                    }
+                    // 日付の前後チェック
+                    if (updateStartDate != null && !updateStartDate.trim().isEmpty()
+                    		 && updateEndDate != null && !updateEndDate.trim().isEmpty()) {
+                    		    LocalDate start = LocalDate.parse(updateStartDate);
+                    		    LocalDate end = LocalDate.parse(updateEndDate);
+                    		    if (start.isAfter(end)) {
+                    		        message = "開始日は終了日以前に設定してください。";
+                    		        break;
+                    		    }
+                    		}
                     
-                    java.util.Date updateStartdateDate = null;
-                    java.util.Date updateEnddateDate = null;
-              
-//                        String dateStr = request.getParameter("date");  // 例: "2025-06-24"
-                        try {
-                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-                            updateStartdateDate = sdf.parse(updateStartDate);
-                            updateEnddateDate = sdf.parse(updateEndDate);
-                            // 処理例: データベースに登録など
-                            // PreparedStatementで setDate(new java.sql.Date(date.getTime())) として渡す
-                        } catch (ParseException e) {
-                            e.printStackTrace();
-                            // エラー処理
-                        }
+                    // プロジェクト番号の重複チェック
+//                    if (ProjectDao.exists(updateProjectId)) {
+//                        message = "プロジェクト：「" + updateProjectId + "」は既に存在します";
+//                        break;
+//                    }
+                    
                     
                     ProjectBean updateProject = new ProjectBean();
                     updateProject.setProjectId(Integer.parseInt(updateProjectId));
                     updateProject.setProjectName(updateProjectName);
+                    Integer budgetUpd = null;
+                    if (updateBudgetAmount != null && !updateBudgetAmount.trim().isEmpty()) {
+                        budget = Integer.parseInt(updateBudgetAmount);
+                    }
+                    updateProject.setProjectBudget(budgetUpd != null ? budgetUpd : 0);
 //                    updateProject.setStartDate(updateStartdateDate);
 //                    updateProject.setEndDate(updateEnddateDate);
-//                    updateEmp.setRoleId(Integer.parseInt(updateRoleIdStr)); // 旧setRoleから変更
-//                    updateEmp.setGradeNo(Integer.parseInt(updateGradeNoStr)); // 新規追加
-//                    updateEmp.setPass(updatePass);
-//                    updateEmp.setMail(updateMail); // 新規追加
 //                    if (updateEmpDateStr != null && !updateEmpDateStr.trim().isEmpty()) {
 //                        updateEmp.setEmpDate(java.time.LocalDate.parse(updateEmpDateStr));
 //                    } else {
 //                        updateEmp.setEmpDate(null); // 入力がない場合はnull
 //                    }
                     
-                 // EMPDATEはnull許容として、JSPからの入力がない場合はnull
+                 // StartDateとEndDateはnull許容として、JSPからの入力がない場合はnull
                     if (updateStartDate != null && !updateStartDate.trim().isEmpty()) {
                         updateProject.setStartDate(java.time.LocalDate.parse(updateStartDate));
                     }
@@ -206,8 +182,8 @@ public class ProjectManageServlet extends HttpServlet {
                     
                 case "delete":
                     // 削除処理
-                    String deleteEmpNo = request.getParameter("empNo");
-                    success = ProjectDao.delete(deleteEmpNo);
+                    String deleteProjectId = request.getParameter("ProjectId");
+                    success = ProjectDao.delete(deleteProjectId);
                     
                     if (success) {
                         message = "プロジェクトを削除しました";
@@ -219,12 +195,12 @@ public class ProjectManageServlet extends HttpServlet {
                 default:
                     message = "不正な操作です";
             }
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException e) 	{
             e.printStackTrace();
-            message = "入力された数値（ロールID、等級番号）が不正です";
+            message = "入力された数値（予算）が不正です";
         } catch (java.time.format.DateTimeParseException e) {
             e.printStackTrace();
-            message = "入社年月日の形式が不正です。YYYY-MM-DD形式で入力してください。";
+            message = "プロジェクト開始日/終了日の形式が不正です。YYYY-MM-DD形式で入力してください。";
         } catch (Exception e) {
             e.printStackTrace();
             message = "処理中にエラーが発生しました";

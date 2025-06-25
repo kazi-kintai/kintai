@@ -12,7 +12,7 @@ public class ProjectBean implements Serializable {
 
     private int projectId;      // projectテーブルの「PROJECT_ID」列に対応
     private String projectName; // projectテーブルの「PROJECT_NAME」列に対応
-	private int projectBudget;
+	private Integer projectBudget;
 	private LocalDate startDate;
 	private LocalDate endDate;
 
@@ -52,11 +52,11 @@ public class ProjectBean implements Serializable {
     public void setProjectName(String projectName) {
         this.projectName = projectName;
     }
-    public int getProjectBudget() {
+    public Integer getProjectBudget() {
         return projectBudget;
     }
 
-    public void setProjectBudget(int projectBudget) {
+    public void setProjectBudget(Integer projectBudget) {
         this.projectBudget = projectBudget;
     }
 
