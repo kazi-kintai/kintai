@@ -229,8 +229,9 @@ public class ProjectDao {
 
         return project;
     }
+}
 
-    public boolean exists(String projectId) {
+/*    public boolean exists(String projectId) {
         try {
             int id = Integer.parseInt(projectId);
             return findByProjectId(id) != null;
