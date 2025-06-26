@@ -192,4 +192,13 @@ public class ProjectDao {
             return false;
         }
     }
+
+    /**
+     * プロジェクトIDでプロジェクト情報を検索する (findById用)
+     * @param projectId プロジェクトID
+     * @return プロジェクト情報。見つからない場合はnull
+     */
+    public ProjectBean findById(int projectId) {
+        return findByProjectId(projectId);
+    }
 }

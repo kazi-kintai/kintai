@@ -274,6 +274,21 @@
         function confirmUpdate(empName) {
             return confirm('プロジェクト「' + empName + '」の情報を変更してもよろしいですか？');
         }
+
+        // プロジェクト人員詳細表示
+        function showProjectMemberDetail() {
+            var projectId = document.getElementById('projectSelect').value;
+            var month = document.getElementById('monthSelect').value;
+            
+            if (projectId === '' || month === '') {
+                alert('プロジェクトと月を選択してください');
+                return;
+            }
+            
+            // 新しいウィンドウでプロジェクト人員詳細を表示
+            var url = '<%= request.getContextPath() %>/ProjectBudgetReportServlet?action=getProjectMembers&projectId=' + projectId + '&month=' + month;
+            window.open(url, 'projectMemberDetail', 'width=1000,height=600,scrollbars=yes,resizable=yes');
+        }
     </script>
 </head>
 <body>
@@ -319,6 +334,46 @@
     </form>
 		</div>
         
+        <%-- プロジェクト予算実績表示セクション --%>
+        <div class="add-form">
+            <h2>プロジェクト予算実績表示</h2>
+            <form id="budgetReportForm" class="form-inline">
+                <div class="form-group">
+                    <label for="projectSelect">プロジェクト：</label>
+                    <select id="projectSelect" required>
+                        <option value="">選択してください</option>
+                        <% if (projectmanagelist != null && !projectmanagelist.isEmpty()) { %>
+                            <% for (ProjectBean project : projectmanagelist) { %>
+                                <option value="<%= project.getProjectId() %>"><%= project.getProjectName() %></option>
+                            <% } %>
+                        <% } %>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="monthSelect">月：</label>
+                    <select id="monthSelect" required>
+                        <option value="">選択してください</option>
+                        <% 
+                            java.util.Calendar cal = java.util.Calendar.getInstance();
+                            int currentYear = cal.get(java.util.Calendar.YEAR);
+                            int currentMonth = cal.get(java.util.Calendar.MONTH) + 1;
+                        %>
+                        <% for (int month = 1; month <= 12; month++) { %>
+                            <option value="<%= currentYear %>-<%= String.format("%02d", month) %>" 
+                                    <%= (month == currentMonth) ? "selected" : "" %>>
+                                <%= month %>月
+                            </option>
+                        <% } %>
+                    </select>
+                </div>
+                
+                <div style="margin-left: 10px;">
+                    <button type="button" class="btn btn-primary" onclick="showProjectMemberDetail()">表示</button>
+                </div>
+            </form>
+        </div>
+
         <%-- プロジェクト一覧テーブル --%>
         <h2>プロジェクト一覧</h2>
         <table class="emp-table">

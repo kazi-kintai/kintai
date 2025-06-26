@@ -2,16 +2,14 @@ package kintai;
 
 import java.math.BigDecimal;
 
-/**
- * 月度勤怠统计信息的数据模型类
- */
+
 public class MonthlySummaryBean {
-    private int totalWorkDays;        // 当月总出社日数
-    private int actualAttendanceDays; // 实际出勤日数
-    private BigDecimal totalOvertimeHours;   // 总残业时间
-    private BigDecimal totalWorkingHours;    // 总実働时间
-    private BigDecimal totalBreakHours;      // 总休憩时间
-    private String targetMonth;              // 对象月份 (YYYY-MM)
+    private int totalWorkDays;        
+    private int actualAttendanceDays; 
+    private BigDecimal totalOvertimeHours;   
+    private BigDecimal totalWorkingHours;    
+    private BigDecimal totalBreakHours;      
+    private String targetMonth;             
 
     public MonthlySummaryBean() {
         this.totalOvertimeHours = BigDecimal.ZERO;
