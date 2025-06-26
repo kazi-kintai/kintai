@@ -6,13 +6,16 @@ public class UserBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // --- フィールド定義 ---
-    // empテーブルの各列に対応する。
+    // empテーブルの各列に対応する。新しいER図の定義に合わせる。
 
-    private String empno;       // empテーブルの「emp_id」列に対応
-    private String name;        // empテーブルの「emp_name」列に対応
-    private String deptId;     // empテーブルの「dept_id」列に対応
-    private String postId;       // empテーブルの「pos_id」列に対応
-    private int role; // ユーザーの役割を保持 (0:従業員, 1:管理者)
+    private String empno;       // empテーブルの「EMPNO」列に対応
+    private String name;        // empテーブルの「EMPNAME」列に対応 (旧emp_name)
+    private String deptNo;      // empテーブルの「DEPTNO」列に対応 (旧deptId)
+    private String postNo;      // empテーブルの「POSTNO」列に対応 (旧postId)
+    private int roleId;         // empテーブルの「ROLEID」列に対応 (旧role)
+    private int gradeNo;        // empテーブルの「GRADENO」列に対応 (新規追加)
+    // PASS, MAIL, EMPDATE はUserBeanのログイン情報として必要であれば追加可能だが、
+    // 認証には直接使用しないため、ここでは省略。
 
     public UserBean() {
     }
@@ -33,23 +36,31 @@ public class UserBean implements Serializable {
         this.name = name;
     }
 
-    public String getDeptId() {
-        return deptId;
+    public String getDeptNo() {
+        return deptNo;
     }
-    public void setDeptId(String deptId) {
-        this.deptId = deptId;
+    public void setDeptNo(String deptNo) {
+        this.deptNo = deptNo;
     }
 
-    public String getPostId() {
-        return postId;
+    public String getPostNo() {
+        return postNo;
     }
-    public void setPostId(String postId) {
-        this.postId = postId;
+    public void setPostNo(String postNo) {
+        this.postNo = postNo;
     }
-    public int getRole() {
-    return role;
+
+    public int getRoleId() {
+        return roleId;
     }
-    public void setRole(int role) {
-    this.role = role;
+    public void setRoleId(int roleId) {
+        this.roleId = roleId;
+    }
+
+    public int getGradeNo() {
+        return gradeNo;
+    }
+    public void setGradeNo(int gradeNo) {
+        this.gradeNo = gradeNo;
     }
 }

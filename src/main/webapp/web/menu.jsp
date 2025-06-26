@@ -76,9 +76,13 @@
 	<div class="menu">
 		<h1>基本メニュー</h1>
 
-		<p><a href="">勤怠記録一覧</a></p>
+		<p><a href="<%= request.getContextPath() %>/KintaiRecServlet?mode=self">勤怠記録表示</a></p>
 		<p><a href="<%= request.getContextPath() %>/showWorkPunchForm">本日分の打刻</a></p>
-		<p><a href="">過去の勤務記録</a></p>
+		<p><a href="<%= request.getContextPath() %>/KinmuManageServlet">勤務時間管理</a></p>
+		<p><a href="<%= request.getContextPath() %>/PasswordChangeServlet">パスワード変更</a></p>
+		<% if (user.getRoleId() == 2) { // 部長（ROLEID=2）の場合のみ表示 %>
+			<p><a href="<%= request.getContextPath() %>/KintaiRecServlet">従業員別勤怠記録表示</a></p>
+		<% } %>
 	</div>
 </body>
 </html>
