@@ -1,6 +1,13 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
 <%@ page import="java.util.*, kintai.*" %>
-<% String deptNoFilter = (String) request.getAttribute("deptNoFilter"); %>
+<%
+  String deptNoFilter = (String) request.getAttribute("deptNoFilter");
+  List<EmpBean> empList = (List<EmpBean>) request.getAttribute("empList");
+  List<DeptBean> deptList = (List<DeptBean>) request.getAttribute("deptList");
+  List<LeaveTypeBean> leaveTypeList = (List<LeaveTypeBean>) request.getAttribute("leaveTypeList");
+  String selectedEmpNo = (String) request.getAttribute("selectedEmpNo");
+  String selectedDept = (String) request.getAttribute("selectedDept");
+%>
 <html>
 <head>
   <title>休暇申請・付与管理</title>
@@ -43,36 +50,26 @@
   <input type="hidden" name="mode" value="search" />
   従業員番号:
   <select name="empNo">
-<%
-  List<EmpBean> empList = (List<EmpBean>) request.getAttribute("empList");
-  String selectedEmpNo = (String) request.getAttribute("selectedEmpNo");
-  if (empList != null) {
-    for (EmpBean emp : empList) {
-      String selected = emp.getEmpNo().equals(selectedEmpNo) ? "selected" : "";
-%>
-    <option value="<%= emp.getEmpNo() %>" <%= selected %>><%= emp.getEmpNo() %> - <%= emp.getEmpName() %></option>
-<%
-    }
-  }
-%>
+    <% if (empList != null) {
+         for (EmpBean emp : empList) {
+           String selected = emp.getEmpNo().equals(selectedEmpNo) ? "selected" : "";
+    %>
+      <option value="<%= emp.getEmpNo() %>" <%= selected %>><%= emp.getEmpNo() %> - <%= emp.getEmpName() %></option>
+    <%   }
+       }
+    %>
   </select>
 
   部署:
   <select name="dept">
-<%
-  List<DeptBean> deptList = (List<DeptBean>) request.getAttribute("deptList");
-  String selectedDept = (String) request.getAttribute("selectedDept");
-  if (deptList != null) {
-    for (DeptBean dept : deptList) {
-      String selected = dept.equals(selectedDept) ? "selected" : "";
-%>
-    <option value="<%= dept.getDeptNo() %>" <%= dept.getDeptNo().equals(deptNoFilter != null ? deptNoFilter : "") ? "selected" : "" %>>
-                                    <%= dept.getDeptName() %>
-                                </option>
-<%
-    }
-  }
-%>
+    <% if (deptList != null) {
+         for (DeptBean dept : deptList) {
+           String selected = dept.getDeptNo().equals(selectedDept) ? "selected" : "";
+    %>
+      <option value="<%= dept.getDeptNo() %>" <%= selected %>><%= dept.getDeptName() %></option>
+    <%   }
+       }
+    %>
   </select>
   <button type="submit">検索</button>
 </form>
@@ -92,16 +89,13 @@
   終了日: <input type="date" name="endDate" required />
   休日種別:
   <select name="leaveTypeId">
-<%
-  List<LeaveTypeBean> leaveTypeList = (List<LeaveTypeBean>) request.getAttribute("leaveTypeList");
-  if (leaveTypeList != null) {
-    for (LeaveTypeBean type : leaveTypeList) {
-%>
-    <option value="<%= type.getLeaveTypeId() %>"><%= type.getLeaveTypeName() %></option>
-<%
-    }
-  }
-%>
+    <% if (leaveTypeList != null) {
+         for (LeaveTypeBean type : leaveTypeList) {
+    %>
+      <option value="<%= type.getLeaveTypeId() %>"><%= type.getLeaveTypeName() %></option>
+    <%   }
+       }
+    %>
   </select>
   理由: <input type="text" name="reason" />
   承認者: <input type="text" name="approvedBy" />
@@ -116,41 +110,39 @@
     <th>開始日</th><th>終了日</th><th>休日種別</th><th>理由</th><th>承認者</th><th>操作</th>
   </tr>
 <%
-  List<LeaveRequest> leaveList = (List<LeaveRequest>) request.getAttribute("leaveList");
+  List<LeaveRecBean> leaveList = (List<LeaveRecBean>) request.getAttribute("leaveList");
   if (leaveList != null) {
-    for (LeaveRequest leave : leaveList) {
+    for (LeaveRecBean leave : leaveList) {
 %>
   <tr>
-    <form action="LeaveRecServlet" method="post">
-      <input type="hidden" name="mode" value="update" />
-      <input type="hidden" name="leaveId" value="<%= leave.getLeaveId() %>" />
-      <input type="hidden" name="empNo" value="<%= leave.getEmpNo() %>" />
-      <td><input type="date" name="startDate" value="<%= leave.getStartDate() %>" /></td>
-      <td><input type="date" name="endDate" value="<%= leave.getEndDate() %>" /></td>
-      <td>
+    <td colspan="6">
+      <form action="LeaveRecServlet" method="post" style="display:flex; gap:10px; align-items:center;">
+        <input type="hidden" name="mode" value="update" />
+        <input type="hidden" name="leaveId" value="<%= leave.getLeaveId() %>" />
+        <input type="hidden" name="empNo" value="<%= leave.getEmpNo() %>" />
+        <input type="date" name="startDate" value="<%= leave.getStartDate() != null ? leave.getStartDate().toString() : "" %>" />
+        <input type="date" name="endDate" value="<%= leave.getEndDate() != null ? leave.getEndDate().toString() : "" %>" />
         <select name="leaveTypeId">
 <%
-  for (LeaveTypeBean type : leaveTypeList) {
-    String selected = (type.getLeaveTypeId() == leave.getLeaveTypeId()) ? "selected" : "";
+        for (LeaveTypeBean type : leaveTypeList) {
+            String selected = (type.getLeaveTypeId() == leave.getLeaveTypeId()) ? "selected" : "";
 %>
           <option value="<%= type.getLeaveTypeId() %>" <%= selected %>><%= type.getLeaveTypeName() %></option>
 <%
-  }
+        }
 %>
         </select>
-      </td>
-      <td><input type="text" name="reason" value="<%= leave.getReason() %>" /></td>
-      <td><input type="text" name="approvedBy" value="<%= leave.getApprovedBy() %>" /></td>
-      <td>
+        <input type="text" name="reason" value="<%= leave.getReason() != null ? leave.getReason() : "" %>" />
+        <input type="text" name="approvedBy" value="<%= leave.getApprovedBy() != null ? leave.getApprovedBy() : "" %>" />
         <button type="submit">保存</button>
-    </form>
-    <form action="LeaveRecServlet" method="post" style="display:inline;">
-      <input type="hidden" name="mode" value="delete" />
-      <input type="hidden" name="leaveId" value="<%= leave.getLeaveId() %>" />
-      <input type="hidden" name="empNo" value="<%= leave.getEmpNo() %>" />
-      <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
-    </form>
-      </td>
+      </form>
+      <form action="LeaveRecServlet" method="post" style="display:inline;">
+        <input type="hidden" name="mode" value="delete" />
+        <input type="hidden" name="leaveId" value="<%= leave.getLeaveId() %>" />
+        <input type="hidden" name="empNo" value="<%= leave.getEmpNo() %>" />
+        <button type="submit" onclick="return confirm('削除しますか？')">削除</button>
+      </form>
+    </td>
   </tr>
 <%
     }
