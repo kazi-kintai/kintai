@@ -71,8 +71,6 @@
     String backUrl;
     if (userRoleId == 1) {
         backUrl = request.getContextPath() + "/web/admin_menu.jsp";
-    } else if (userRoleId == 2) {
-        backUrl = request.getContextPath() + "/web/manager_menu.jsp";
     } else {
         backUrl = request.getContextPath() + "/web/menu.jsp";
     }
