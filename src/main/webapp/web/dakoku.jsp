@@ -29,6 +29,7 @@
 %>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
     <title>勤怠打刻・登録</title>
     <style>
         body { font-family: sans-serif; background-color: #f4f4f4; padding: 20px; }
@@ -59,6 +60,71 @@
         .button-container { text-align: center; margin-top: 20px; }
         .back-button { display: inline-block; padding: 8px 24px; border-radius: 5px; text-decoration: none; font-size: 1em; background-color: #6c757d; color: white; border: 1px solid #5a6268; }
         .back-button:hover { background-color: #5a6268; }
+        @media (max-width: 600px) {
+    body {
+        font-size: 0.80em;
+    }
+
+    .punch-button,
+    .add-break-button,
+    .back-button {
+        font-size: 0.85em;
+        padding: 10px 14px;
+    }
+
+    .status-table th,
+    .status-table td {
+        font-size: 0.82em;
+    }
+
+    .header h3,
+    h4 {
+        font-size: 1em;
+   
+   
+   }
+   @media (max-width: 320px) {
+    body {
+        font-size: 0.75em;
+    }
+
+    .form-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 5px;
+        margin-bottom: 14px;
+    }
+
+    .form-group label {
+        width: 100%;
+        font-size: 0.82em;
+    }
+
+    .form-group input[type="text"] {
+        width: 100%;
+        font-size: 0.82em;
+        padding: 6px 10px;
+        box-sizing: border-box;
+    }
+
+    .punch-button,
+    .add-break-button,
+    .back-button {
+        font-size: 0.82em;
+        padding: 8px 12px;
+    }
+
+    .status-table th,
+    .status-table td {
+        font-size: 0.78em;
+        padding: 6px;
+    }
+
+    .header h3,
+    h4 {
+        font-size: 0.92em;
+    }
+}
     </style>
 </head>
 <body>

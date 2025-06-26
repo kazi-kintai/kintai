@@ -12,6 +12,7 @@
 %>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
     <title>勤怠管理システムメニュー（管理部）</title>
     
     <style>
@@ -72,6 +73,65 @@
         .menu a:hover {
             text-decoration: underline;
         }
+       @media (max-width: 320px) {
+    body {
+        font-size: 0.78em;
+    }
+
+    .menu h1 {
+        font-size: 1.2em;
+    }
+
+    .menu h3 {
+        font-size: 0.95em;
+        margin-top: 12px;
+        margin-bottom: 6px;
+    }
+
+    .menu a {
+        font-size: 12.5px;
+    }
+
+    .user-info p {
+        font-size: 0.88em;
+        line-height: 1.3;
+    }
+
+    .logout-button {
+        font-size: 0.82em;
+        padding: 4px 8px;
+    }
+}
+
+        @media (max-width: 600px) {
+    body {
+        font-size: 0.88em;
+    }
+
+    .menu a {
+        font-size: 13.5px;
+    }
+
+    .menu h1 {
+        font-size: 1.4em;
+    }
+
+    .menu h3 {
+        font-size: 1.1em;
+        margin-top: 16px;
+        margin-bottom: 8px;
+    }
+
+    .user-info p {
+        font-size: 0.92em;
+        line-height: 1.4;
+    }
+
+    .logout-button {
+        font-size: 0.88em;
+        padding: 6px 10px;
+    }
+}
      </style>
     
 </head>
