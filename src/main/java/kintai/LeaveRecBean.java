@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.sql.Date;
 import java.sql.Timestamp;
 
-public class LeaveRequest implements Serializable {
+public class LeaveRecBean implements Serializable {
     private int leaveId;
     private String empNo;
     private int leaveTypeId;

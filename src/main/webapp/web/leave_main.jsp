@@ -159,7 +159,7 @@
 </table>
 
 <br/>
-<form action="AdminMenu.jsp" method="get">
+<form action="web/admin_menu.jsp" method="get">
   <button type="submit">管理メニューに戻る</button>
 </form>
 
