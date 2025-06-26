@@ -1,7 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
+<%@ page import="kintai.EmpBean" %>
+<%@ page import="kintai.DeptBean" %>
+<%@ page import="kintai.PostBean" %>
 <%@ page import="kintai.UserBean" %>
 <%@ page import="kintai.ProjectBean" %>
+<%@ page import="java.text.NumberFormat" %>
 
 <jsp:useBean id="today" class="java.util.Date" />
 <%
@@ -53,7 +57,7 @@
         }
         
         .container {
-            max-width: 1400px; /* 幅を少し広めに調整 */
+            max-width: 1200px;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -61,10 +65,48 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 10px 20px;
+            background: #fff;
+            border-bottom: 1px solid #ccc;
+            margin: -20px -20px 20px -20px;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.5;
+            text-align: left;
+            font-size: 13px;
+        }
+        
+        .logout-button {
+            background-color: #dc3545;
+            color: white;
+            border: 1px solid #dc3545;
+            border-radius: 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+            align-self: center;
+        }
+        
+        .logout-button:hover {
+            background-color: #c82333;
+            border-color: #bd2130;
+        }
+        
         h1 {
             color: #333;
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
+            margin-top: 0;
         }
         
         /* メッセージ表示エリア */
@@ -87,117 +129,151 @@
             border: 1px solid #f5c6cb;
         }
         
-        /* 新規追加フォーム */
+        /* フィルターフォーム・追加フォーム */
         .add-form {
-            background-color: #f8f9fa;
-            padding: 20px;
-            margin-bottom: 30px;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
             border: 1px solid #dee2e6;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         .add-form h2 {
             margin-top: 0;
             color: #495057;
+            font-size: 16px;
         }
         
         .form-group {
-            margin-bottom: 15px;
-            display: inline-block;
+            display: flex;
+            flex-direction: column;
             margin-right: 20px;
-            vertical-align: top; /* フォーム要素の上下位置を揃える */
+            margin-bottom: 15px;
+            min-width: 160px;
         }
         
         .form-group label {
-            display: block; /* ラベルをブロック要素にして、入力フィールドの上に配置 */
-            width: auto; /* 幅を自動調整 */
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #495057;
+            font-size: 12px;
         }
         
         .form-group input[type="text"],
-        .form-group input[type="password"],
-        .form-group input[type="email"], /* 新規追加 */
-        .form-group input[type="date"],   /* 新規追加 */
+        .form-group input[type="number"],
+        .form-group input[type="date"],
         .form-group select {
-            width: 180px; /* 幅を調整 */
-            padding: 5px;
+            padding: 8px 10px;
             border: 1px solid #ced4da;
-            border-radius: 4px;
+            border-radius: 6px;
+            font-size: 13px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: white;
         }
         
-        /* ボタンスタイル */
+        .form-group input[type="text"]:focus,
+        .form-group input[type="number"]:focus,
+        .form-group input[type="date"]:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.1);
+        }
+        
+        /* ボタンスタイル（kintai_rec.jspと統一） */
         .btn {
-            padding: 6px 12px;
+            padding: 8px 16px;
             border: none;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 14px;
-            margin-right: 5px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-right: 10px;
+            transition: all 0.2s;
         }
         
         .btn-primary {
-            background-color: #007bff;
+            background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
             color: white;
+            box-shadow: 0 2px 4px rgba(0,123,255,0.2);
         }
         
         .btn-primary:hover {
-            background-color: #0056b3;
+            background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(0,123,255,0.3);
         }
         
         .btn-success {
-            background-color: #28a745;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
             color: white;
+            box-shadow: 0 2px 4px rgba(40,167,69,0.2);
         }
         
         .btn-success:hover {
-            background-color: #218838;
+            background: linear-gradient(135deg, #218838 0%, #1e7e34 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(40,167,69,0.3);
         }
         
         .btn-danger {
-            background-color: #dc3545;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
             color: white;
+            box-shadow: 0 2px 4px rgba(220,53,69,0.2);
         }
         
         .btn-danger:hover {
-            background-color: #c82333;
+            background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(220,53,69,0.3);
         }
         
         .btn-secondary {
-            background-color: #6c757d;
+            background: linear-gradient(135deg, #6c757d 0%, #545b62 100%);
             color: white;
+            box-shadow: 0 2px 4px rgba(108,117,125,0.2);
         }
         
         .btn-secondary:hover {
-            background-color: #545b62;
+            background: linear-gradient(135deg, #545b62 0%, #495057 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(108,117,125,0.3);
         }
         
-        /* テーブルスタイル */
+        /* テーブルスタイル（kintai_rec.jspと統一） */
         .emp-table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-top: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            background-color: white;
         }
         
         .emp-table th, .emp-table td {
             border: 1px solid #dee2e6;
-            padding: 10px;
-            text-align: left;
-            vertical-align: middle; /* セル内容を中央揃え */
+            padding: 10px 8px;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 12px;
         }
         
         .emp-table th {
-            background-color: #f8f9fa;
-            font-weight: bold;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 600;
             color: #495057;
+            border-bottom: 2px solid #dee2e6;
         }
         
         .emp-table tr:nth-child(even) {
-            background-color: #f8f9fa;
+            background-color: rgba(0,123,255,0.02);
         }
         
         .emp-table tr:hover {
-            background-color: #e9ecef;
+            background-color: rgba(0,123,255,0.05);
+            transition: background-color 0.2s;
         }
         
         /* 編集フォーム */
@@ -205,10 +281,14 @@
             display: none;
         }
         
-        .edit-row input[type="text"],
-        .edit-row input[type="password"],
-        .edit-row input[type="email"], /* 新規追加 */
-        .edit-row input[type="date"],   /* 新規追加 */
+        .edit-row input[type="number"]{
+ 		    width: 120px; /* 編集行の入力フィールドの幅 */
+            padding: 3px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            margin-right: 5px; /* 要素間のスペース */
+ 		    text-align: right;/* 右寄せ */
+		}
         .edit-row select {
             width: 120px; /* 編集行の入力フィールドの幅 */
             padding: 3px;
@@ -233,14 +313,76 @@
         }
         
         .form-inline {
-            display: flex; /* 横並びにするためにflexを使用 */
-            flex-wrap: wrap; /* 必要に応じて折り返す */
-            align-items: center;
-            gap: 10px; /* 要素間のスペース */
+            display: flex;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            gap: 12px;
         }
         .form-inline label {
-             font-weight: bold;
-             flex-shrink: 0; /* ラベルが縮まないように */
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: #495057;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        /* 並排配置のためのコンテナスタイル */
+        .form-container-wrapper {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            align-items: stretch;
+        }
+        
+        .form-container {
+            flex: 1;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .project-info-display {
+            font-size: 16px;
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .info-grid div {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        
+        .info-grid strong {
+            font-size: 18px;
+            color: #495057;
+        }
+        
+        .info-grid span {
+            font-size: 17px;
+            font-weight: 500;
+            color: #1976d2;
+        }
+        
+
+        /* レスポンシブ対応 */
+        @media (max-width: 768px) {
+            .form-container-wrapper {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .form-container {
+                min-height: auto;
+            }
         }
     </style>
     <script>
@@ -275,8 +417,8 @@
             return confirm('プロジェクト「' + empName + '」の情報を変更してもよろしいですか？');
         }
 
-        // プロジェクト人員詳細表示
-        function showProjectMemberDetail() {
+        // プロジェクト人員詳細表示（弹出窗口）
+        function showProjectMemberDetailPopup() {
             var projectId = document.getElementById('projectSelect').value;
             var month = document.getElementById('monthSelect').value;
             
@@ -289,10 +431,72 @@
             var url = '<%= request.getContextPath() %>/ProjectBudgetReportServlet?action=getProjectMembers&projectId=' + projectId + '&month=' + month;
             window.open(url, 'projectMemberDetail', 'width=1000,height=600,scrollbars=yes,resizable=yes');
         }
+        
+        // プロジェクト一覧表示（弹出窗口）
+        function showProjectListPopup() {
+            var url = '<%= request.getContextPath() %>/projectManage?action=showProjectList';
+            window.open(url, 'projectList', 'width=800,height=500,scrollbars=yes,resizable=yes');
+        }
+
+
+        // プロジェクト詳細情報表示
+        function showProjectInfo() {
+            var select = document.getElementById('projectSelect');
+            var infoArea = document.getElementById('projectInfoArea');
+            
+            if (select.value === '') {
+                infoArea.style.display = 'none';
+                return;
+            }
+            
+            var selectedOption = select.options[select.selectedIndex];
+            var projectName = selectedOption.getAttribute('data-name');
+            var budget = selectedOption.getAttribute('data-budget');
+            var startDate = selectedOption.getAttribute('data-start');
+            var endDate = selectedOption.getAttribute('data-end');
+            
+            document.getElementById('selectedProjectName').textContent = projectName;
+            document.getElementById('selectedProjectBudget').textContent = budget ? '¥' + Number(budget).toLocaleString() : '-';
+            
+            var period = '';
+            if (startDate && endDate) {
+                period = startDate + ' ～ ' + endDate;
+            } else if (startDate) {
+                period = startDate + ' ～';
+            } else if (endDate) {
+                period = '～ ' + endDate;
+            } else {
+                period = '-';
+            }
+            document.getElementById('selectedProjectPeriod').textContent = period;
+            
+            infoArea.style.display = 'block';
+        }
+
+        // ページ読み込み時の初期化
+        window.onload = function() {
+            var projectSelect = document.getElementById('projectSelect');
+            
+            // 第一個項目を選択
+            if (projectSelect.options.length > 1) {
+                projectSelect.selectedIndex = 1; // 最初の項目（選択してくださいを除く）
+                showProjectInfo(); // プロジェクト情報を表示
+            }
+        }
     </script>
 </head>
 <body>
     <div class="container">
+        <div class="header">
+            <div class="user-info">
+                <p>部署：管理部</p>
+                <p>氏名：<%= user.getName() %></p>
+            </div>
+            <form method="post" action="<%= request.getContextPath() %>/logout" style="margin: 0;">
+                <input type="submit" value="ログアウト" class="logout-button">
+            </form>
+        </div>
+        
         <h1>プロジェクト管理</h1>
         
         <%-- メッセージ表示 --%>
@@ -302,144 +506,98 @@
             </div>
         <% } %>
         
-        <%-- 新規追加フォーム --%>
-        <div class="add-form">
-    <h2>新規プロジェクト追加</h2>
-    <form method="post" action="<%= request.getContextPath() %>/ProjectManageServlet" onsubmit="return confirmAdd();">
-        <input type="hidden" name="action" value="add">
+        <%-- 並排配置のフォームコンテナ --%>
+        <div class="form-container-wrapper">
+            <%-- 新規追加フォーム --%>
+            <div class="add-form form-container">
+                <h2>新規プロジェクト追加</h2>
+                <form method="post" action="<%= request.getContextPath() %>/projectManage" onsubmit="return confirmAdd();">
+                    <input type="hidden" name="action" value="add">
 
-        <div class="form-group">
-            <label for="newPrjName">プロジェクト名：</label>
-            <input type="text" id="newPrjName" name="ProjectName" maxlength="50" required>
-        </div>
-        
-        <div class="form-group">
-            <label for="newPrjBudget">予算：</label>
-            <input type="number" id="newPrjBudget" name="Budget" required>
-        </div>
+                    <div class="form-group">
+                        <label for="newPrjName">プロジェクト名：</label>
+                        <input type="text" id="ProjectName" name="ProjectName" maxlength="10" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="newPrjName">予算：</label>
+                        <input type="number" id="BudgetAmount" name="BudgetAmount" maxlength="10">
+                    </div>
 
-        <div class="form-group">
-            <label for="startDate">期間(開始日)：</label>
-            <input type="date" id="startDate" name="StartDate" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(today) %>">
-        </div>
+                    <div class="form-group">
+                        <label for="startDate">期間(開始日)：</label>
+                        <input type="date" id="StartDate" name="StartDate" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(today) %>">
+                    </div>
 
-        <div class="form-group">
-            <label for="endDate">期間(終了日)：</label>
-            <input type="date" id="endDate" name="EndDate" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(today) %>">
-        </div>
+                    <div class="form-group">
+                        <label for="endDate">期間(終了日)：</label>
+                        <input type="date" id="EndDate" name="EndDate" value="<%= new java.text.SimpleDateFormat("yyyy-MM-dd").format(today) %>">
+                    </div>
 
-        <div style="margin-top: 15px;">
-            <button type="submit" class="btn btn-primary">追加</button>
-        </div>
-    </form>
-		</div>
-        
-        <%-- プロジェクト予算実績表示セクション --%>
-        <div class="add-form">
-            <h2>プロジェクト予算実績表示</h2>
-            <form id="budgetReportForm" class="form-inline">
-                <div class="form-group">
-                    <label for="projectSelect">プロジェクト：</label>
-                    <select id="projectSelect" required>
-                        <option value="">選択してください</option>
-                        <% if (projectmanagelist != null && !projectmanagelist.isEmpty()) { %>
-                            <% for (ProjectBean project : projectmanagelist) { %>
-                                <option value="<%= project.getProjectId() %>"><%= project.getProjectName() %></option>
+                    <div style="margin-top: auto; padding-top: 15px;">
+                        <button type="submit" class="btn btn-primary">追加</button>
+                    </div>
+                </form>
+            </div>
+            
+            <%-- プロジェクト予算実績表示セクション --%>
+            <div class="add-form form-container">
+                <h2>プロジェクト予算実績表示</h2>
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label for="projectSelect">プロジェクト：</label>
+                        <select id="projectSelect" onchange="showProjectInfo()" required>
+                            <option value="">選択してください</option>
+                            <% if (projectmanagelist != null && !projectmanagelist.isEmpty()) { %>
+                                <% for (ProjectBean project : projectmanagelist) { %>
+                                    <option value="<%= project.getProjectId() %>" 
+                                            data-name="<%= project.getProjectName() %>"
+                                            data-budget="<%= project.getBudget() %>"
+                                            data-start="<%= project.getStartDate() != null ? project.getStartDate() : "" %>"
+                                            data-end="<%= project.getEndDate() != null ? project.getEndDate() : "" %>">
+                                        <%= project.getProjectName() %>
+                                    </option>
+                                <% } %>
                             <% } %>
-                        <% } %>
-                    </select>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="monthSelect">月：</label>
+                        <select id="monthSelect" required>
+                            <option value="">選択してください</option>
+                            <% 
+                                java.util.Calendar cal = java.util.Calendar.getInstance();
+                                int currentYear = cal.get(java.util.Calendar.YEAR);
+                                int currentMonth = cal.get(java.util.Calendar.MONTH) + 1;
+                            %>
+                            <% for (int month = 1; month <= 12; month++) { %>
+                                <option value="<%= currentYear %>-<%= String.format("%02d", month) %>" 
+                                        <%= (month == currentMonth) ? "selected" : "" %>>
+                                    <%= month %>月
+                                </option>
+                            <% } %>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-top: auto;">
+                        <button type="button" class="btn btn-primary" onclick="showProjectMemberDetailPopup()">詳細表示</button>
+                        <button type="button" class="btn btn-secondary" onclick="showProjectListPopup()">プロジェクト一覧</button>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="monthSelect">月：</label>
-                    <select id="monthSelect" required>
-                        <option value="">選択してください</option>
-                        <% 
-                            java.util.Calendar cal = java.util.Calendar.getInstance();
-                            int currentYear = cal.get(java.util.Calendar.YEAR);
-                            int currentMonth = cal.get(java.util.Calendar.MONTH) + 1;
-                        %>
-                        <% for (int month = 1; month <= 12; month++) { %>
-                            <option value="<%= currentYear %>-<%= String.format("%02d", month) %>" 
-                                    <%= (month == currentMonth) ? "selected" : "" %>>
-                                <%= month %>月
-                            </option>
-                        <% } %>
-                    </select>
+                <%-- プロジェクト詳細情報表示エリア --%>
+                <div id="projectInfoArea" class="project-info-display" style="display: none; margin-top: 15px; padding: 10px; background-color: #f1f3f4; border-radius: 4px;">
+                    <h4 style="margin: 0 0 8px 0; color: #495057;">選択プロジェクト詳細</h4>
+                    <div class="info-grid">
+                        <div><strong>プロジェクト名:</strong> <span id="selectedProjectName">-</span></div>
+                        <div><strong>予算:</strong> <span id="selectedProjectBudget">-</span></div>
+                        <div><strong>期間:</strong> <span id="selectedProjectPeriod">-</span></div>
+                    </div>
                 </div>
-                
-                <div style="margin-left: 10px;">
-                    <button type="button" class="btn btn-primary" onclick="showProjectMemberDetail()">表示</button>
-                </div>
-            </form>
+            </div>
         </div>
 
-        <%-- プロジェクト一覧テーブル --%>
-        <h2>プロジェクト一覧</h2>
-        <table class="emp-table">
-            <thead>
-                <tr>
-                	<th>プロジェクトID</th>
-                    <th>プロジェクト名</th>
-                    <th>予算</th>
-                    <th>開始日</th>
-                    <th>終了日</th>
-                    <th>操作</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (projectmanagelist != null && !projectmanagelist.isEmpty()) { %>
-                    <% for (ProjectBean emp : projectmanagelist) { %>
-                        <%-- 表示行 --%>
-                        <tr id="display-<%= emp.getProjectId() %>">
-                            <td><%= emp.getProjectId() %></td>
-                            <%-- プロジェクト名の表示（nullの場合の処理） --%>
-                            <td><%= (emp.getProjectName() != null) ? emp.getProjectName() : "情報なし" %></td>
-                            <%-- 予算の表示 --%>
-                            <td><%= emp.getBudget() %></td>
-                            <%-- 開始日の表示 --%>
-                            <td><%= (emp.getStartDate() != null) ? emp.getStartDate() : "---" %></td>
-                            <%-- 終了日の表示 --%>
-                            <td><%= (emp.getEndDate() != null) ? emp.getEndDate(): "---" %></td>
-                            <td>
-                                <button class="btn btn-success" onclick="toggleEdit('<%= emp.getProjectId() %>')">編集</button>
-                                <button class="btn btn-danger" onclick="confirmDelete('<%= emp.getProjectId() %>', '<%= emp.getProjectName() %>')">削除</button>
-                                
-                                <%-- 削除用フォーム（非表示） --%>
-                                <form id="deleteForm-<%= emp.getProjectId() %>" method="post" 
-                                      action="<%= request.getContextPath() %>/ProjectManageServlet" style="display: none;">
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="ProjectId" value="<%= emp.getProjectId() %>">
-                                </form>
-                            </td>
-                        </tr>
-                        
-                        <%-- 編集行（初期状態では非表示） --%>
-                        <tr id="edit-<%= emp.getProjectId() %>" class="edit-row" style="display: none;">
-                            <td><%= emp.getProjectId() %></td>
-                            <td colspan="5"> <%-- 列数を調整 --%>
-                                <form method="post" action="<%= request.getContextPath() %>/ProjectManageServlet" class="form-inline" onsubmit="return confirmUpdate('<%= emp.getProjectName() %>');">
-                                    <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="ProjectId" value="<%= emp.getProjectId() %>">
-                                    
-                                    <label>プロジェクト名：</label><input type="text" name="ProjectName" value="<%= emp.getProjectName() %>" maxlength="50" required>
-                                    <label>予算：</label><input type="number" name="Budget" value="<%= emp.getBudget() %>" required>
-                                    <label>開始日：</label><input type="date" name="StartDate" value="<%= emp.getStartDate() != null ? emp.getStartDate().toString() : "" %>"> <%-- 新規追加 --%>
-                                    <label>終了日：</label><input type="date" name="EndDate" value="<%= emp.getEndDate() != null ? emp.getEndDate().toString() : "" %>"> <%-- 新規追加 --%>
-                                    
-                                    <button type="submit" class="btn btn-primary">保存</button>
-                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= emp.getProjectId() %>')">キャンセル</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <% } %>
-                <% } else { %>
-                    <tr>
-                        <td colspan="9" style="text-align: center;">プロジェクトデータがありません</td> <%-- 列数を調整 --%>
-                    </tr>
-                <% } %>
-            </tbody>
-        </table>
         
         <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理部基本メニューへ戻る</a>
     </div>
