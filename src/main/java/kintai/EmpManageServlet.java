@@ -24,6 +24,7 @@ public class EmpManageServlet extends HttpServlet {
     private DeptDao deptDao = new DeptDao();
     private PostDao postDao = new PostDao();
     private RoleDao roleDao = new RoleDao(); // 新規追加: RoleDao
+    private GradeDao gradeDao = new GradeDao(); // 新規追加: GradeDao
     
     /**
      * GETリクエストの処理メソッド。
@@ -56,11 +57,13 @@ public class EmpManageServlet extends HttpServlet {
         List<DeptBean> deptList = deptDao.findAll();
         List<PostBean> postList = postDao.findAll();
         List<RoleBean> roleList = roleDao.findAll(); 
+        List<GradeBean> gradeList = gradeDao.findAll(); 
         
         request.setAttribute("empList", empList);
         request.setAttribute("deptList", deptList);
         request.setAttribute("postList", postList);
         request.setAttribute("roleList", roleList); // 新規追加
+        request.setAttribute("gradeList", gradeList); // 新規追加
         
         // 従業員管理画面にフォワード
         RequestDispatcher dispatcher = request.getRequestDispatcher("/web/emp_manage.jsp");
@@ -108,10 +111,10 @@ public class EmpManageServlet extends HttpServlet {
                     String newDeptNo = request.getParameter("deptNo");
                     String newPostNo = request.getParameter("postNo");
                     String newRoleIdStr = request.getParameter("roleId"); // 旧roleから変更
+                    String newGradeNoStr = request.getParameter("gradeNo"); // 新規追加
                     String newPass = request.getParameter("pass");
                     String newMail = request.getParameter("mail"); // 新規追加
                     String newEmpDateStr = request.getParameter("empDate"); // 新規追加
-                    String newEmpType = request.getParameter("empType"); // 新規追加
 
                     // 入力チェック (最低限のチェック、詳細なビジネスロジックはDAOやサービス層で)
                     if (newEmpNo == null || newEmpNo.trim().isEmpty() || 
@@ -119,8 +122,8 @@ public class EmpManageServlet extends HttpServlet {
                         newDeptNo == null || newDeptNo.trim().isEmpty() ||
                         newPostNo == null || newPostNo.trim().isEmpty() ||
                         newRoleIdStr == null || newRoleIdStr.trim().isEmpty() ||
-                        newPass == null || newPass.trim().isEmpty() ||
-                        newEmpType == null || newEmpType.trim().isEmpty()) {
+                        newGradeNoStr == null || newGradeNoStr.trim().isEmpty() ||
+                        newPass == null || newPass.trim().isEmpty()) {
                         message = "必須項目をすべて入力してください";
                         break;
                     }
@@ -137,13 +140,13 @@ public class EmpManageServlet extends HttpServlet {
                     newEmp.setDeptNo(newDeptNo);
                     newEmp.setPostNo(newPostNo);
                     newEmp.setRoleId(Integer.parseInt(newRoleIdStr)); // 旧setRoleから変更
+                    newEmp.setGradeNo(Integer.parseInt(newGradeNoStr)); // 新規追加
                     newEmp.setPass(newPass);
                     newEmp.setMail(newMail); // 新規追加
                     // EMPDATEはnull許容として、JSPからの入力がない場合はnull
                     if (newEmpDateStr != null && !newEmpDateStr.trim().isEmpty()) {
                         newEmp.setEmpDate(java.time.LocalDate.parse(newEmpDateStr));
                     }
-                    newEmp.setEmpType(newEmpType); // 追加
                     
                     success = empDao.insert(newEmp);
                     message = success ? "従業員を追加しました" : "従業員の追加に失敗しました";
@@ -156,18 +159,18 @@ public class EmpManageServlet extends HttpServlet {
                     String updateDeptNo = request.getParameter("deptNo");
                     String updatePostNo = request.getParameter("postNo");
                     String updateRoleIdStr = request.getParameter("roleId"); // 旧roleから変更
+                    String updateGradeNoStr = request.getParameter("gradeNo"); // 新規追加
                     String updatePass = request.getParameter("pass"); // パスワードは更新時も入力させる想定
                     String updateMail = request.getParameter("mail"); // 新規追加
                     String updateEmpDateStr = request.getParameter("empDate"); // 新規追加
-                    String updateEmpType = request.getParameter("empType"); // 追加
                     
                     // 入力チェック
                     if (updateEmpName == null || updateEmpName.trim().isEmpty() ||
                         updateDeptNo == null || updateDeptNo.trim().isEmpty() ||
                         updatePostNo == null || updatePostNo.trim().isEmpty() ||
                         updateRoleIdStr == null || updateRoleIdStr.trim().isEmpty() ||
-                        updatePass == null || updatePass.trim().isEmpty() ||// パスワードも必須
-                        updateEmpType == null || updateEmpType.trim().isEmpty()) { 
+                        updateGradeNoStr == null || updateGradeNoStr.trim().isEmpty() ||
+                        updatePass == null || updatePass.trim().isEmpty()) { // パスワードも必須
                         message = "必須項目をすべて入力してください";
                         break;
                     }
@@ -178,6 +181,7 @@ public class EmpManageServlet extends HttpServlet {
                     updateEmp.setDeptNo(updateDeptNo);
                     updateEmp.setPostNo(updatePostNo);
                     updateEmp.setRoleId(Integer.parseInt(updateRoleIdStr)); // 旧setRoleから変更
+                    updateEmp.setGradeNo(Integer.parseInt(updateGradeNoStr)); // 新規追加
                     updateEmp.setPass(updatePass);
                     updateEmp.setMail(updateMail); // 新規追加
                     if (updateEmpDateStr != null && !updateEmpDateStr.trim().isEmpty()) {
@@ -185,7 +189,6 @@ public class EmpManageServlet extends HttpServlet {
                     } else {
                         updateEmp.setEmpDate(null); // 入力がない場合はnull
                     }
-                    updateEmp.setEmpType(updateEmpType); // 追加
                     
                     success = empDao.update(updateEmp);
                     message = success ? "従業員情報を更新しました" : "従業員情報の更新に失敗しました";

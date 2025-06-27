@@ -1,8 +1,16 @@
+.classpath
+.project
+.settings/
 .history/
 
 *.class
 /bin/
 /build/
+<<<<<<< HEAD
+/.settings/
+/.classpath
+/.project
+=======
 /target/
 
 *.jsp-generated
@@ -15,42 +23,4 @@ Thumbs.db
 .mvn/
 mvnw
 mvnw.cmd
-
-
-pom.xml
-web.xml
-
-# IDEA files
-.idea/
-*.iml
-*.ipr
-*.iws
-
-
-# Build artifacts
-bin/
-build/
-target/
-classes/
-*.class
-*.jar
-*.war
-*.ear
-*.zip
-*.tar
-*.gz
-
-# Log files
-*.log
-
-# Cursor IDE specific
-.cursorignore
-
-# Maven generated files
-pom.xml.tag
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
-
+>>>>>>> branch 'develop' of https://github.com/kazi-kintai/kintai.git

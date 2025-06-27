@@ -8,12 +8,12 @@ public class UserBean implements Serializable {
     // --- フィールド定義 ---
     // empテーブルの各列に対応する。新しいER図の定義に合わせる。
 
-    private String empno;       // empテーブルの「EMPNO」列に対応
+    private String empId;       // empテーブルの「EMP_ID」列に対応
     private String name;        // empテーブルの「EMPNAME」列に対応 (旧emp_name)
-    private String deptNo;      // empテーブルの「DEPTNO」列に対応 (旧deptId)
-    private String postNo;      // empテーブルの「POSTNO」列に対応 (旧postId)
+    private String deptId;      // empテーブルの「DEPT_ID」列に対応
+    private String postId;      // empテーブルの「POST_ID」列に対応
     private int roleId;         // empテーブルの「ROLEID」列に対応 (旧role)
-    private String empType;        // empテーブルの「GRADENO」列に対応 (新規追加)
+    private int gradeNo;        // empテーブルの「GRADENO」列に対応 (新規追加)
     // PASS, MAIL, EMPDATE はUserBeanのログイン情報として必要であれば追加可能だが、
     // 認証には直接使用しないため、ここでは省略。
 
@@ -22,11 +22,19 @@ public class UserBean implements Serializable {
 
     // --- 以下、各フィールドのアクセサメソッド (getter/setter) ---
 
+    public String getEmpId() {
+        return empId;
+    }
+    public void setEmpId(String empId) {
+        this.empId = empId;
+    }
+    
+    // 互換性のためのメソッド
     public String getEmpno() {
-        return empno;
+        return empId;
     }
     public void setEmpno(String empno) {
-        this.empno = empno;
+        this.empId = empno;
     }
 
     public String getName() {
@@ -36,18 +44,34 @@ public class UserBean implements Serializable {
         this.name = name;
     }
 
+    public String getDeptId() {
+        return deptId;
+    }
+    public void setDeptId(String deptId) {
+        this.deptId = deptId;
+    }
+    
+    // 互換性のためのメソッド
     public String getDeptNo() {
-        return deptNo;
+        return deptId;
     }
     public void setDeptNo(String deptNo) {
-        this.deptNo = deptNo;
+        this.deptId = deptNo;
     }
 
+    public String getPostId() {
+        return postId;
+    }
+    public void setPostId(String postId) {
+        this.postId = postId;
+    }
+    
+    // 互換性のためのメソッド
     public String getPostNo() {
-        return postNo;
+        return postId;
     }
     public void setPostNo(String postNo) {
-        this.postNo = postNo;
+        this.postId = postNo;
     }
 
     public int getRoleId() {
@@ -57,10 +81,10 @@ public class UserBean implements Serializable {
         this.roleId = roleId;
     }
 
-    public String getEmpType() {
-        return empType;
+    public int getGradeNo() {
+        return gradeNo;
     }
-    public void setEmpType(String empType) {
-        this.empType = empType;
+    public void setGradeNo(int gradeNo) {
+        this.gradeNo = gradeNo;
     }
 }

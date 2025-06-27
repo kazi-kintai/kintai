@@ -4,6 +4,7 @@
 <%@ page import="kintai.DeptBean" %>
 <%@ page import="kintai.PostBean" %>
 <%@ page import="kintai.RoleBean" %>    <%-- 新規追加 --%>
+<%@ page import="kintai.GradeBean" %>   <%-- 新規追加 --%>
 <%@ page import="kintai.UserBean" %>
 <jsp:useBean id="today" class="java.util.Date" />
 <%
@@ -19,6 +20,7 @@
     List<DeptBean> deptList = (List<DeptBean>) request.getAttribute("deptList");
     List<PostBean> postList = (List<PostBean>) request.getAttribute("postList");
     List<RoleBean> roleList = (List<RoleBean>) request.getAttribute("roleList");    // 新規追加
+    List<GradeBean> gradeList = (List<GradeBean>) request.getAttribute("gradeList"); // 新規追加
     String message = (String) request.getAttribute("message");
     Boolean success = (Boolean) request.getAttribute("success");
 
@@ -27,6 +29,7 @@
     if (deptList == null) deptList = new java.util.ArrayList<>();
     if (postList == null) postList = new java.util.ArrayList<>();
     if (roleList == null) roleList = new java.util.ArrayList<>();
+    if (gradeList == null) gradeList = new java.util.ArrayList<>();
 %>
 <!DOCTYPE html>
 <html>
@@ -320,15 +323,15 @@
                     </select>
                 </div>
                 <div class="form-group">
-				    <label for="newEmpType">社員種別：</label> <%-- 変更：等級→社員種別 --%>
-				    <select id="newEmpType" name="empType" required>
-				        <option value="">選択してください</option>
-				        <option value="正社員">正社員</option>
-				        <option value="契約社員">契約社員</option>
-				        <option value="パート">パート</option>
-				        <option value="派遣">派遣</option>
-				    </select>
-				</div>
+                    <label for="newGradeNo">等級：</label> <%-- 新規追加 --%>
+                    <select id="newGradeNo" name="gradeNo" required> <%-- 新規追加 --%>
+                        <option value="">選択してください</option>
+                        <% if (gradeList != null) { 
+                            for (GradeBean grade : gradeList) { %>
+                                <option value="<%= grade.getGradeNo() %>"><%= grade.getGradeName() %></option>
+                        <% }} %>
+                    </select>
+                </div>
                 <div class="form-group">
                     <label for="newPass">パスワード：</label>
                     <input type="password" id="newPass" name="pass" maxlength="64" required> <%-- maxlengthを64に増やす --%>
@@ -357,7 +360,7 @@
                     <th>部署</th>
                     <th>役職</th>
                     <th>権限</th> <%-- 旧権限から変更 --%>
-                    <th>社員種別</th> <%-- 変更：等級→社員種別 --%>
+                    <th>等級</th> <%-- 新規追加 --%>
                     <th>メールアドレス</th> <%-- 新規追加 --%>
                     <th>入社年月日</th> <%-- 新規追加 --%>
                     <th>操作</th>
@@ -376,8 +379,8 @@
                             <td><%= (emp.getPostName() != null) ? emp.getPostName() : "情報なし" %></td>
                             <%-- 権限名の表示（emp.getRole()からemp.getRoleName()へ変更） --%>
                             <td><%= (emp.getRoleName() != null) ? emp.getRoleName() : "情報なし" %></td>
-                            <%-- 社員種別の表示（新規追加） --%>
-                            <td><%= (emp.getEmpType() != null) ? emp.getEmpType() : "情報なし" %></td>
+                            <%-- 等級名の表示（新規追加） --%>
+                            <td><%= (emp.getGradeName() != null) ? emp.getGradeName() : "情報なし" %></td>
                             <%-- メールアドレスの表示（新規追加） --%>
                             <td><%= (emp.getMail() != null) ? emp.getMail() : "---" %></td>
                             <%-- 入社年月日の表示（新規追加） --%>
@@ -441,14 +444,17 @@
                                         <% }} %>
                                     </select>
 
-                                    <label>社員種別：</label> <%-- 変更 --%>
-									<select name="empType" required>
-									    <option value="">選択してください</option>
-									    <option value="正社員" <%= "正社員".equals(emp.getEmpType()) ? "selected" : "" %>>正社員</option>
-									    <option value="契約社員" <%= "契約社員".equals(emp.getEmpType()) ? "selected" : "" %>>契約社員</option>
-									    <option value="パート" <%= "パート".equals(emp.getEmpType()) ? "selected" : "" %>>パート</option>
-									    <option value="派遣" <%= "派遣".equals(emp.getEmpType()) ? "selected" : "" %>>派遣</option>
-									</select>
+                                    <label>等級：</label> <%-- 新規追加 --%>
+                                    <select name="gradeNo" required> <%-- 新規追加 --%>
+                                        <option value="">選択してください</option>
+                                        <% if (gradeList != null) { 
+                                            for (GradeBean grade : gradeList) { %>
+                                                <option value="<%= grade.getGradeNo() %>" 
+                                                    <%= grade.getGradeNo() == emp.getGradeNo() ? "selected" : "" %>> <%-- == で比較 --%>
+                                                    <%= grade.getGradeName() %>
+                                                </option>
+                                        <% }} %>
+                                    </select>
                                     
                                     <label>パスワード：</label><input type="password" name="pass" value="<%= emp.getPass() %>" maxlength="64" required> <%-- maxlengthを64に増やす --%>
                                     

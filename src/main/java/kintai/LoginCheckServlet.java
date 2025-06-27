@@ -80,11 +80,11 @@ public class LoginCheckServlet extends HttpServlet {
 
 
             // ユーザーの役割(ROLEID)に応じてリダイレクト先を決定 
-            if (user.getRoleId() == 1) { // 管理者のROLEIDが1の場合
-                // 管理者の場合 -> 管理者用メニューにリダイレクト
+            if (user.getRoleId() == 1) { // 管理部の従業員（ROLEID=1）
+                // 管理部の場合 -> 管理者用メニューにリダイレクト
                 response.sendRedirect(request.getContextPath() + "/web/admin_menu.jsp");
-            } else { // その他のロールの場合（一般社員や承認者）
-                // 一般従業員の場合 -> 通常メニューにリダイレクト
+            } else { // 一般従業員（ROLEID=0）および部長（ROLEID=2）
+                // 一般従業員および部長の場合 -> 通常メニューにリダイレクト
                 response.sendRedirect(request.getContextPath() + "/web/menu.jsp");
             }
 

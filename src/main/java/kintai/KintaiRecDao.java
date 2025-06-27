@@ -1,13 +1,16 @@
 package kintai;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Time;
+import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -131,6 +134,10 @@ public class KintaiRecDao {
                     long actualWorkMinutes = calculateActualWorkMinutes(bean.getClockIn(), bean.getClockOut(), totalBreakMinutes);
                     bean.setActualWorkMinutes(actualWorkMinutes);
 
+                    // 残業時間を計算（実働時間が8時間を超えた分）
+                    long overtimeMinutes = Math.max(0, actualWorkMinutes - (8 * 60)); // 8時間 = 480分
+                    bean.setOvertimeMinutes(overtimeMinutes);
+
                     kintaiRecList.add(bean);
                 }
             }
@@ -208,5 +215,288 @@ public class KintaiRecDao {
         // 実働時間 = (退勤時刻 - 出勤時刻) - 総休憩時間
         long actualMinutes = workDurationMinutes - totalBreakMinutes;
         return Math.max(0, actualMinutes); // マイナスにならないように0以上を保証
+    }
+
+    /**
+     * 指定された従業員・月の月度勤怠統計を取得します
+     * @param empno 従業員番号
+     * @param targetMonth 対象月 (YYYY-MM)
+     * @return 月度統計データ
+     */
+    public MonthlySummaryBean getMonthlySummary(String empno, String targetMonth) {
+        MonthlySummaryBean summary = new MonthlySummaryBean();
+        summary.setTargetMonth(targetMonth);
+
+        try {
+            // 対象月の開始日と終了日を計算
+            YearMonth ym = YearMonth.parse(targetMonth);
+            LocalDate monthStart = ym.atDay(1);
+            LocalDate monthEnd = ym.atEndOfMonth();
+
+            // 1. 総出社日数を計算
+            int totalWorkDays = calculateTotalWorkDays(monthStart, monthEnd);
+            summary.setTotalWorkDays(totalWorkDays);
+
+            // 2. 実際の出勤日数を取得
+            int actualAttendanceDays = getActualAttendanceDays(empno, monthStart, monthEnd);
+            summary.setActualAttendanceDays(actualAttendanceDays);
+
+            // 3. 月度の勤怠統計を計算
+            calculateMonthlyWorkingHours(empno, monthStart, monthEnd, summary);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return summary;
+    }
+
+    /**
+     * 指定期間の総出社日数を計算（週末とカレンダーの休日を除く）
+     */
+    private int calculateTotalWorkDays(LocalDate monthStart, LocalDate monthEnd) {
+        int workDays = 0;
+        LocalDate current = monthStart;
+
+        while (!current.isAfter(monthEnd)) {
+            // 週末を除外
+            if (current.getDayOfWeek() != DayOfWeek.SATURDAY && 
+                current.getDayOfWeek() != DayOfWeek.SUNDAY) {
+                // カレンダーテーブルの休日をチェック
+                if (!isHolidayInCalendar(current)) {
+                    workDays++;
+                }
+            }
+            current = current.plusDays(1);
+        }
+
+        return workDays;
+    }
+
+    /**
+     * カレンダーテーブルで指定日が休日かどうかをチェック
+     * カレンダーテーブルが存在しない場合は、基本的な休日判定のみ行う
+     */
+    private boolean isHolidayInCalendar(LocalDate date) {
+        // まずカレンダーテーブルの存在をチェック
+        try (Connection conn = db.getConnection()) {
+            String checkTableSql = "SHOW TABLES LIKE 'calendar'";
+            PreparedStatement checkStmt = conn.prepareStatement(checkTableSql);
+            ResultSet tableRs = checkStmt.executeQuery();
+            
+            if (tableRs.next()) {
+                // カレンダーテーブルが存在する場合の処理
+                String sql = "SELECT COUNT(*) FROM calendar WHERE EVENT_DATE = ? AND IS_HOLIDAY = 1";
+                try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                    stmt.setDate(1, Date.valueOf(date));
+                    ResultSet rs = stmt.executeQuery();
+                    
+                    if (rs.next()) {
+                        return rs.getInt(1) > 0;
+                    }
+                }
+            } else {
+                // カレンダーテーブルが存在しない場合は、基本的な祝日をハードコーディングで判定
+                return isBasicHoliday(date);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            // エラー時は基本的な祝日判定にフォールバック
+            return isBasicHoliday(date);
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 基本的な日本の祝日判定（簡易版）
+     */
+    private boolean isBasicHoliday(LocalDate date) {
+        int month = date.getMonthValue();
+        int day = date.getDayOfMonth();
+        
+        // 基本的な固定祝日のみをチェック
+        switch (month) {
+            case 1: // 元日、成人の日
+                return day == 1 || (day >= 8 && day <= 14 && date.getDayOfWeek() == DayOfWeek.MONDAY);
+            case 2: // 建国記念の日、天皇誕生日
+                return day == 11 || day == 23;
+            case 3: // 春分の日（概算：20日または21日）
+                return day == 20 || day == 21;
+            case 4: // 昭和の日
+                return day == 29;
+            case 5: // 憲法記念日、みどりの日、こどもの日
+                return day == 3 || day == 4 || day == 5;
+            case 7: // 海の日（7月第3月曜日）
+                return day >= 15 && day <= 21 && date.getDayOfWeek() == DayOfWeek.MONDAY;
+            case 8: // 山の日
+                return day == 11;
+            case 9: // 敬老の日、秋分の日
+                return (day >= 15 && day <= 21 && date.getDayOfWeek() == DayOfWeek.MONDAY) || day == 22 || day == 23;
+            case 10: // スポーツの日（10月第2月曜日）
+                return day >= 8 && day <= 14 && date.getDayOfWeek() == DayOfWeek.MONDAY;
+            case 11: // 文化の日、勤労感謝の日
+                return day == 3 || day == 23;
+            case 12: // なし
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * 指定期間の実際の出勤日数を取得
+     */
+    private int getActualAttendanceDays(String empno, LocalDate monthStart, LocalDate monthEnd) {
+        String sql = "SELECT COUNT(*) FROM kintai WHERE EMPNO = ? AND KINTAIDATE >= ? AND KINTAIDATE <= ? AND CLOCKIN IS NOT NULL";
+        
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, empno);
+            stmt.setDate(2, Date.valueOf(monthStart));
+            stmt.setDate(3, Date.valueOf(monthEnd));
+            
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return 0;
+    }
+
+    /**
+     * 月度の労働時間統計を計算
+     */
+    private void calculateMonthlyWorkingHours(String empno, LocalDate monthStart, LocalDate monthEnd, MonthlySummaryBean summary) {
+        String sql = "SELECT RECID, KINTAIDATE, CLOCKIN, CLOCKOUT, WORKING_HOURS, OVERTIME_HOURS FROM kintai " +
+                     "WHERE EMPNO = ? AND KINTAIDATE >= ? AND KINTAIDATE <= ? AND CLOCKIN IS NOT NULL";
+        
+        BigDecimal totalWorkingHours = BigDecimal.ZERO;
+        BigDecimal totalOvertimeHours = BigDecimal.ZERO;
+        BigDecimal totalBreakHours = BigDecimal.ZERO;
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            
+            stmt.setString(1, empno);
+            stmt.setDate(2, Date.valueOf(monthStart));
+            stmt.setDate(3, Date.valueOf(monthEnd));
+            
+            ResultSet rs = stmt.executeQuery();
+            
+            while (rs.next()) {
+                int recId = rs.getInt("RECID");
+                LocalDate kintaiDate = rs.getDate("KINTAIDATE").toLocalDate();
+                
+                // 実働時間を累積
+                BigDecimal workingHours = rs.getBigDecimal("WORKING_HOURS");
+                if (workingHours != null) {
+                    totalWorkingHours = totalWorkingHours.add(workingHours);
+                }
+                
+                // 残業時間を累積
+                BigDecimal overtimeHours = rs.getBigDecimal("OVERTIME_HOURS");
+                if (overtimeHours != null) {
+                    totalOvertimeHours = totalOvertimeHours.add(overtimeHours);
+                }
+                
+                // 休憩時間を計算して累積（正しいrecIdを使用）
+                long breakMinutes = calculateTotalBreakMinutes(recId);
+                BigDecimal breakHours = BigDecimal.valueOf(breakMinutes).divide(BigDecimal.valueOf(60), 2, BigDecimal.ROUND_HALF_UP);
+                totalBreakHours = totalBreakHours.add(breakHours);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        summary.setTotalWorkingHours(totalWorkingHours);
+        summary.setTotalOvertimeHours(totalOvertimeHours);
+        summary.setTotalBreakHours(totalBreakHours);
+    }
+    
+    /**
+     * 指定日の出勤予定者数を取得（全従業員数を返す）
+     * @param date 対象日
+     * @return 出勤予定者数
+     */
+    public int getScheduledEmployeeCount(LocalDate date) {
+        String sql = "SELECT COUNT(*) FROM emp WHERE ROLEID != 999"; // 999は退職者など除外
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    
+    /**
+     * 指定日の出勤中者数を取得（CLOCKINがあってCLOCKOUTがないレコード）
+     * @param date 対象日
+     * @return 出勤中者数
+     */
+    public int getWorkingEmployeeCount(LocalDate date) {
+        String sql = "SELECT COUNT(*) FROM kintai WHERE KINTAIDATE = ? AND CLOCKIN IS NOT NULL AND CLOCKOUT IS NULL";
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    
+    /**
+     * 指定日の未出勤者数を取得（その日の勤怠記録がない従業員）
+     * @param date 対象日
+     * @return 未出勤者数
+     */
+    public int getAbsentEmployeeCount(LocalDate date) {
+        String sql = "SELECT COUNT(*) FROM emp e WHERE e.ROLEID != 999 AND NOT EXISTS " +
+                    "(SELECT 1 FROM kintai k WHERE k.EMPNO = e.EMPNO AND k.KINTAIDATE = ?)";
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+    
+    /**
+     * 指定日の休暇予定者数を取得
+     * 実装注：現在の段階では休暇管理テーブルがないため、固定値またはダミー計算を返す
+     * @param date 対象日
+     * @return 休暇予定者数
+     */
+    public int getVacationEmployeeCount(LocalDate date) {
+        // TODO: 将来的に休暇管理テーブルが実装されたら、以下のようなSQLに変更
+        // String sql = "SELECT COUNT(*) FROM vacation WHERE vacation_date = ? AND status = 'approved'";
+        
+        // 現在はダミーデータとして、土日の場合は多め、平日は少なめの休暇者数を返す
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            return 5; // 土日は休暇扱いが多い
+        } else {
+            return 2; // 平日は有給休暇者が少数
+        }
     }
 }

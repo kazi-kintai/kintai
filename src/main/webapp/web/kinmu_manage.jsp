@@ -59,7 +59,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 960px; /* 少し広めに設定 */
+            max-width: 1200px; /* 他ページと同じ幅に変更 */
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -82,6 +82,7 @@
             flex-direction: column;
             line-height: 1.5;
             text-align: left;
+            font-size: 13px;
         }
         .logout-button {
             background-color: #dc3545;
@@ -103,6 +104,11 @@
             border-bottom: 2px solid #007bff;
             padding-bottom: 10px;
             margin-top: 0;
+            text-align: center; /* 他ページと同じ中央揃え */
+            margin: 10px 0 5px 0;
+            padding: 0;
+            padding-bottom: 5px;
+            font-size: 18px;
         }
         /* メッセージ表示エリア */
         .message {
@@ -122,19 +128,29 @@
             border: 1px solid #f5c6cb;
         }
 
+        /* メインコンテンツレイアウト */
+        .main-content {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
         .section {
-            margin-bottom: 30px;
-            padding: 20px;
-            border: 1px solid #eee;
-            border-radius: 5px;
-            background-color: #fcfcfc;
+            flex: 1;
+            margin-bottom: 20px;
+            padding: 16px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         .section h2 {
             margin-top: 0;
-            color: #555;
-            border-bottom: 1px dashed #ddd;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
+            color: #495057;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            font-size: 16px;
         }
         .form-group {
             margin-bottom: 15px;
@@ -159,12 +175,13 @@
             width: 100%; /* 説明欄は広めに */
         }
         button[type="submit"], .button {
-            padding: 8px 16px;
+            padding: 6px 12px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 1em;
-            margin-left: 10px; /* ボタン間のスペース */
+            font-size: 12px;
+            margin-left: 8px;
+            transition: all 0.2s;
         }
         .btn-primary { background-color: #007bff; color: white; }
         .btn-primary:hover { background-color: #0056b3; }
@@ -178,15 +195,24 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
+            margin-top: 10px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            background-color: white;
         }
         table th, table td {
-            border: 1px solid #ddd;
-            padding: 10px;
+            border: 1px solid #dee2e6;
+            padding: 8px 6px;
             text-align: center;
+            vertical-align: middle;
+            font-size: 12px;
         }
         table th {
-            background-color: #f2f2f2;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
         }
         .action-cell button {
             margin: 0 3px;
@@ -206,13 +232,13 @@
             border-radius: 5px;
             cursor: pointer;
             border: none;
-            font-size: 1.2em;
+            font-size: 1em;
         }
         .date-navigation button:hover {
             background-color: #0056b3;
         }
         .date-navigation span {
-            font-size: 1.5em;
+            font-size: 16px;
             font-weight: bold;
             color: #333;
         }
@@ -220,12 +246,13 @@
         .back-link {
             display: inline-block;
             margin-top: 30px;
-            padding: 10px 20px;
+            padding: 8px 16px;
             background-color: #6c757d;
             color: white;
             text-decoration: none;
             border-radius: 4px;
             text-align: center;
+            font-size: 14px;
         }
         .back-link:hover {
             background-color: #545b62;
@@ -302,120 +329,128 @@
             <button type="button" onclick="navigateDate(1)">翌日 &gt;</button>
         </div>
 
-        <%-- 出退勤・休憩時間修正エリア --%>
-        <div class="section">
-            <h2>出退勤・休憩時間</h2>
-            <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この内容で出退勤時間を更新しますか？');">
-                <input type="hidden" name="action" value="update_work_time">
-                <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
-                <input type="hidden" name="recId" value="<%= workTimeData.getOrDefault("recId", "") %>">
-                
-                <div class="form-group">
-                    <label for="clockInTime">出勤時刻:</label>
-                    <input type="time" id="clockInTime" name="clockInTime" value="<%= workTimeData.getOrDefault("clockInTime", "") %>">
-                </div>
-                <div class="form-group">
-                    <label for="clockOutTime">退勤時刻:</label>
-                    <input type="time" id="clockOutTime" name="clockOutTime" value="<%= workTimeData.getOrDefault("clockOutTime", "") %>">
-                </div>
-                <div style="text-align: right;">
-                    <button type="submit" class="btn-primary">出退勤 更新</button>
-                </div>
-            </form>
+        <%-- メインコンテンツエリア（一行配置） --%>
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <%-- 出退勤・休憩時間修正エリア（左側） --%>
+            <div class="section" style="flex: 1;">
+                <h2>📋 出退勤時間更新</h2>
+                <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この内容で出退勤時間を更新しますか？');">
+                    <input type="hidden" name="action" value="update_work_time">
+                    <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
+                    <input type="hidden" name="recId" value="<%= workTimeData.getOrDefault("recId", "") %>">
+                    
+                    <div class="form-group">
+                        <label for="clockInTime" style="width: 60px; font-size: 11px;">出勤:</label>
+                        <input type="time" id="clockInTime" name="clockInTime" value="<%= workTimeData.getOrDefault("clockInTime", "") %>" style="font-size: 11px; width: 120px;">
+                    </div>
+                    <div class="form-group">
+                        <label for="clockOutTime" style="width: 60px; font-size: 11px;">退勤:</label>
+                        <input type="time" id="clockOutTime" name="clockOutTime" value="<%= workTimeData.getOrDefault("clockOutTime", "") %>" style="font-size: 11px; width: 120px;">
+                    </div>
+                    <div style="text-align: right; margin-top: 10px;">
+                        <button type="submit" class="btn-primary" style="font-size: 11px; padding: 4px 8px;">更新</button>
+                    </div>
+                </form>
+            </div>
 
-            <h3 style="margin-top: 30px; border-bottom: 1px solid #eee; padding-bottom: 10px;">休憩時間</h3>
-            <table class="break-table">
-                <thead>
-                    <tr>
-                        <th>開始時刻</th>
-                        <th>終了時刻</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (breakList.isEmpty()) { %>
-                        <tr><td colspan="3">休憩記録はありません</td></tr>
-                    <% } else { %>
-                        <% for (Map<String, String> breakItem : breakList) { %>
+            <%-- 休憩時間エリア（中央） --%>
+            <div class="section" style="flex: 1;">
+                <h2>🕐 休憩時間</h2>
+                <div style="max-height: 200px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        <thead>
                             <tr>
-                                <td><%= breakItem.getOrDefault("startTime", "---") %></td>
-                                <td><%= breakItem.getOrDefault("endTime", "---") %></td>
-                                <td class="action-cell">
-                                    <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この休憩記録を削除しますか？');" style="display: inline;">
-                                        <input type="hidden" name="action" value="delete_break">
-                                        <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
-                                        <input type="hidden" name="breakId" value="<%= breakItem.get("breakId") %>">
-                                        <button type="submit" class="btn-danger">削除</button>
-                                    </form>
-                                </td>
+                                <th style="border: 1px solid #dee2e6; padding: 4px; font-size: 10px;">開始</th>
+                                <th style="border: 1px solid #dee2e6; padding: 4px; font-size: 10px;">終了</th>
+                                <th style="border: 1px solid #dee2e6; padding: 4px; font-size: 10px;">操作</th>
                             </tr>
-                        <% } %>
-                    <% } %>
-                    <tr>
-                        <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('新しい休憩記録を追加しますか？');">
-                            <input type="hidden" name="action" value="add_break">
-                            <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
-                            <td><input type="time" name="newBreakStartTime" placeholder="HH:mm" required></td>
-                            <td><input type="time" name="newBreakEndTime" placeholder="HH:mm" required></td>
-                            <td class="action-cell"><button type="submit" class="btn-success">追加</button></td>
-                        </form>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+                        </thead>
+                        <tbody>
+                            <% if (breakList.isEmpty()) { %>
+                                <tr><td colspan="3" style="color: #6c757d; text-align: center; padding: 8px; font-size: 10px;">休憩記録なし</td></tr>
+                            <% } else { %>
+                                <% for (Map<String, String> breakItem : breakList) { %>
+                                    <tr>
+                                        <td style="border: 1px solid #dee2e6; padding: 3px; text-align: center;"><%= breakItem.getOrDefault("startTime", "---") %></td>
+                                        <td style="border: 1px solid #dee2e6; padding: 3px; text-align: center;"><%= breakItem.getOrDefault("endTime", "---") %></td>
+                                        <td style="border: 1px solid #dee2e6; padding: 3px; text-align: center;">
+                                            <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この休憩記録を削除しますか？');" style="display: inline;">
+                                                <input type="hidden" name="action" value="delete_break">
+                                                <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
+                                                <input type="hidden" name="breakId" value="<%= breakItem.get("breakId") %>">
+                                                <button type="submit" class="btn-danger" style="font-size: 9px; padding: 2px 4px;">削除</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+                <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('新しい休憩記録を追加しますか？');" style="margin-top: 10px;">
+                    <input type="hidden" name="action" value="add_break">
+                    <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <input type="time" name="newBreakStartTime" required style="width: 80px; font-size: 10px;">
+                        <span style="font-size: 10px;">〜</span>
+                        <input type="time" name="newBreakEndTime" required style="width: 80px; font-size: 10px;">
+                        <button type="submit" class="btn-success" style="font-size: 10px; padding: 3px 6px;">追加</button>
+                    </div>
+                </form>
+            </div>
 
-        <%-- 工数割り当て（プロジェクト）管理エリア --%>
-        <div class="section">
-            <h2>工数割り当て（プロジェクト）</h2>
-            <table class="work-detail-table"> <%-- クラス名はそのまま流用 --%>
-                <thead>
-                    <tr>
-                        <th>プロジェクト</th>
-                        <th>作業時間</th>
-                        <th>説明</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <% if (workAllocs.isEmpty()) { %>
-                        <tr><td colspan="4">工数割り当てはありません</td></tr> <%-- colspan の数も変更 --%>
-                    <% } else { %>
-                        <% for (KinmuManageBean.WorkAlloc alloc : workAllocs) { %>
+            <%-- 工数割り当て（プロジェクト）管理エリア（右側） --%>
+            <div class="section" style="flex: 1;">
+                <h2>📊 工数割り当て</h2>
+                <div style="max-height: 200px; overflow-y: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        <thead>
                             <tr>
-                                <td><%= alloc.getProjectName() != null ? alloc.getProjectName() : "---" %></td>
-                                <td><%= alloc.getWorkHoursFormatted() %></td>
-                                <td>---</td> <%-- work_allocテーブルにはdescription列はないため固定表示 --%>
-                                <td class="action-cell">
-                                    <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この工数割り当てを削除しますか？');" style="display: inline;">
-                                        <input type="hidden" name="action" value="delete_work_alloc">
-                                        <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
-                                        <input type="hidden" name="allocationId" value="<%= alloc.getAllocationId() %>">
-                                        <button type="submit" class="btn-danger">削除</button>
-                                    </form>
-                                    <%-- TODO: 工数明細の編集機能が必要な場合はここに追加 --%>
-                                </td>
+                                <th style="border: 1px solid #dee2e6; padding: 4px; font-size: 10px;">プロジェクト</th>
+                                <th style="border: 1px solid #dee2e6; padding: 4px; font-size: 10px;">時間</th>
+                                <th style="border: 1px solid #dee2e6; padding: 4px; font-size: 10px;">操作</th>
                             </tr>
-                        <% } %>
-                    <% } %>
-                    <tr>
-                        <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('新しい工数割り当てを追加しますか？');">
-                            <input type="hidden" name="action" value="add_work_alloc">
-                            <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
-                            <td>
-                                <select name="newProjectId" required>
-                                    <option value="">選択</option>
-                                    <% for (ProjectBean project : projectList) { %>
-                                        <option value="<%= project.getProjectId() %>"><%= project.getProjectName() %></option>
-                                    <% } %>
-                                </select>
-                            </td>
-                            <td><input type="text" name="newWorkHours" placeholder="例: 8.00" pattern="^\d+(\.\d{1,2})?$" title="半角数字で時間を入力してください（例: 8.00）" required></td>
-                            <td>---</td> <%-- 説明欄は削除され、固定値または別の方法で表示 --%>
-                            <td class="action-cell"><button type="submit" class="btn-success">追加</button></td>
-                        </form>
-                    </tr>
-                </tbody>
-            </table>
+                        </thead>
+                        <tbody>
+                            <% if (workAllocs.isEmpty()) { %>
+                                <tr><td colspan="3" style="color: #6c757d; text-align: center; padding: 8px; font-size: 10px;">工数割り当てなし</td></tr>
+                            <% } else { %>
+                                <% for (KinmuManageBean.WorkAlloc alloc : workAllocs) { %>
+                                    <tr>
+                                        <td style="border: 1px solid #dee2e6; padding: 3px; font-size: 9px;"><%= alloc.getProjectName() != null ? alloc.getProjectName() : "---" %></td>
+                                        <td style="border: 1px solid #dee2e6; padding: 3px; text-align: center;"><%= alloc.getWorkHoursFormatted() %></td>
+                                        <td style="border: 1px solid #dee2e6; padding: 3px; text-align: center;">
+                                            <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('この工数割り当てを削除しますか？');" style="display: inline;">
+                                                <input type="hidden" name="action" value="delete_work_alloc">
+                                                <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
+                                                <input type="hidden" name="allocationId" value="<%= alloc.getAllocationId() %>">
+                                                <button type="submit" class="btn-danger" style="font-size: 9px; padding: 2px 4px;">削除</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% } %>
+                            <% } %>
+                        </tbody>
+                    </table>
+                </div>
+                <form action="<%= request.getContextPath() %>/KinmuManageServlet" method="post" onsubmit="return confirmAction('新しい工数割り当てを追加しますか？');" style="margin-top: 10px;">
+                    <input type="hidden" name="action" value="add_work_alloc">
+                    <input type="hidden" name="targetDate" value="<%= targetDateStr %>">
+                    <div style="display: flex; flex-direction: column; gap: 5px;">
+                        <select name="newProjectId" required style="width: 100%; font-size: 10px; padding: 3px;">
+                            <option value="">プロジェクト選択</option>
+                            <% for (ProjectBean project : projectList) { %>
+                                <option value="<%= project.getProjectId() %>"><%= project.getProjectName() %></option>
+                            <% } %>
+                        </select>
+                        <div style="display: flex; gap: 5px; align-items: center;">
+                            <input type="text" name="newWorkHours" placeholder="8.00" pattern="^\d+(\.\d{1,2})?$" required style="width: 60px; font-size: 10px; padding: 3px;">
+                            <span style="font-size: 10px;">時間</span>
+                            <button type="submit" class="btn-success" style="font-size: 10px; padding: 3px 6px;">追加</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
 
         <div style="text-align: center; margin-top: 30px;">
