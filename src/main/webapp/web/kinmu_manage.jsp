@@ -44,7 +44,7 @@
     String formattedTargetDate = targetDate.format(formatter);
 
     // メニューへ戻るリンクのURLを権限に応じて設定
-    String backUrl = (userRoleId == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
+    String backUrl = (userRoleId == 1) ? request.getContextPath() + "/AdminMenuServlet" : request.getContextPath() + "/web/menu.jsp";
 %>
 <!DOCTYPE html>
 <html>

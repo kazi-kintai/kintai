@@ -425,7 +425,7 @@ public class KintaiRecDao {
      * @return 出勤予定者数
      */
     public int getScheduledEmployeeCount(LocalDate date) {
-        String sql = "SELECT COUNT(*) FROM emp WHERE ROLEID != 999"; // 999は退職者など除外
+        String sql = "SELECT COUNT(*) FROM emp WHERE IS_ACTIVE = true";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -444,16 +444,21 @@ public class KintaiRecDao {
      * @return 出勤中者数
      */
     public int getWorkingEmployeeCount(LocalDate date) {
-        String sql = "SELECT COUNT(*) FROM kintai WHERE KINTAI_DATE = ? AND CLOCK_IN IS NOT NULL AND CLOCK_OUT IS NULL";
+        String sql = "SELECT COUNT(*) FROM kintai WHERE KINTAI_DATE = ? AND CLOCK_IN IS NOT NULL AND (IS_DELETED = false OR IS_DELETED IS NULL)";
+        System.out.println("getWorkingEmployeeCount SQL: " + sql);
+        System.out.println("getWorkingEmployeeCount date: " + date);
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(date));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1);
+                    int count = rs.getInt(1);
+                    System.out.println("getWorkingEmployeeCount result: " + count);
+                    return count;
                 }
             }
         } catch (Exception e) {
+            System.out.println("getWorkingEmployeeCount error: " + e.getMessage());
             e.printStackTrace();
         }
         return 0;
@@ -465,38 +470,71 @@ public class KintaiRecDao {
      * @return 未出勤者数
      */
     public int getAbsentEmployeeCount(LocalDate date) {
-        String sql = "SELECT COUNT(*) FROM emp e WHERE e.ROLEID != 999 AND NOT EXISTS " +
-                    "(SELECT 1 FROM kintai k WHERE k.EMP_ID = e.EMP_ID AND k.KINTAI_DATE = ?)";
+        // 土日祖日の場合は0を返す
+        DayOfWeek dayOfWeek = date.getDayOfWeek();
+        System.out.println("getAbsentEmployeeCount date: " + date + ", dayOfWeek: " + dayOfWeek);
+        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
+            System.out.println("getAbsentEmployeeCount: Weekend, returning 0");
+            return 0;
+        }
+        
+        String sql = "SELECT COUNT(*) FROM emp e WHERE e.IS_ACTIVE = true AND NOT EXISTS " +
+                    "(SELECT 1 FROM kintai k WHERE k.EMP_ID = e.EMP_ID AND k.KINTAI_DATE = ? AND (k.IS_DELETED = false OR k.IS_DELETED IS NULL))";
+        System.out.println("getAbsentEmployeeCount SQL: " + sql);
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(date));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getInt(1);
+                    int count = rs.getInt(1);
+                    System.out.println("getAbsentEmployeeCount result: " + count);
+                    return count;
                 }
             }
         } catch (Exception e) {
+            System.out.println("getAbsentEmployeeCount error: " + e.getMessage());
             e.printStackTrace();
         }
         return 0;
     }
     
     /**
-     * 指定日の休暇予定者数を取得
-     * 実装注：現在の段階では休暇管理テーブルがないため、固定値またはダミー計算を返す
+     * 指定日の休暇申請者数を取得
+     * 実装注：現在の段階では休暇管理テーブルがないため、0を返す
      * @param date 対象日
-     * @return 休暇予定者数
+     * @return 休暇申請者数
      */
     public int getVacationEmployeeCount(LocalDate date) {
         // TODO: 将来的に休暇管理テーブルが実装されたら、以下のようなSQLに変更
         // String sql = "SELECT COUNT(*) FROM vacation WHERE vacation_date = ? AND status = 'approved'";
         
-        // 現在はダミーデータとして、土日の場合は多め、平日は少なめの休暇者数を返す
-        DayOfWeek dayOfWeek = date.getDayOfWeek();
-        if (dayOfWeek == DayOfWeek.SATURDAY || dayOfWeek == DayOfWeek.SUNDAY) {
-            return 5; // 土日は休暇扱いが多い
-        } else {
-            return 2; // 平日は有給休暇者が少数
+        // 現在は休暇管理機能がないため0を返す
+        return 0;
+    }
+    
+    /**
+     * 指定日の遅刻者数を取得（標準出勤時刻9:00より遅い出勤）
+     * @param date 対象日
+     * @return 遅刻者数
+     */
+    public int getLateArrivalCount(LocalDate date) {
+        String sql = "SELECT COUNT(*) FROM kintai WHERE KINTAI_DATE = ? AND CLOCK_IN > '09:00:00' AND (IS_DELETED = false OR IS_DELETED IS NULL)";
+        System.out.println("getLateArrivalCount SQL: " + sql);
+        System.out.println("getLateArrivalCount date: " + date);
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setDate(1, Date.valueOf(date));
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    System.out.println("getLateArrivalCount result: " + count);
+                    return count;
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("getLateArrivalCount error: " + e.getMessage());
+            e.printStackTrace();
         }
+        return 0;
     }
 }

@@ -47,13 +47,28 @@ public class DeptManageServlet extends HttpServlet {
             return;
         }
         
-        // 部署一覧を取得
-        List<DeptBean> deptList = deptDao.findAll();
-        request.setAttribute("deptList", deptList);
+        // アクションをチェック
+        String action = request.getParameter("action");
         
-        // 部署管理画面にフォワード
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/dept_manage.jsp");
-        dispatcher.forward(request, response);
+        if ("history".equals(action)) {
+            // 削除履歴一覧を表示
+            List<DeptBean> deletedDeptList = deptDao.findDeleted();
+            request.setAttribute("deletedDeptList", deletedDeptList);
+            
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/dept_history.jsp");
+            dispatcher.forward(request, response);
+        } else {
+            // 通常の部署管理画面
+            List<DeptBean> deptList = deptDao.findAll();
+            List<DeptBean> deletedDeptList = deptDao.findDeleted(); // 削除された部署一覧も取得
+            
+            request.setAttribute("deptList", deptList);
+            request.setAttribute("deletedDeptList", deletedDeptList);
+            
+            // 部署管理画面にフォワード
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/dept_manage.jsp");
+            dispatcher.forward(request, response);
+        }
     }
     
     /**
@@ -84,6 +99,7 @@ public class DeptManageServlet extends HttpServlet {
         
         // アクションを取得
         String action = request.getParameter("action");
+        System.out.println("DeptManageServlet.doPost - action: " + action);
         
         boolean success = false;
         String message = "";
@@ -94,6 +110,7 @@ public class DeptManageServlet extends HttpServlet {
                     // 新規追加処理
                     String newDeptId = request.getParameter("deptId");
                     String newDeptName = request.getParameter("deptName");
+                    System.out.println("DeptManageServlet.doPost - add: deptId=" + newDeptId + ", deptName=" + newDeptName);
                     
                     // 入力チェック
                     if (newDeptId == null || newDeptId.trim().isEmpty() || 
@@ -144,6 +161,18 @@ public class DeptManageServlet extends HttpServlet {
                         message = "部署を削除しました";
                     } else {
                         message = "部署の削除に失敗しました。この部署に所属する社員が存在する可能性があります";
+                    }
+                    break;
+                    
+                case "restore":
+                    // 恢復処理
+                    String restoreDeptId = request.getParameter("deptId");
+                    success = deptDao.restore(restoreDeptId);
+                    
+                    if (success) {
+                        message = "部署を恢復しました";
+                    } else {
+                        message = "部署の恢復に失敗しました";
                     }
                     break;
                     

@@ -10,7 +10,7 @@
         return;
     }
     // 修正箇所: user.getRole() を user.getRoleId() に変更
-    String backUrl = (user.getRoleId() == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
+    String backUrl = (user.getRoleId() == 1) ? request.getContextPath() + "/AdminMenuServlet" : request.getContextPath() + "/web/menu.jsp";
 
     String today = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy年MM月dd日"));
     Map<String, String> workTimeData = (Map<String, String>) request.getAttribute("workTimeData");

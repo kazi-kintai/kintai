@@ -47,13 +47,28 @@ public class PostManageServlet extends HttpServlet {
             return;
         }
         
-        // 役職一覧を取得
-        List<PostBean> postList = postDao.findAll();
-        request.setAttribute("postList", postList);
+        // アクションをチェック
+        String action = request.getParameter("action");
         
-        // 役職管理画面にフォワード
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/post_manage.jsp");
-        dispatcher.forward(request, response);
+        if ("history".equals(action)) {
+            // 削除履歴一覧を表示
+            List<PostBean> deletedPostList = postDao.findDeleted();
+            request.setAttribute("deletedPostList", deletedPostList);
+            
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/post_history.jsp");
+            dispatcher.forward(request, response);
+        } else {
+            // 通常の役職管理画面
+            List<PostBean> postList = postDao.findAll();
+            List<PostBean> deletedPostList = postDao.findDeleted(); // 削除された役職一覧も取得
+            
+            request.setAttribute("postList", postList);
+            request.setAttribute("deletedPostList", deletedPostList);
+            
+            // 役職管理画面にフォワード
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/post_manage.jsp");
+            dispatcher.forward(request, response);
+        }
     }
     
     /**
@@ -84,6 +99,7 @@ public class PostManageServlet extends HttpServlet {
         
         // アクションを取得
         String action = request.getParameter("action");
+        System.out.println("PostManageServlet.doPost - action: " + action);
         
         boolean success = false;
         String message = "";
@@ -94,6 +110,7 @@ public class PostManageServlet extends HttpServlet {
                     // 新規追加処理
                     String newPostId = request.getParameter("postId");
                     String newPostName = request.getParameter("postName");
+                    System.out.println("PostManageServlet.doPost - add: postId=" + newPostId + ", postName=" + newPostName);
                     
                     // 入力チェック
                     if (newPostId == null || newPostId.trim().isEmpty() || 
@@ -144,6 +161,18 @@ public class PostManageServlet extends HttpServlet {
                         message = "役職を削除しました";
                     } else {
                         message = "役職の削除に失敗しました。この役職に所属する社員が存在する可能性があります";
+                    }
+                    break;
+                    
+                case "restore":
+                    // 恢復処理
+                    String restorePostId = request.getParameter("postId");
+                    success = postDao.restore(restorePostId);
+                    
+                    if (success) {
+                        message = "役職を恢復しました";
+                    } else {
+                        message = "役職の恢復に失敗しました";
                     }
                     break;
                     

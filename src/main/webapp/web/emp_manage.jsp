@@ -276,6 +276,11 @@
             </div>
         <% } %>
         
+        <%-- 削除履歴リンク --%>
+        <div style="margin-bottom: 20px; text-align: right;">
+            <a href="<%= request.getContextPath() %>/empManage?action=history" class="btn btn-secondary">過去削除履歴一覧</a>
+        </div>
+        
         <%-- 新規追加フォーム --%>
         <div class="add-form">
             <h2>新規従業員追加</h2>
@@ -470,8 +475,61 @@
             </tbody>
         </table>
         
-        <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理部基本メニューへ戻る</a>
+        <!-- 削除された従業員の復元セクション -->
+        <%
+            List<EmpBean> deletedEmpList = (List<EmpBean>) request.getAttribute("deletedEmpList");
+            Boolean hideRestoreSection = (Boolean) session.getAttribute("hideRestoreSection");
+            if (deletedEmpList != null && !deletedEmpList.isEmpty() && (hideRestoreSection == null || !hideRestoreSection)) {
+                // 復元セクションを表示したことをセッションに記録
+                session.setAttribute("hideRestoreSection", true);
+        %>
+        <div class="add-form" style="margin-top: 30px;">
+            <h2>誤削除データの復元</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>従業員ID</th>
+                        <th>氏名</th>
+                        <th>部署名</th>
+                        <th>役職名</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for (EmpBean deletedEmp : deletedEmpList) { %>
+                        <tr>
+                            <td><%= deletedEmp.getEmpId() %></td>
+                            <td><%= deletedEmp.getEmpName() %></td>
+                            <td><%= deletedEmp.getDeptName() != null ? deletedEmp.getDeptName() : "-" %></td>
+                            <td><%= deletedEmp.getPostName() != null ? deletedEmp.getPostName() : "-" %></td>
+                            <td>
+                                <button class="btn btn-success" onclick="confirmRestore('<%= deletedEmp.getEmpId() %>', '<%= deletedEmp.getEmpName() %>')">復元</button>
+                                
+                                <%-- 復元用フォーム（非表示） --%>
+                                <form id="restoreForm-<%= deletedEmp.getEmpId() %>" method="post" 
+                                      action="<%= request.getContextPath() %>/empManage" style="display: none;">
+                                    <input type="hidden" name="action" value="restore">
+                                    <input type="hidden" name="empId" value="<%= deletedEmp.getEmpId() %>">
+                                </form>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        <% } %>
+        
+        <a href="<%= request.getContextPath() %>/AdminMenuServlet" class="back-link">メニューへ戻る</a>
     </div>
+    
+    <script>
+        // 復元確認
+        function confirmRestore(empId, empName) {
+            if (confirm('従業員「' + empName + '」を復元してもよろしいですか？')) {
+                document.getElementById('restoreForm-' + empId).submit();
+            }
+        }
+    </script>
 </body>
 </html>
 

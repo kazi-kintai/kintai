@@ -20,7 +20,7 @@
     Boolean isSelfMode = (Boolean) request.getAttribute("isSelfMode");
     if (isSelfMode == null) isSelfMode = false;
 
-    String backUrl = (user.getRoleId() == 1) ? request.getContextPath() + "/web/admin_menu.jsp" : request.getContextPath() + "/web/menu.jsp";
+    String backUrl = (user.getRoleId() == 1) ? request.getContextPath() + "/AdminMenuServlet" : request.getContextPath() + "/web/menu.jsp";
 %>
 <!DOCTYPE html>
 <html>
