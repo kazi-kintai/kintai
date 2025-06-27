@@ -24,3 +24,4 @@ Thumbs.db
 mvnw
 mvnw.cmd
 >>>>>>> branch 'develop' of https://github.com/kazi-kintai/kintai.git
+.claude/.gitignore
