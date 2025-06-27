@@ -596,10 +596,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
 
         
-        <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理部基本メニューへ戻る</a>
+        <a href="<%= request.getContextPath() %>/AdminMenuServlet" class="back-link">メニューへ戻る</a>
     </div>
 </body>
 </html>

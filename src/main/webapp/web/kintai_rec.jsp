@@ -70,7 +70,7 @@
     // メニューへ戻るリンクのURLを権限に応じて設定
     String backUrl;
     if (userRoleId == 1) {
-        backUrl = request.getContextPath() + "/web/admin_menu.jsp";
+        backUrl = request.getContextPath() + "/AdminMenuServlet";
     } else {
         backUrl = request.getContextPath() + "/web/menu.jsp";
     }
@@ -674,9 +674,9 @@
 
         <h1 class="page-title">
             <% if ((userRoleId == 1 || userRoleId == 2) && !isSelfMode) { %>
-                勤怠時間記録管理
+                勤怠記録管理
             <% } else { %>
-                勤怠時間記録表示
+                勤怠記録表示
             <% } %>
         </h1>
 
@@ -701,18 +701,14 @@
                         <div class="summary-card lateness" style="border-left: 4px solid #dc3545;">
                             <h3>🕒 遅刻者</h3>
                             <div class="value" style="color: #dc3545;">
-                                <% 
-                                    // 这里需要从后端获取迟到者数据，暂时使用示例
-                                    int lateEmployeeCount = 0; // 将由后端提供
-                                %>
-                                <%= lateEmployeeCount %>名
+                                <%= request.getAttribute("lateCount") != null ? request.getAttribute("lateCount") : 0 %>名
                             </div>
                             <div class="employee-list">
                                 <span style="font-size: 10px; color: #666;">今日のデータ</span>
                             </div>
                         </div>
                         <div class="summary-card holiday-work">
-                            <h3>休日出勤者</h3>
+                            <h3>出勤予定者</h3>
                             <div class="value"><%= request.getAttribute("scheduledCount") != null ? request.getAttribute("scheduledCount") : 0 %>名</div>
                             <div class="employee-list">
                                 <!-- 真実のデータに基づいて動的に表示される予定 -->
@@ -720,7 +716,7 @@
                             </div>
                         </div>
                         <div class="summary-card absent">
-                            <h3>出社日欠勤者</h3>
+                            <h3>欠勤者</h3>
                             <div class="value"><%= request.getAttribute("absentCount") != null ? request.getAttribute("absentCount") : 0 %>名</div>
                             <div class="employee-list">
                                 <span style="font-size: 10px; color: #666;">今日のデータ</span>
@@ -853,12 +849,12 @@
                             <div class="status-title">📈 今日の勤怠状況 (<%= java.time.LocalDate.now().toString() %>)</div>
                             <div class="status-items">
                                 <div style="display: flex; gap: 12px; margin-bottom: 8px;">
-                                    <span>出勤予定: <%= request.getAttribute("scheduledCount") != null ? request.getAttribute("scheduledCount") : 25 %>名</span>
-                                    <span>出勤中: <%= request.getAttribute("workingCount") != null ? request.getAttribute("workingCount") : 23 %>名</span>
-                                    <span>未出勤: <%= request.getAttribute("absentCount") != null ? request.getAttribute("absentCount") : 2 %>名</span>
+                                    <span>出勤予定: <%= request.getAttribute("scheduledCount") != null ? request.getAttribute("scheduledCount") : 0 %>名</span>
+                                    <span>出勤中: <%= request.getAttribute("workingCount") != null ? request.getAttribute("workingCount") : 0 %>名</span>
+                                    <span>未出勤: <%= request.getAttribute("absentCount") != null ? request.getAttribute("absentCount") : 0 %>名</span>
                                 </div>
                                 <div style="display: flex; gap: 12px;">
-                                    <span>休暇予定: <%= request.getAttribute("vacationCount") != null ? request.getAttribute("vacationCount") : 3 %>名</span>
+                                    <span>休暇予定: <%= request.getAttribute("vacationCount") != null ? request.getAttribute("vacationCount") : 0 %>名</span>
                                 </div>
                             </div>
                         </div>

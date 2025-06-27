@@ -1,5 +1,8 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="kintai.UserBean" %>
+<%@ page import="java.time.LocalDate" %>
+<%@ page import="java.time.format.DateTimeFormatter" %>
+<%@ page import="java.util.Locale" %>
 <%
     UserBean user = (UserBean) session.getAttribute("user");
     // ログインチェック
@@ -9,6 +12,14 @@
     }
     
     String deptname = (String)session.getAttribute("deptname");
+    
+    // 現在の日付と曜日を取得（サーバー側）
+    LocalDate today = LocalDate.now();
+    int month = today.getMonthValue();
+    int day = today.getDayOfMonth();
+    String[] weekdays = {"日", "月", "火", "水", "木", "金", "土"};
+    String weekday = weekdays[today.getDayOfWeek().getValue() % 7];
+    String dateString = "今日は" + month + "月" + day + "日です<br/>" + weekday + "曜日";
 %>
 <html>
 <head>
@@ -237,7 +248,7 @@
         </div>
         
         <div class="dashboard">
-            <h1>管理部基本メニュー</h1>
+            <h1>管理者メニュー</h1>
             
             
             <!-- 基本機能ウィジェット -->
@@ -252,7 +263,7 @@
             <!-- 業務管理ウィジェット -->
             <div class="widget admin-widget">
                 <h2>業務管理</h2>
-                <a href="<%= request.getContextPath() %>/ProjectManageServlet" class="function-btn admin">プロジェクト管理</a>
+                <a href="<%= request.getContextPath() %>/projectManage" class="function-btn admin">プロジェクト管理</a>
                 <a href="#" class="function-btn" style="background: #6c757d;">休暇申請管理 (準備中)</a>
                 <a href="#" class="function-btn" style="background: #6c757d;">休暇付与管理 (準備中)</a>
             </div>
@@ -271,25 +282,20 @@
             <div class="widget system-widget">
                 <h2>システム概要</h2>
                 <div class="system-summary">
-                    <div class="summary-item">
-                        <div class="label">総従業員数</div>
-                        <div class="value" id="totalEmployees">-</div>
+                    <div class="summary-item" style="grid-column: span 2;">
+                        <div class="value" id="currentDate"><%= dateString %></div>
                     </div>
                     <div class="summary-item">
                         <div class="label">今日の出勤者</div>
                         <div class="value" id="todayAttendance">-</div>
                     </div>
                     <div class="summary-item">
+                        <div class="label">総従業員数</div>
+                        <div class="value" id="totalEmployees">-</div>
+                    </div>
+                    <div class="summary-item">
                         <div class="label">部署数</div>
                         <div class="value" id="totalDepts">-</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="label">今月の総労働時間</div>
-                        <div class="value" id="monthlyHours">-</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="label">未処理の申請</div>
-                        <div class="value" id="pendingRequests">-</div>
                     </div>
                 </div>
             </div>
@@ -307,21 +313,6 @@
         <% } %>
         <% if (request.getAttribute("totalDepts") != null) { %>
             document.getElementById('totalDepts').textContent = '<%= request.getAttribute("totalDepts") %>部署';
-        <% } %>
-        <% if (request.getAttribute("monthlyHours") != null) { %>
-            <%
-                Object monthlyHoursObj = request.getAttribute("monthlyHours");
-                String monthlyHoursStr = "0";
-                if (monthlyHoursObj instanceof Double) {
-                    monthlyHoursStr = String.format("%.0f", (Double) monthlyHoursObj);
-                } else if (monthlyHoursObj != null) {
-                    monthlyHoursStr = monthlyHoursObj.toString();
-                }
-            %>
-            document.getElementById('monthlyHours').textContent = '<%= monthlyHoursStr %>時間';
-        <% } %>
-        <% if (request.getAttribute("pendingRequests") != null) { %>
-            document.getElementById('pendingRequests').textContent = '<%= request.getAttribute("pendingRequests") %>件';
         <% } %>
     </script>
 </body>

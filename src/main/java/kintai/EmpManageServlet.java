@@ -51,20 +51,34 @@ public class EmpManageServlet extends HttpServlet {
             return;
         }
         
-        // 従業員一覧、部署一覧、役職一覧、ロール一覧、等級一覧を取得
-        List<EmpBean> empList = empDao.findAll();
-        List<DeptBean> deptList = deptDao.findAll();
-        List<PostBean> postList = postDao.findAll();
-        List<RoleBean> roleList = roleDao.findAll(); 
+        // アクションをチェック
+        String action = request.getParameter("action");
         
-        request.setAttribute("empList", empList);
-        request.setAttribute("deptList", deptList);
-        request.setAttribute("postList", postList);
-        request.setAttribute("roleList", roleList); // 新規追加
-        
-        // 従業員管理画面にフォワード
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/emp_manage.jsp");
-        dispatcher.forward(request, response);
+        if ("history".equals(action)) {
+            // 削除履歴一覧を表示
+            List<EmpBean> deletedEmpList = empDao.findDeleted();
+            request.setAttribute("deletedEmpList", deletedEmpList);
+            
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/emp_history.jsp");
+            dispatcher.forward(request, response);
+        } else {
+            // 通常の従業員管理画面
+            List<EmpBean> empList = empDao.findAll();
+            List<DeptBean> deptList = deptDao.findAll();
+            List<PostBean> postList = postDao.findAll();
+            List<RoleBean> roleList = roleDao.findAll();
+            List<EmpBean> deletedEmpList = empDao.findDeleted(); // 削除された従業員一覧も取得
+            
+            request.setAttribute("empList", empList);
+            request.setAttribute("deptList", deptList);
+            request.setAttribute("postList", postList);
+            request.setAttribute("roleList", roleList);
+            request.setAttribute("deletedEmpList", deletedEmpList);
+            
+            // 従業員管理画面にフォワード
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/emp_manage.jsp");
+            dispatcher.forward(request, response);
+        }
     }
     
     /**
@@ -199,6 +213,18 @@ public class EmpManageServlet extends HttpServlet {
                         message = "従業員を削除しました";
                     } else {
                         message = "従業員の削除に失敗しました。この従業員に関連するデータが存在する可能性があります。"; // メッセージを一般化
+                    }
+                    break;
+                    
+                case "restore":
+                    // 復元処理
+                    String restoreEmpId = request.getParameter("empId");
+                    success = empDao.restore(restoreEmpId);
+                    
+                    if (success) {
+                        message = "従業員を復元しました";
+                    } else {
+                        message = "従業員の復元に失敗しました";
                     }
                     break;
                     

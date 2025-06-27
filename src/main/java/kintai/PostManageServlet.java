@@ -47,16 +47,28 @@ public class PostManageServlet extends HttpServlet {
             return;
         }
         
-        // 役職一覧を取得
-        List<PostBean> postList = postDao.findAll();
-        List<PostBean> deletedPostList = postDao.findDeleted(); // 削除された役職一覧も取得
+        // アクションをチェック
+        String action = request.getParameter("action");
         
-        request.setAttribute("postList", postList);
-        request.setAttribute("deletedPostList", deletedPostList);
-        
-        // 役職管理画面にフォワード
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/post_manage.jsp");
-        dispatcher.forward(request, response);
+        if ("history".equals(action)) {
+            // 削除履歴一覧を表示
+            List<PostBean> deletedPostList = postDao.findDeleted();
+            request.setAttribute("deletedPostList", deletedPostList);
+            
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/post_history.jsp");
+            dispatcher.forward(request, response);
+        } else {
+            // 通常の役職管理画面
+            List<PostBean> postList = postDao.findAll();
+            List<PostBean> deletedPostList = postDao.findDeleted(); // 削除された役職一覧も取得
+            
+            request.setAttribute("postList", postList);
+            request.setAttribute("deletedPostList", deletedPostList);
+            
+            // 役職管理画面にフォワード
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/post_manage.jsp");
+            dispatcher.forward(request, response);
+        }
     }
     
     /**

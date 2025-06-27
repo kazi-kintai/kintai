@@ -261,6 +261,11 @@
             </div>
         <% } %>
         
+        <%-- 削除履歴リンク --%>
+        <div style="margin-bottom: 20px; text-align: right;">
+            <a href="<%= request.getContextPath() %>/postManage?action=history" class="btn btn-secondary">過去削除履歴一覧</a>
+        </div>
+        
         <%-- 新規追加フォーム --%>
         <div class="add-form">
             <h2>新規役職追加</h2>
@@ -337,10 +342,13 @@
         <!-- 削除された役職の復元セクション -->
         <%
             List<PostBean> deletedPostList = (List<PostBean>) request.getAttribute("deletedPostList");
-            if (deletedPostList != null && !deletedPostList.isEmpty()) {
+            Boolean hideRestoreSection = (Boolean) session.getAttribute("hideRestoreSection");
+            if (deletedPostList != null && !deletedPostList.isEmpty() && (hideRestoreSection == null || !hideRestoreSection)) {
+                // 復元セクションを表示したことをセッションに記録
+                session.setAttribute("hideRestoreSection", true);
         %>
         <div class="add-form" style="margin-top: 30px;">
-            <h2>削除された役職の復元</h2>
+            <h2>誤削除データの復元</h2>
             <table>
                 <thead>
                     <tr>
@@ -371,7 +379,7 @@
         </div>
         <% } %>
         
-        <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理部基本メニューへ戻る</a>
+        <a href="<%= request.getContextPath() %>/AdminMenuServlet" class="back-link">メニューへ戻る</a>
     </div>
 </body>
 </html>

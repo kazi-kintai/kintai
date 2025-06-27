@@ -191,21 +191,24 @@ public class KintaiRecServlet extends HttpServlet {
                 int scheduledCount = kintaiRecDao.getScheduledEmployeeCount(today); // 出勤予定者数
                 int workingCount = kintaiRecDao.getWorkingEmployeeCount(today);     // 出勤中者数
                 int absentCount = kintaiRecDao.getAbsentEmployeeCount(today);       // 未出勤者数
-                int vacationCount = kintaiRecDao.getVacationEmployeeCount(today);   // 休暇予定者数
+                int vacationCount = kintaiRecDao.getVacationEmployeeCount(today);   // 休暇申請者数
+                int lateCount = kintaiRecDao.getLateArrivalCount(today);           // 遅刻者数
                 
                 request.setAttribute("scheduledCount", scheduledCount);
                 request.setAttribute("workingCount", workingCount);
                 request.setAttribute("absentCount", absentCount);
                 request.setAttribute("vacationCount", vacationCount);
+                request.setAttribute("lateCount", lateCount);
                 
             } catch (Exception e) {
                 e.printStackTrace();
                 request.setAttribute("errorMessage", "今日の勤怠状況の取得中にエラーが発生しました");
-                // エラー時はデフォルト値を設定
-                request.setAttribute("scheduledCount", 25);
-                request.setAttribute("workingCount", 23);
-                request.setAttribute("absentCount", 2);
-                request.setAttribute("vacationCount", 3);
+                // エラー時は0を設定
+                request.setAttribute("scheduledCount", 0);
+                request.setAttribute("workingCount", 0);
+                request.setAttribute("absentCount", 0);
+                request.setAttribute("vacationCount", 0);
+                request.setAttribute("lateCount", 0);
             }
         }
 
@@ -248,13 +251,8 @@ public class KintaiRecServlet extends HttpServlet {
             } catch (Exception e) {
                 e.printStackTrace();
                 request.setAttribute("errorMessage", "法令遵守違反者リストの取得中にエラーが発生しました");
-                // エラー時はサンプルデータを設定
+                // エラー時は空リストを設定
                 violationEmployees = new java.util.ArrayList<>();
-                violationEmployees.add("田中太郎");
-                violationEmployees.add("佐藤花子");
-                violationEmployees.add("山田健一");
-                violationEmployees.add("中村咲子");
-                violationEmployees.add("渡辺大輔");
             }
         }
 

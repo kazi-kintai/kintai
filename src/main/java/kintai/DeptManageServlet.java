@@ -47,16 +47,28 @@ public class DeptManageServlet extends HttpServlet {
             return;
         }
         
-        // 部署一覧を取得
-        List<DeptBean> deptList = deptDao.findAll();
-        List<DeptBean> deletedDeptList = deptDao.findDeleted(); // 削除された部署一覧も取得
+        // アクションをチェック
+        String action = request.getParameter("action");
         
-        request.setAttribute("deptList", deptList);
-        request.setAttribute("deletedDeptList", deletedDeptList);
-        
-        // 部署管理画面にフォワード
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/dept_manage.jsp");
-        dispatcher.forward(request, response);
+        if ("history".equals(action)) {
+            // 削除履歴一覧を表示
+            List<DeptBean> deletedDeptList = deptDao.findDeleted();
+            request.setAttribute("deletedDeptList", deletedDeptList);
+            
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/dept_history.jsp");
+            dispatcher.forward(request, response);
+        } else {
+            // 通常の部署管理画面
+            List<DeptBean> deptList = deptDao.findAll();
+            List<DeptBean> deletedDeptList = deptDao.findDeleted(); // 削除された部署一覧も取得
+            
+            request.setAttribute("deptList", deptList);
+            request.setAttribute("deletedDeptList", deletedDeptList);
+            
+            // 部署管理画面にフォワード
+            RequestDispatcher dispatcher = request.getRequestDispatcher("/web/dept_manage.jsp");
+            dispatcher.forward(request, response);
+        }
     }
     
     /**
