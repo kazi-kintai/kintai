@@ -227,7 +227,7 @@
         <div class="header">
             <div class="user-info">
                 <%-- 部署名と氏名を表示 --%>
-                <p>部署：営業部<%-- <%= deptname %> --%></p>
+                <p>部署：管理部<%-- <%= deptname %> --%></p>
                 <p>氏名：<%= user.getName() %> <span style="color: #dc3545; font-weight: bold;">[管理者]</span></p>
             </div>
             <%-- ログアウトボタン --%>
@@ -237,7 +237,7 @@
         </div>
         
         <div class="dashboard">
-            <h1>管理者ダッシュボード</h1>
+            <h1>管理部基本メニュー</h1>
             
             
             <!-- 基本機能ウィジェット -->
@@ -249,20 +249,20 @@
                 <a href="<%= request.getContextPath() %>/PasswordChangeServlet" class="function-btn basic">パスワード変更</a>
             </div>
             
-            <!-- 管理機能ウィジェット -->
+            <!-- 業務管理ウィジェット -->
             <div class="widget admin-widget">
-                <h2>管理機能</h2>
+                <h2>業務管理</h2>
                 <a href="<%= request.getContextPath() %>/ProjectManageServlet" class="function-btn admin">プロジェクト管理</a>
                 <a href="#" class="function-btn" style="background: #6c757d;">休暇申請管理 (準備中)</a>
                 <a href="#" class="function-btn" style="background: #6c757d;">休暇付与管理 (準備中)</a>
             </div>
             
-            <!-- その他管理機能ウィジェット -->
+            <!-- マスタ管理ウィジェット -->
             <div class="widget other-admin-widget">
-                <h2>その他管理機能</h2>
-                <a href="<%= request.getContextPath() %>/empManage" class="function-btn" style="background: #fd7e14;">従業員登録・変更・削除</a>
-                <a href="<%= request.getContextPath() %>/deptManage" class="function-btn" style="background: #fd7e14;">部署登録・変更・削除</a>
-                <a href="<%= request.getContextPath() %>/postManage" class="function-btn" style="background: #fd7e14;">役職登録・変更・削除</a>
+                <h2>マスタ管理</h2>
+                <a href="<%= request.getContextPath() %>/empManage" class="function-btn" style="background: #fd7e14;">従業員管理</a>
+                <a href="<%= request.getContextPath() %>/deptManage" class="function-btn" style="background: #fd7e14;">部署管理</a>
+                <a href="<%= request.getContextPath() %>/postManage" class="function-btn" style="background: #fd7e14;">役職管理</a>
                 <a href="<%= request.getContextPath() %>/CalendarManageServlet" class="function-btn" style="background: #fd7e14;">カレンダー・イベント管理</a>
                 <a href="#" class="function-btn" style="background: #6c757d;">休日種別管理 (準備中)</a>
             </div>

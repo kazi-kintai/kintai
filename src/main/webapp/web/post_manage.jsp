@@ -197,9 +197,9 @@
     </style>
     <script>
         // 編集モードの切り替え
-        function toggleEdit(postNo) {
-            var displaySpan = document.getElementById('display-' + postNo);
-            var editForm = document.getElementById('edit-' + postNo);
+        function toggleEdit(postId) {
+            var displaySpan = document.getElementById('display-' + postId);
+            var editForm = document.getElementById('edit-' + postId);
             
             if (editForm.style.display === 'inline') {
                 displaySpan.style.display = 'inline';
@@ -211,27 +211,27 @@
         }
         
         // 削除確認
-        function confirmDelete(postNo, postName) {
+        function confirmDelete(postId, postName) {
             if (confirm('役職「' + postName + '」を削除してもよろしいですか？')) {
-                document.getElementById('deleteForm-' + postNo).submit();
+                document.getElementById('deleteForm-' + postId).submit();
             }
         }
         
         // 追加確認
         function confirmAdd(form) {
-            var postNo = form.postNo.value;
+            var postId = form.postId.value;
             var postName = form.postName.value;
             
-            if (postNo.trim() === '' || postName.trim() === '') {
+            if (postId.trim() === '' || postName.trim() === '') {
                 alert('役職番号と役職名を入力してください。');
                 return false;
             }
             
-            return confirm('役職番号「' + postNo + '」、役職名「' + postName + '」を追加してもよろしいですか？');
+            return confirm('役職番号「' + postId + '」、役職名「' + postName + '」を追加してもよろしいですか？');
         }
         
         // 更新確認
-        function confirmUpdate(form, postNo) {
+        function confirmUpdate(form, postId) {
             var postName = form.postName.value;
             
             if (postName.trim() === '') {
@@ -239,7 +239,14 @@
                 return false;
             }
             
-            return confirm('役職番号「' + postNo + '」の役職名を「' + postName + '」に更新してもよろしいですか？');
+            return confirm('役職番号「' + postId + '」の役職名を「' + postName + '」に更新してもよろしいですか？');
+        }
+        
+        // 恢復確認
+        function confirmRestore(postId, postName) {
+            if (confirm('役職「' + postName + '」を恢復してもよろしいですか？')) {
+                document.getElementById('restoreForm-' + postId).submit();
+            }
         }
     </script>
 </head>
@@ -260,8 +267,8 @@
             <form method="post" action="<%= request.getContextPath() %>/postManage" onsubmit="return confirmAdd(this)">
                 <input type="hidden" name="action" value="add">
                 <div class="form-group">
-                    <label for="newPostNo">役職番号：</label>
-                    <input type="text" id="newPostNo" name="postNo" maxlength="10" required>
+                    <label for="newPostId">役職番号：</label>
+                    <input type="text" id="newPostId" name="postId" maxlength="10" required>
                 </div>
                 <div class="form-group">
                     <label for="newPostName">役職名：</label>
@@ -285,36 +292,36 @@
                 <% if (postList != null && !postList.isEmpty()) { %>
                     <% for (PostBean post : postList) { %>
                         <tr>
-                            <td><%= post.getPostNo() %></td>
+                            <td><%= post.getPostId() %></td>
                             <td>
                                 <%-- 表示用 --%>
-                                <span id="display-<%= post.getPostNo() %>">
+                                <span id="display-<%= post.getPostId() %>">
                                     <%= post.getPostName() %>
                                 </span>
                                 
                                 <%-- 編集フォーム（初期状態では非表示） --%>
-                                <form id="edit-<%= post.getPostNo() %>" method="post" 
+                                <form id="edit-<%= post.getPostId() %>" method="post" 
                                       action="<%= request.getContextPath() %>/postManage" 
                                       class="edit-form" style="display: none;"
-                                      onsubmit="return confirmUpdate(this, '<%= post.getPostNo() %>')">
+                                      onsubmit="return confirmUpdate(this, '<%= post.getPostId() %>')">
                                     <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="postNo" value="<%= post.getPostNo() %>">
+                                    <input type="hidden" name="postId" value="<%= post.getPostId() %>">
                                     <input type="text" name="postName" value="<%= post.getPostName() %>" 
                                            maxlength="50" required>
                                     <button type="submit" class="btn btn-primary">保存</button>
                                     <button type="button" class="btn btn-secondary" 
-                                            onclick="toggleEdit('<%= post.getPostNo() %>')">キャンセル</button>
+                                            onclick="toggleEdit('<%= post.getPostId() %>')">キャンセル</button>
                                 </form>
                             </td>
                             <td>
-                                <button class="btn btn-success" onclick="toggleEdit('<%= post.getPostNo() %>')">編集</button>
-                                <button class="btn btn-danger" onclick="confirmDelete('<%= post.getPostNo() %>', '<%= post.getPostName() %>')">削除</button>
+                                <button class="btn btn-success" onclick="toggleEdit('<%= post.getPostId() %>')">編集</button>
+                                <button class="btn btn-danger" onclick="confirmDelete('<%= post.getPostId() %>', '<%= post.getPostName() %>')">削除</button>
                                 
                                 <%-- 削除用フォーム（非表示） --%>
-                                <form id="deleteForm-<%= post.getPostNo() %>" method="post" 
+                                <form id="deleteForm-<%= post.getPostId() %>" method="post" 
                                       action="<%= request.getContextPath() %>/postManage" style="display: none;">
                                     <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="postNo" value="<%= post.getPostNo() %>">
+                                    <input type="hidden" name="postId" value="<%= post.getPostId() %>">
                                 </form>
                             </td>
                         </tr>
@@ -326,6 +333,43 @@
                 <% } %>
             </tbody>
         </table>
+        
+        <!-- 削除された役職の復元セクション -->
+        <%
+            List<PostBean> deletedPostList = (List<PostBean>) request.getAttribute("deletedPostList");
+            if (deletedPostList != null && !deletedPostList.isEmpty()) {
+        %>
+        <div class="add-form" style="margin-top: 30px;">
+            <h2>削除された役職の復元</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>役職番号</th>
+                        <th>役職名</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for (PostBean deletedPost : deletedPostList) { %>
+                        <tr>
+                            <td><%= deletedPost.getPostId() %></td>
+                            <td><%= deletedPost.getPostName() %></td>
+                            <td>
+                                <button class="btn btn-success" onclick="confirmRestore('<%= deletedPost.getPostId() %>', '<%= deletedPost.getPostName() %>')">恢復</button>
+                                
+                                <%-- 復元用フォーム（非表示） --%>
+                                <form id="restoreForm-<%= deletedPost.getPostId() %>" method="post" 
+                                      action="<%= request.getContextPath() %>/postManage" style="display: none;">
+                                    <input type="hidden" name="action" value="restore">
+                                    <input type="hidden" name="postId" value="<%= deletedPost.getPostId() %>">
+                                </form>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        <% } %>
         
         <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理部基本メニューへ戻る</a>
     </div>

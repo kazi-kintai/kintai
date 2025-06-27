@@ -139,6 +139,7 @@ public class EmpManageServlet extends HttpServlet {
                     newEmp.setEmpType("正社員"); // Grade機能削除によりデフォルト値を設定
                     newEmp.setPass(newPass);
                     newEmp.setMail(newMail); // 新規追加
+                    newEmp.setActive(true); // 新規追加時はアクティブに設定
                     // EMPDATEはnull許容として、JSPからの入力がない場合はnull
                     if (newEmpDateStr != null && !newEmpDateStr.trim().isEmpty()) {
                         newEmp.setEmpDate(java.time.LocalDate.parse(newEmpDateStr));

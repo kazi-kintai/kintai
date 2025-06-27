@@ -79,7 +79,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>勤怠時間記録表示</title>
+    <title>勤怠記録表示</title>
     <style>
         body {
             font-family: 'メイリオ', sans-serif;

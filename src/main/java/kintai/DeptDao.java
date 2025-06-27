@@ -21,7 +21,7 @@ public class DeptDao {
      */
     public List<DeptBean> findAll() {
         List<DeptBean> deptList = new ArrayList<>();
-        String sql = "SELECT DEPT_ID, DEPT_NAME FROM dept WHERE IS_DELETED = false ORDER BY DEPT_ID";
+        String sql = "SELECT DEPT_ID, DEPT_NAME FROM dept WHERE (IS_DELETED IS NULL OR IS_DELETED = false) ORDER BY DEPT_ID";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -48,7 +48,7 @@ public class DeptDao {
      */
     public DeptBean findByDeptId(String deptId) {
         DeptBean dept = null;
-        String sql = "SELECT DEPT_ID, DEPT_NAME FROM dept WHERE DEPT_ID = ? AND IS_DELETED = false";
+        String sql = "SELECT DEPT_ID, DEPT_NAME FROM dept WHERE DEPT_ID = ? AND (IS_DELETED IS NULL OR IS_DELETED = false)";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -76,7 +76,7 @@ public class DeptDao {
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(DeptBean dept) {
-        String sql = "INSERT INTO dept (DEPT_ID, DEPT_NAME, IS_DELETED, CREATED_AT, CREATED_BY) VALUES (?, ?, false, NOW(), 'system')";
+        String sql = "INSERT INTO dept (DEPT_ID, DEPT_NAME, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, false, NOW(), 'system', NOW(), 'system')";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -162,5 +162,54 @@ public class DeptDao {
      */
     public boolean exists(String deptId) {
         return findByDeptId(deptId) != null;
+    }
+    
+    /**
+     * 削除された部署一覧を取得する
+     * @return 削除された部署情報のリスト
+     */
+    public List<DeptBean> findDeleted() {
+        List<DeptBean> deptList = new ArrayList<>();
+        String sql = "SELECT DEPT_ID, DEPT_NAME FROM dept WHERE IS_DELETED = true ORDER BY DEPT_ID";
+        
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                DeptBean dept = new DeptBean();
+                dept.setDeptId(rs.getString("DEPT_ID"));
+                dept.setDeptName(rs.getString("DEPT_NAME"));
+                deptList.add(dept);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return deptList;
+    }
+    
+    /**
+     * 削除された部署を恢復する
+     * @param deptId 恢復する部署番号
+     * @return 恢復に成功した場合true、失敗した場合false
+     */
+    public boolean restore(String deptId) {
+        String sql = "UPDATE dept SET IS_DELETED = false, DELETED_AT = NULL, DELETED_BY = NULL, UPDATED_AT = NOW(), UPDATED_BY = 'system' WHERE DEPT_ID = ? AND IS_DELETED = true";
+        
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, deptId);
+            
+            int count = ps.executeUpdate();
+            return count > 0;
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return false;
     }
 }

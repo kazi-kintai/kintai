@@ -197,9 +197,9 @@
     </style>
     <script>
         // 編集モードの切り替え
-        function toggleEdit(deptNo) {
-            var displaySpan = document.getElementById('display-' + deptNo);
-            var editForm = document.getElementById('edit-' + deptNo);
+        function toggleEdit(deptId) {
+            var displaySpan = document.getElementById('display-' + deptId);
+            var editForm = document.getElementById('edit-' + deptId);
             
             if (editForm.style.display === 'inline') {
                 displaySpan.style.display = 'inline';
@@ -211,27 +211,27 @@
         }
         
         // 削除確認
-        function confirmDelete(deptNo, deptName) {
+        function confirmDelete(deptId, deptName) {
             if (confirm('部署「' + deptName + '」を削除してもよろしいですか？')) {
-                document.getElementById('deleteForm-' + deptNo).submit();
+                document.getElementById('deleteForm-' + deptId).submit();
             }
         }
         
         // 追加確認
         function confirmAdd(form) {
-            var deptNo = form.deptNo.value;
+            var deptId = form.deptId.value;
             var deptName = form.deptName.value;
             
-            if (deptNo.trim() === '' || deptName.trim() === '') {
+            if (deptId.trim() === '' || deptName.trim() === '') {
                 alert('部署番号と部署名を入力してください。');
                 return false;
             }
             
-            return confirm('部署番号「' + deptNo + '」、部署名「' + deptName + '」を追加してもよろしいですか？');
+            return confirm('部署番号「' + deptId + '」、部署名「' + deptName + '」を追加してもよろしいですか？');
         }
         
         // 更新確認
-        function confirmUpdate(form, deptNo) {
+        function confirmUpdate(form, deptId) {
             var deptName = form.deptName.value;
             
             if (deptName.trim() === '') {
@@ -239,7 +239,14 @@
                 return false;
             }
             
-            return confirm('部署番号「' + deptNo + '」の部署名を「' + deptName + '」に更新してもよろしいですか？');
+            return confirm('部署番号「' + deptId + '」の部署名を「' + deptName + '」に更新してもよろしいですか？');
+        }
+        
+        // 恢復確認
+        function confirmRestore(deptId, deptName) {
+            if (confirm('部署「' + deptName + '」を恢復してもよろしいですか？')) {
+                document.getElementById('restoreForm-' + deptId).submit();
+            }
         }
     </script>
 </head>
@@ -260,8 +267,8 @@
             <form method="post" action="<%= request.getContextPath() %>/deptManage" onsubmit="return confirmAdd(this)">
                 <input type="hidden" name="action" value="add">
                 <div class="form-group">
-                    <label for="newDeptNo">部署番号：</label>
-                    <input type="text" id="newDeptNo" name="deptNo" maxlength="10" required>
+                    <label for="newDeptId">部署番号：</label>
+                    <input type="text" id="newDeptId" name="deptId" maxlength="10" required>
                 </div>
                 <div class="form-group">
                     <label for="newDeptName">部署名：</label>
@@ -285,36 +292,36 @@
                 <% if (deptList != null && !deptList.isEmpty()) { %>
                     <% for (DeptBean dept : deptList) { %>
                         <tr>
-                            <td><%= dept.getDeptNo() %></td>
+                            <td><%= dept.getDeptId() %></td>
                             <td>
                                 <%-- 表示用 --%>
-                                <span id="display-<%= dept.getDeptNo() %>">
+                                <span id="display-<%= dept.getDeptId() %>">
                                     <%= dept.getDeptName() %>
                                 </span>
                                 
                                 <%-- 編集フォーム（初期状態では非表示） --%>
-                                <form id="edit-<%= dept.getDeptNo() %>" method="post" 
+                                <form id="edit-<%= dept.getDeptId() %>" method="post" 
                                       action="<%= request.getContextPath() %>/deptManage" 
                                       class="edit-form" style="display: none;"
-                                      onsubmit="return confirmUpdate(this, '<%= dept.getDeptNo() %>')">
+                                      onsubmit="return confirmUpdate(this, '<%= dept.getDeptId() %>')">
                                     <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="deptNo" value="<%= dept.getDeptNo() %>">
+                                    <input type="hidden" name="deptId" value="<%= dept.getDeptId() %>">
                                     <input type="text" name="deptName" value="<%= dept.getDeptName() %>" 
                                            maxlength="50" required>
                                     <button type="submit" class="btn btn-primary">保存</button>
                                     <button type="button" class="btn btn-secondary" 
-                                            onclick="toggleEdit('<%= dept.getDeptNo() %>')">キャンセル</button>
+                                            onclick="toggleEdit('<%= dept.getDeptId() %>')">キャンセル</button>
                                 </form>
                             </td>
                             <td>
-                                <button class="btn btn-success" onclick="toggleEdit('<%= dept.getDeptNo() %>')">編集</button>
-                                <button class="btn btn-danger" onclick="confirmDelete('<%= dept.getDeptNo() %>', '<%= dept.getDeptName() %>')">削除</button>
+                                <button class="btn btn-success" onclick="toggleEdit('<%= dept.getDeptId() %>')">編集</button>
+                                <button class="btn btn-danger" onclick="confirmDelete('<%= dept.getDeptId() %>', '<%= dept.getDeptName() %>')">削除</button>
                                 
                                 <%-- 削除用フォーム（非表示） --%>
-                                <form id="deleteForm-<%= dept.getDeptNo() %>" method="post" 
+                                <form id="deleteForm-<%= dept.getDeptId() %>" method="post" 
                                       action="<%= request.getContextPath() %>/deptManage" style="display: none;">
                                     <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="deptNo" value="<%= dept.getDeptNo() %>">
+                                    <input type="hidden" name="deptId" value="<%= dept.getDeptId() %>">
                                 </form>
                             </td>
                         </tr>
@@ -326,6 +333,43 @@
                 <% } %>
             </tbody>
         </table>
+        
+        <!-- 削除された部署の復元セクション -->
+        <%
+            List<DeptBean> deletedDeptList = (List<DeptBean>) request.getAttribute("deletedDeptList");
+            if (deletedDeptList != null && !deletedDeptList.isEmpty()) {
+        %>
+        <div class="add-form" style="margin-top: 30px;">
+            <h2>削除された部署の復元</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>部署番号</th>
+                        <th>部署名</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% for (DeptBean deletedDept : deletedDeptList) { %>
+                        <tr>
+                            <td><%= deletedDept.getDeptId() %></td>
+                            <td><%= deletedDept.getDeptName() %></td>
+                            <td>
+                                <button class="btn btn-success" onclick="confirmRestore('<%= deletedDept.getDeptId() %>', '<%= deletedDept.getDeptName() %>')">恢復</button>
+                                
+                                <%-- 復元用フォーム（非表示） --%>
+                                <form id="restoreForm-<%= deletedDept.getDeptId() %>" method="post" 
+                                      action="<%= request.getContextPath() %>/deptManage" style="display: none;">
+                                    <input type="hidden" name="action" value="restore">
+                                    <input type="hidden" name="deptId" value="<%= deletedDept.getDeptId() %>">
+                                </form>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        <% } %>
         
         <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理部基本メニューへ戻る</a>
     </div>
