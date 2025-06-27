@@ -137,10 +137,9 @@ public class EmpManageServlet extends HttpServlet {
                     EmpBean newEmp = new EmpBean();
                     newEmp.setEmpNo(newEmpNo);
                     newEmp.setEmpName(newEmpName);
-                    newEmp.setDeptNo(newDeptNo);
-                    newEmp.setPostNo(newPostNo);
+                    newEmp.setDeptId(newDeptNo);
+                    newEmp.setPostId(newPostNo);
                     newEmp.setRoleId(Integer.parseInt(newRoleIdStr)); // 旧setRoleから変更
-                    newEmp.setGradeNo(Integer.parseInt(newGradeNoStr)); // 新規追加
                     newEmp.setPass(newPass);
                     newEmp.setMail(newMail); // 新規追加
                     // EMPDATEはnull許容として、JSPからの入力がない場合はnull
@@ -159,7 +158,6 @@ public class EmpManageServlet extends HttpServlet {
                     String updateDeptNo = request.getParameter("deptNo");
                     String updatePostNo = request.getParameter("postNo");
                     String updateRoleIdStr = request.getParameter("roleId"); // 旧roleから変更
-                    String updateGradeNoStr = request.getParameter("gradeNo"); // 新規追加
                     String updatePass = request.getParameter("pass"); // パスワードは更新時も入力させる想定
                     String updateMail = request.getParameter("mail"); // 新規追加
                     String updateEmpDateStr = request.getParameter("empDate"); // 新規追加
@@ -169,7 +167,6 @@ public class EmpManageServlet extends HttpServlet {
                         updateDeptNo == null || updateDeptNo.trim().isEmpty() ||
                         updatePostNo == null || updatePostNo.trim().isEmpty() ||
                         updateRoleIdStr == null || updateRoleIdStr.trim().isEmpty() ||
-                        updateGradeNoStr == null || updateGradeNoStr.trim().isEmpty() ||
                         updatePass == null || updatePass.trim().isEmpty()) { // パスワードも必須
                         message = "必須項目をすべて入力してください";
                         break;
@@ -178,10 +175,9 @@ public class EmpManageServlet extends HttpServlet {
                     EmpBean updateEmp = new EmpBean();
                     updateEmp.setEmpNo(updateEmpNo);
                     updateEmp.setEmpName(updateEmpName);
-                    updateEmp.setDeptNo(updateDeptNo);
-                    updateEmp.setPostNo(updatePostNo);
+                    updateEmp.setDeptId(updateDeptNo);
+                    updateEmp.setPostId(updatePostNo);
                     updateEmp.setRoleId(Integer.parseInt(updateRoleIdStr)); // 旧setRoleから変更
-                    updateEmp.setGradeNo(Integer.parseInt(updateGradeNoStr)); // 新規追加
                     updateEmp.setPass(updatePass);
                     updateEmp.setMail(updateMail); // 新規追加
                     if (updateEmpDateStr != null && !updateEmpDateStr.trim().isEmpty()) {

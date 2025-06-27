@@ -5,6 +5,8 @@ import java.sql.Date;
 import java.sql.Timestamp;
 
 public class LeaveRecBean implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private int leaveId;
     private String empNo;
     private int leaveTypeId;
@@ -12,34 +14,120 @@ public class LeaveRecBean implements Serializable {
     private Date endDate;
     private String reason;
     private String approvedBy;
+    private String status;
+
+    private boolean isDeleted;       // 論理削除フラグ
+    private Timestamp deletedAt;
+    private String deletedBy;
+
     private Timestamp createdAt;
+    private String createdBy;
+    private Timestamp updatedAt;
+    private String updatedBy;
 
-    private int totalPaidLeave;
+    // --- Getter / Setter ---
+    public int getLeaveId() {
+        return leaveId;
+    }
+    public void setLeaveId(int leaveId) {
+        this.leaveId = leaveId;
+    }
 
-    public int getLeaveId() { return leaveId; }
-    public void setLeaveId(int leaveId) { this.leaveId = leaveId; }
+    public String getEmpNo() {
+        return empNo;
+    }
+    public void setEmpNo(String empNo) {
+        this.empNo = empNo;
+    }
 
-    public String getEmpNo() { return empNo; }
-    public void setEmpNo(String empNo) { this.empNo = empNo; }
+    public int getLeaveTypeId() {
+        return leaveTypeId;
+    }
+    public void setLeaveTypeId(int leaveTypeId) {
+        this.leaveTypeId = leaveTypeId;
+    }
 
-    public int getLeaveTypeId() { return leaveTypeId; }
-    public void setLeaveTypeId(int leaveTypeId) { this.leaveTypeId = leaveTypeId; }
+    public Date getStartDate() {
+        return startDate;
+    }
+    public void setStartDate(Date startDate) {
+        this.startDate = startDate;
+    }
 
-    public Date getStartDate() { return startDate; }
-    public void setStartDate(Date startDate) { this.startDate = startDate; }
+    public Date getEndDate() {
+        return endDate;
+    }
+    public void setEndDate(Date endDate) {
+        this.endDate = endDate;
+    }
 
-    public Date getEndDate() { return endDate; }
-    public void setEndDate(Date endDate) { this.endDate = endDate; }
+    public String getReason() {
+        return reason;
+    }
+    public void setReason(String reason) {
+        this.reason = reason;
+    }
 
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
+    public String getApprovedBy() {
+        return approvedBy;
+    }
+    public void setApprovedBy(String approvedBy) {
+        this.approvedBy = approvedBy;
+    }
 
-    public String getApprovedBy() { return approvedBy; }
-    public void setApprovedBy(String approvedBy) { this.approvedBy = approvedBy; }
+    public String getStatus() {
+        return status;
+    }
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
-    public Timestamp getCreatedAt() { return createdAt; }
-    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+    public void setDeleted(boolean isDeleted) {
+        this.isDeleted = isDeleted;
+    }
 
-    public int getTotalPaidLeave() { return totalPaidLeave; }
-    public void setTotalPaidLeave(int totalPaidLeave) { this.totalPaidLeave = totalPaidLeave; }
+    public Timestamp getDeletedAt() {
+        return deletedAt;
+    }
+    public void setDeletedAt(Timestamp deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public String getDeletedBy() {
+        return deletedBy;
+    }
+    public void setDeletedBy(String deletedBy) {
+        this.deletedBy = deletedBy;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getCreatedBy() {
+        return createdBy;
+    }
+    public void setCreatedBy(String createdBy) {
+        this.createdBy = createdBy;
+    }
+
+    public Timestamp getUpdatedAt() {
+        return updatedAt;
+    }
+    public void setUpdatedAt(Timestamp updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
+    public String getUpdatedBy() {
+        return updatedBy;
+    }
+    public void setUpdatedBy(String updatedBy) {
+        this.updatedBy = updatedBy;
+    }
 }

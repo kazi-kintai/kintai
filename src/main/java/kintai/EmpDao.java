@@ -42,10 +42,9 @@ public class EmpDao {
                 EmpBean emp = new EmpBean();
                 emp.setEmpNo(rs.getString("EMPNO"));
                 emp.setEmpName(rs.getString("EMPNAME"));
-                emp.setDeptNo(rs.getString("DEPTNO"));
-                emp.setPostNo(rs.getString("POSTNO"));
+                emp.setDeptId(rs.getString("DEPTNO"));
+                emp.setPostId(rs.getString("POSTNO"));
                 emp.setRoleId(rs.getInt("ROLEID"));
-                emp.setGradeNo(rs.getInt("GRADENO"));
                 emp.setPass(rs.getString("PASS"));
                 emp.setMail(rs.getString("MAIL"));
                 
@@ -60,7 +59,6 @@ public class EmpDao {
                 emp.setDeptName(rs.getString("DEPTNAME"));
                 emp.setPostName(rs.getString("POSTNAME"));
                 emp.setRoleName(rs.getString("ROLENAME")); // 新規追加
-                emp.setGradeName(rs.getString("GRADENAME")); // 新規追加
                 empList.add(emp);
             }
             
@@ -98,10 +96,9 @@ public class EmpDao {
                     emp = new EmpBean();
                     emp.setEmpNo(rs.getString("EMPNO"));
                     emp.setEmpName(rs.getString("EMPNAME"));
-                    emp.setDeptNo(rs.getString("DEPTNO"));
-                    emp.setPostNo(rs.getString("POSTNO"));
+                    emp.setDeptId(rs.getString("DEPTNO"));
+                    emp.setPostId(rs.getString("POSTNO"));
                     emp.setRoleId(rs.getInt("ROLEID"));
-                    emp.setGradeNo(rs.getInt("GRADENO"));
                     emp.setPass(rs.getString("PASS"));
                     emp.setMail(rs.getString("MAIL"));
                     
@@ -116,7 +113,6 @@ public class EmpDao {
                     emp.setDeptName(rs.getString("DEPTNAME"));
                     emp.setPostName(rs.getString("POSTNAME"));
                     emp.setRoleName(rs.getString("ROLENAME")); // 新規追加
-                    emp.setGradeName(rs.getString("GRADENAME")); // 新規追加
                 }
             }
             
@@ -142,10 +138,9 @@ public class EmpDao {
             
             ps.setString(1, emp.getEmpNo());
             ps.setString(2, emp.getEmpName());
-            ps.setString(3, emp.getDeptNo());
-            ps.setString(4, emp.getPostNo());
+            ps.setString(3, emp.getDeptId());
+            ps.setString(4, emp.getPostId());
             ps.setInt(5, emp.getRoleId());
-            ps.setInt(6, emp.getGradeNo());
             ps.setString(7, emp.getPass());
             ps.setString(8, emp.getMail());
             
@@ -187,10 +182,9 @@ public class EmpDao {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, emp.getEmpName());
-            ps.setString(2, emp.getDeptNo());
-            ps.setString(3, emp.getPostNo());
+            ps.setString(2, emp.getDeptId());
+            ps.setString(3, emp.getPostId());
             ps.setInt(4, emp.getRoleId());
-            ps.setInt(5, emp.getGradeNo());
             ps.setString(6, emp.getPass());
             ps.setString(7, emp.getMail());
             
@@ -334,10 +328,9 @@ public class EmpDao {
                     EmpBean emp = new EmpBean();
                     emp.setEmpNo(rs.getString("EMPNO"));
                     emp.setEmpName(rs.getString("EMPNAME"));
-                    emp.setDeptNo(rs.getString("DEPTNO"));
-                    emp.setPostNo(rs.getString("POSTNO"));
+                    emp.setDeptId(rs.getString("DEPTNO"));
+                    emp.setPostId(rs.getString("POSTNO"));
                     emp.setRoleId(rs.getInt("ROLEID"));
-                    emp.setGradeNo(rs.getInt("GRADENO"));
                     emp.setPass(rs.getString("PASS"));
                     emp.setMail(rs.getString("MAIL"));
                     
@@ -350,7 +343,6 @@ public class EmpDao {
                     emp.setDeptName(rs.getString("DEPTNAME"));
                     emp.setPostName(rs.getString("POSTNAME"));
                     emp.setRoleName(rs.getString("ROLENAME"));
-                    emp.setGradeName(rs.getString("GRADENAME"));
                     
                     empList.add(emp);
                 }
@@ -361,5 +353,39 @@ public class EmpDao {
         }
         
         return empList;
+    }
+    
+    // 正社員のみを検索する
+    public List<EmpBean> findAllFullTimeEmployees() {
+        List<EmpBean> list = new ArrayList<>();
+        String sql = "SELECT * FROM emp WHERE IS_ACTIVE = TRUE AND EMP_TYPE = ? ORDER BY EMP_ID";
+
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, "fulltime");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    EmpBean emp = new EmpBean();
+                    emp.setEmpNo(rs.getString("EMP_ID"));
+                    emp.setEmpName(rs.getString("EMP_NAME"));
+                    emp.setDeptId(rs.getString("DEPT_ID"));
+                    emp.setPostId(rs.getString("POST_ID"));
+                    emp.setRoleId(rs.getInt("ROLE_ID"));
+                    emp.setEmpType(rs.getString("EMP_TYPE"));
+                    emp.setMail(rs.getString("MAIL"));
+                    emp.setEmpDate(rs.getDate("EMP_DATE").toLocalDate());
+                    emp.setIsActive(rs.getBoolean("IS_ACTIVE"));
+                    emp.setLeaveDate(rs.getDate("LEAVE_DATE") != null ? rs.getDate("LEAVE_DATE").toLocalDate() : null);
+                    list.add(emp);
+                }
+            }
+
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return list;
     }
 }
