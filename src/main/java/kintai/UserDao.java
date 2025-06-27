@@ -28,7 +28,7 @@ public class UserDao {
         // 検索列: EMPNO
         // 取得列: EMPNO, EMPNAME, DEPTNO, POSTNO, ROLEID, GRADENO, PASS
         // ※PASS列は認証のためだけに取得し、UserBeanには格納しない（セキュリティのため）。
-        String sql = "SELECT EMPNO, EMPNAME, DEPTNO, POSTNO, ROLEID, GRADENO, PASS FROM emp WHERE EMPNO = ?";
+        String sql = "SELECT EMP_ID, EMP_NAME, DEPT_ID, POST_ID, ROLE_ID, PASS FROM emp WHERE EMP_ID = ? AND IS_ACTIVE = true";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -46,12 +46,11 @@ public class UserDao {
                     if (storedPassword != null && storedPassword.equals(password)) {
                         user = new UserBean();
                         // --- ResultSetからUserBeanへのマッピング ---
-                        user.setEmpno(rs.getString("EMPNO"));
-                        user.setName(rs.getString("EMPNAME"));
-                        user.setDeptNo(rs.getString("DEPTNO"));
-                        user.setPostNo(rs.getString("POSTNO"));
-                        user.setRoleId(rs.getInt("ROLEID"));
-                        user.setGradeNo(rs.getInt("GRADENO"));
+                        user.setEmpId(rs.getString("EMP_ID"));
+                        user.setName(rs.getString("EMP_NAME"));
+                        user.setDeptId(rs.getString("DEPT_ID"));
+                        user.setPostId(rs.getString("POST_ID"));
+                        user.setRoleId(rs.getInt("ROLE_ID"));
                     }
                 }
             }
