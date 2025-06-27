@@ -31,6 +31,7 @@ public class EmpDao {
                      "LEFT JOIN dept d ON e.DEPT_ID = d.DEPT_ID " +
                      "LEFT JOIN post p ON e.POST_ID = p.POST_ID " +
                      "LEFT JOIN role r ON e.ROLE_ID = r.ROLE_ID " +
+                     "WHERE e.IS_ACTIVE = true " +
                      "ORDER BY e.EMP_ID";
         
         try (Connection conn = db.getConnection();
