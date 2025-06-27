@@ -21,13 +21,13 @@ public class LeaveGrantDao {
     public static final int LEAVE_TYPE_INITIAL_6M = 12;
     
     
-    // 未付与社員の抽出
+ // 未付与社員の抽出（付与日で重複チェック）
     public List<EmpBean> findUnissued(int leaveTypeId, LocalDate grantDate) {
         String sql = """
             SELECT * FROM emp e
             WHERE NOT EXISTS (
                 SELECT 1 FROM leave_balance lb
-                WHERE lb.empno = e.empno
+                WHERE lb.EmpId = e.EmpId
                   AND lb.leave_type_id = ?
                   AND lb.grant_date = ?
             )
@@ -40,7 +40,7 @@ public class LeaveGrantDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     EmpBean emp = new EmpBean();
-                    emp.setEmpNo(rs.getString("empno"));
+                    emp.setEmpId(rs.getString("EmpId"));
                     emp.setEmpName(rs.getString("empname"));
                     emp.setEmpDate(rs.getDate("empdate").toLocalDate());
                     list.add(emp);
@@ -60,7 +60,7 @@ public class LeaveGrantDao {
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 EmpBean emp = new EmpBean();
-                emp.setEmpNo(rs.getString("empno"));
+                emp.setEmpId(rs.getString("EmpId"));
                 emp.setEmpName(rs.getString("empname"));
                 emp.setEmpDate(rs.getDate("empdate").toLocalDate());
                 list.add(emp);
@@ -79,7 +79,7 @@ public class LeaveGrantDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     EmpBean emp = new EmpBean();
-                    emp.setEmpNo(rs.getString("empno"));
+                    emp.setEmpId(rs.getString("EmpId"));
                     emp.setEmpName(rs.getString("empname"));
                     emp.setEmpDate(rs.getDate("empdate").toLocalDate());
                     list.add(emp);
@@ -94,46 +94,45 @@ public class LeaveGrantDao {
     
     
     // 年次有給休暇（毎年7月1日付与）
-    public boolean grantAnnualLeave(EmpBean emp, String source) {
+    public boolean grantAnnualLeave(EmpBean emp, String loginUser) {
         LocalDate grantDate = LocalDate.of(LocalDate.now().getYear(), 7, 1);
         if (!isEligible(emp, grantDate)) return false;
-        if (alreadyGranted(emp.getEmpNo(), grantDate, LEAVE_TYPE_ANNUAL)) return false;
-
+        if (alreadyGranted(emp.getEmpId(), grantDate, LEAVE_TYPE_ANNUAL)) return false;
         int days = calcGrantedDays(emp);
-        return insertLeaveBalance(emp.getEmpNo(), LEAVE_TYPE_ANNUAL, grantDate, grantDate.plusYears(1), days, source);
+        return insertLeaveBalance(emp.getEmpId(), LEAVE_TYPE_ANNUAL, grantDate, grantDate.plusYears(1), days, "auto", loginUser);
     }
 
     // 初回5日・5日付与（3か月／6か月）
-    public boolean grantInitialAnnualLeave(EmpBean emp, int stage, String source) {
+    public boolean grantInitialAnnualLeave(EmpBean emp, int stage, String loginUser) {
         int days = 5;
         int leaveTypeId = (stage == 1) ? LEAVE_TYPE_INITIAL_3M : LEAVE_TYPE_INITIAL_6M;
         LocalDate targetDate = (stage == 1)
             ? emp.getEmpDate().plusMonths(3)
             : emp.getEmpDate().plusMonths(6);
 
-        if (LocalDate.now().isBefore(targetDate)) return false; // 遅れ許容
+        if (LocalDate.now().isBefore(targetDate)) return false;
         if (!isEligible(emp, targetDate)) return false;
-        if (alreadyGranted(emp.getEmpNo(), targetDate, leaveTypeId)) return false;
+        if (alreadyGranted(emp.getEmpId(), targetDate, leaveTypeId)) return false;
 
-        return insertLeaveBalance(emp.getEmpNo(), leaveTypeId, targetDate, targetDate.plusYears(1), days, "初回" + days + "日付与");
+        return insertLeaveBalance(emp.getEmpId(), leaveTypeId, targetDate, targetDate.plusYears(1), days, "初回" + days + "日付与", loginUser);
     }
 
     // 特別休暇（7月1日）
-    public boolean grantSpecialLeave(EmpBean emp, String source) {
+    public boolean grantSpecialLeave(EmpBean emp, String loginUser) {
         LocalDate today = LocalDate.now();
         LocalDate grantDate = LocalDate.of(today.getYear(), 7, 1);
 
         if (!today.equals(grantDate)) return false;
-        if (alreadyGranted(emp.getEmpNo(), grantDate, LEAVE_TYPE_SPECIAL)) return false;
+        if (alreadyGranted(emp.getEmpId(), grantDate, LEAVE_TYPE_SPECIAL)) return false;
 
-        return insertLeaveBalance(emp.getEmpNo(), 2, grantDate, grantDate.plusYears(1), 5, "特別休暇");
+        return insertLeaveBalance(emp.getEmpId(), LEAVE_TYPE_SPECIAL, grantDate, grantDate.plusYears(1), 5, "特別休暇", loginUser);
     }
 
     // 代休（休日勤務があった翌日以降に人手で呼び出し）
-    public boolean grantCompLeave(EmpBean emp, LocalDate workDate, String source) {
-    	if (alreadyGranted(emp.getEmpNo(), workDate, LEAVE_TYPE_COMP)) return false;
+    public boolean grantCompLeave(EmpBean emp, LocalDate workDate, String loginUser) {
+        if (alreadyGranted(emp.getEmpId(), workDate, LEAVE_TYPE_COMP)) return false;
 
-        return insertLeaveBalance(emp.getEmpNo(), 3, workDate, workDate.plusMonths(1), 1, "休日勤務代休");
+        return insertLeaveBalance(emp.getEmpId(), LEAVE_TYPE_COMP, workDate, workDate.plusMonths(1), 1, "休日勤務代休", loginUser);
     }
 
     // 勤続年数による年次有給休暇日数計算（第25条3項）
@@ -149,11 +148,11 @@ public class LeaveGrantDao {
     }
 
     // すでに付与済か確認（同日・同種）
-    boolean alreadyGranted(String empNo, LocalDate date, int leaveTypeId) {
-        String sql = "SELECT COUNT(*) FROM leave_balance WHERE empno = ? AND leave_type_id = ? AND grant_date = ?";
+    public boolean alreadyGranted(String empId, LocalDate date, int leaveTypeId) {
+        String sql = "SELECT COUNT(*) FROM leave_balance WHERE EmpId = ? AND leave_type_id = ? AND grant_date = ?";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, empNo);
+            ps.setString(1, empId);
             ps.setInt(2, leaveTypeId);
             ps.setDate(3, Date.valueOf(date));
             try (ResultSet rs = ps.executeQuery()) {
@@ -166,18 +165,19 @@ public class LeaveGrantDao {
     }
 
     // 付与登録処理
-    private boolean insertLeaveBalance(String empNo, int leaveTypeId, LocalDate grantDate,
-            LocalDate expireDate, int days, String source) {
-        String sql = "INSERT INTO leave_balance (empno, leave_type_id, grant_date, expire_date, granted_days, used_days, source)"
-        		+ "VALUES (?, ?, ?, ?, ?, 0, ?)";
+    private boolean insertLeaveBalance(String empId, int leaveTypeId, LocalDate grantDate, LocalDate expireDate, int days, String source, String loginUser) {
+        String sql = "INSERT INTO leave_balance (EmpId, leave_type_id, grant_date, expire_date, granted_days, used_days, source, created_at, created_by, updated_at, updated_by)"
+                + " VALUES (?, ?, ?, ?, ?, 0, ?, CURRENT_TIMESTAMP, ?, CURRENT_TIMESTAMP, ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setString(1, empNo);
+            ps.setString(1, empId);
             ps.setInt(2, leaveTypeId);
             ps.setDate(3, Date.valueOf(grantDate));
             ps.setDate(4, Date.valueOf(expireDate));
             ps.setInt(5, days);
             ps.setString(6, source);
+            ps.setString(7, loginUser);
+            ps.setString(8, loginUser); 
             return ps.executeUpdate() > 0;
         } catch (Exception e) {
             e.printStackTrace();
@@ -195,7 +195,7 @@ public class LeaveGrantDao {
 //                             "WHERE EVENT_DATE BETWEEN ? AND ? AND IS_WORKING = TRUE";
 //
 //        String attendanceSql = "SELECT COUNT(*) FROM kintai " +
-//                               "WHERE EMPNO = ? AND KINTAIDATE BETWEEN ? AND ?";
+//                               "WHERE EmpId = ? AND KINTAIDATE BETWEEN ? AND ?";
 //
 //        try (Connection conn = db.getConnection()) {
 //            int totalWorkingDays = 0;
@@ -212,7 +212,7 @@ public class LeaveGrantDao {
 //
 //            // kintai テーブルの出勤日数
 //            try (PreparedStatement ps = conn.prepareStatement(attendanceSql)) {
-//                ps.setString(1, emp.getEmpNo());
+//                ps.setString(1, emp.getEmpId());
 //                ps.setDate(2, Date.valueOf(startDate));
 //                ps.setDate(3, Date.valueOf(baseDate));
 //                try (ResultSet rs = ps.executeQuery()) {

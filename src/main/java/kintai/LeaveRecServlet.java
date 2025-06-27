@@ -18,6 +18,7 @@ public class LeaveRecServlet extends HttpServlet {
     private final LeaveBalanceDao balanceDao = new LeaveBalanceDao(); // 残日数・期限一覧
     private final EmpDao empDao = new EmpDao();
     private final DeptDao deptDao = new DeptDao();
+    private final PostDao postDao = new PostDao();
     private final LeaveTypeDao typeDao = new LeaveTypeDao();
 
     @Override
@@ -31,8 +32,24 @@ public class LeaveRecServlet extends HttpServlet {
         }
 
         try {
-            setCommonAttributes(request);
+            // 部署・役職パラメータを取得（検索フォームから）
+            String deptId = request.getParameter("dept");
+            String postId = request.getParameter("post");
 
+            // 部署・役職でフィルターした社員リスト取得
+            List<EmpBean> empList = empDao.findByFilters(deptId, postId);
+
+            // 共通属性セット（部署一覧、役職一覧、休暇種別一覧）
+            request.setAttribute("empList", empList);
+            request.setAttribute("deptList", deptDao.findAll());
+            request.setAttribute("postList", postDao.findAll());
+            request.setAttribute("leaveTypeList", typeDao.findAll());
+
+            // 選択された部署・役職をJSPへ保持
+            request.setAttribute("selectedDept", deptId);
+            request.setAttribute("selectedPost", postId);
+
+            // 従業員選択
             String empNo = (String) request.getAttribute("selectedEmpNo");
             if (empNo == null) empNo = "";
 
@@ -47,7 +64,7 @@ public class LeaveRecServlet extends HttpServlet {
                 List<LeaveRecBean> leaveList = dao.getLeaveList(empNo);
                 request.setAttribute("leaveList", leaveList);
             } else {
-                // 初期表示用（従業員未選択時）
+                // 初期表示用
                 request.setAttribute("remainingPaidLeave", 0);
                 request.setAttribute("remainingSpecialLeave", 0);
                 request.setAttribute("remainingCompLeave", 0);

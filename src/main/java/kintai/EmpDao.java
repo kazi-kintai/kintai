@@ -378,4 +378,38 @@ public class EmpDao {
         
         return empList;
     }
+    
+    
+    /**
+     * 契約形態で社員情報を検索する
+     * @param 
+     * @return 正社員の社員情報。見つからない場合はnull
+     */
+    public List<EmpBean> findAllFullTimeEmployees() {
+        List<EmpBean> list = new ArrayList<>();
+
+        String sql = "SELECT * FROM emp WHERE employment_type = ? AND is_deleted = FALSE"; // employment_type=正社員
+        try ( Connection conn = db.getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "正社員");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    EmpBean emp = new EmpBean();
+                    emp.setEmpId(rs.getString("empno"));
+                    emp.setEmpName(rs.getString("empname"));
+                    emp.setDeptNo(rs.getString("deptno"));
+                    emp.setPostNo(rs.getString("postno"));
+                    emp.setRoleId(rs.getInt("roleid"));
+                    emp.setPass(rs.getString("pass"));
+                    emp.setMail(rs.getString("mail"));
+                    emp.setEmpDate(rs.getDate("empdate").toLocalDate());
+                    list.add(emp);
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return list;
+    }
 }

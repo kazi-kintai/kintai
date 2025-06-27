@@ -11,6 +11,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 @WebServlet("/leaveGrantManage")
 public class LeaveGrantManageServlet extends HttpServlet {
@@ -31,7 +32,7 @@ public class LeaveGrantManageServlet extends HttpServlet {
 
         String mode = request.getParameter("mode");
         String leaveType = request.getParameter("leaveType");
-        if (leaveType == null) leaveType = "annual"; // デフォルト
+        if (leaveType == null) leaveType = "annual";
 
         LocalDate today = LocalDate.now();
         List<EmpBean> allEmp = empDao.findAllFullTimeEmployees();
@@ -42,28 +43,24 @@ public class LeaveGrantManageServlet extends HttpServlet {
         int unissuedSpecial = 0;
 
         for (EmpBean emp : allEmp) {
-            // 年次有給休暇
-            boolean notGrantedAnnual = !grantDao.alreadyGranted(emp.getEmpNo(), LocalDate.of(today.getYear(), 7, 1), LeaveGrantDao.LEAVE_TYPE_ANNUAL)
+            boolean notGrantedAnnual = !grantDao.alreadyGranted(emp.getEmpId(), LocalDate.of(today.getYear(), 7, 1), LeaveGrantDao.LEAVE_TYPE_ANNUAL)
                     && grantDao.isEligible(emp, LocalDate.of(today.getYear(), 7, 1));
             if (notGrantedAnnual) unissuedAnnual++;
 
-            // 初回付与（3ヶ月・6ヶ月）
             LocalDate date3m = emp.getEmpDate().plusMonths(3);
             LocalDate date6m = emp.getEmpDate().plusMonths(6);
 
-            boolean need3m = !grantDao.alreadyGranted(emp.getEmpNo(), date3m, LeaveGrantDao.LEAVE_TYPE_INITIAL_3M)
+            boolean need3m = !grantDao.alreadyGranted(emp.getEmpId(), date3m, LeaveGrantDao.LEAVE_TYPE_INITIAL_3M)
                     && !today.isBefore(date3m) && grantDao.isEligible(emp, date3m);
-            boolean need6m = !grantDao.alreadyGranted(emp.getEmpNo(), date6m, LeaveGrantDao.LEAVE_TYPE_INITIAL_6M)
+            boolean need6m = !grantDao.alreadyGranted(emp.getEmpId(), date6m, LeaveGrantDao.LEAVE_TYPE_INITIAL_6M)
                     && !today.isBefore(date6m) && grantDao.isEligible(emp, date6m);
             if (need3m || need6m) unissuedInitial++;
 
-            // 特別休暇
             LocalDate specialDate = LocalDate.of(today.getYear(), 7, 1);
-            boolean notGrantedSpecial = today.equals(specialDate)
-                    && !grantDao.alreadyGranted(emp.getEmpNo(), specialDate, LeaveGrantDao.LEAVE_TYPE_SPECIAL);
+            boolean notGrantedSpecial = (today.isEqual(specialDate) || today.isAfter(specialDate))
+                    && !grantDao.alreadyGranted(emp.getEmpId(), specialDate, LeaveGrantDao.LEAVE_TYPE_SPECIAL);
             if (notGrantedSpecial) unissuedSpecial++;
 
-            // プレビュー表示対象のみにリスト化
             if ("preview".equals(mode)) {
                 switch (leaveType) {
                     case "annual":
@@ -79,11 +76,10 @@ public class LeaveGrantManageServlet extends HttpServlet {
             }
         }
 
-        // JSPに渡す共通データ
         request.setAttribute("unissuedAnnual", unissuedAnnual);
         request.setAttribute("unissuedInitial", unissuedInitial);
         request.setAttribute("unissuedSpecial", unissuedSpecial);
-        request.setAttribute("leaveType", leaveType); // プルダウン選択維持
+        request.setAttribute("leaveType", leaveType);
 
         if ("preview".equals(mode)) {
             request.setAttribute("unissuedList", unissuedList);
@@ -102,40 +98,30 @@ public class LeaveGrantManageServlet extends HttpServlet {
         LocalDate today = LocalDate.now();
         int grantedCount = 0;
 
-        List<EmpBean> empList = empDao.findAllFullTimeEmployees();
+        HttpSession session = request.getSession();
+        UserBean user = (UserBean) session.getAttribute("user");
+        String loginUser = (user != null) ? user.getEmpId() : "system";
 
-        String source; // 追加：source文字列
-        switch (leaveType) {
-            case "annual":
-                source = "auto";
-                break;
-            case "initial":
-                // initial-3m, initial-6mは後段で分けて指定
-                source = "initial";
-                break;
-            case "special":
-                source = "special";
-                break;
-            default:
-                source = "manual";
-        }
+        List<EmpBean> empList = empDao.findAllFullTimeEmployees();
 
         for (EmpBean emp : empList) {
             switch (leaveType) {
                 case "annual":
-                    if (grantDao.grantAnnualLeave(emp, "auto")) grantedCount++;
+                    if (grantDao.grantAnnualLeave(emp, loginUser)) grantedCount++;
                     break;
                 case "initial":
-                    if (grantDao.grantInitialAnnualLeave(emp, 1, "auto")) grantedCount++;
-                    if (grantDao.grantInitialAnnualLeave(emp, 2, "auto")) grantedCount++;
+                    if (grantDao.grantInitialAnnualLeave(emp, 1, loginUser)) grantedCount++;
+                    if (grantDao.grantInitialAnnualLeave(emp, 2, loginUser)) grantedCount++;
                     break;
-                case "special":	
-                    if (grantDao.grantSpecialLeave(emp, "auto")) grantedCount++;
+                case "special":
+                    LocalDate grantDate = LocalDate.of(today.getYear(), 7, 1);
+                    if ((today.isEqual(grantDate) || today.isAfter(grantDate)) && !grantDao.alreadyGranted(emp.getEmpId(), grantDate, LeaveGrantDao.LEAVE_TYPE_SPECIAL)) {
+                        if (grantDao.grantSpecialLeave(emp, loginUser)) grantedCount++;
+                    }
                     break;
             }
         }
 
-        // メッセージ設定
         if (grantedCount > 0) {
             request.setAttribute("message", grantedCount + "人に「" + leaveType + "」休暇を付与しました。");
             request.setAttribute("success", true);

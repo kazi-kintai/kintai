@@ -2,6 +2,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="kintai.EmpBean" %>
 <%@ page import="kintai.DeptBean" %>
+<%@ page import="kintai.PostBean" %>
 <%@ page import="kintai.LeaveTypeBean" %>
 <%@ page import="kintai.LeaveRecBean" %>
 <%@ page import="kintai.LeaveBalanceBean" %>
@@ -14,6 +15,9 @@
     String message = (String) request.getAttribute("message");
     Boolean success = (Boolean) request.getAttribute("success");
     String selectedEmpNo = (String) request.getAttribute("selectedEmpNo");
+    List<PostBean> postList = (List<PostBean>) request.getAttribute("postList");
+    String selectedDept = (String) request.getAttribute("selectedDept");
+    String selectedPost = (String) request.getAttribute("selectedPost");
 %>
 
 <!DOCTYPE html>
@@ -132,6 +136,26 @@
         .balance-table th, .balance-table td {
             text-align: center;
         }
+        form.selection-form {
+		    margin-bottom: 30px;
+		    display: flex;
+		    align-items: center;
+		    gap: 15px; /* 各項目間のスペース */
+		    flex-wrap: wrap; /* 画面幅が狭い時に折り返しOK */
+		}
+		
+		form.selection-form label {
+		    width: auto; /* 固定幅解除 */
+		    margin-bottom: 0;
+		}
+		
+		form.selection-form select {
+		    width: 200px;
+		    padding: 6px 8px;
+		    border: 1px solid #ced4da;
+		    border-radius: 4px;
+		    font-size: 14px;
+		}
     </style>
 </head>
 <body>
@@ -144,22 +168,49 @@
             </div>
         <% } %>
 
-        <!-- 従業員選択 -->
-        <form method="post" action="<%= request.getContextPath() %>/leaveRec">
-            <label for="empNo">従業員選択：</label>
-            <select id="empNo" name="empNo" onchange="this.form.submit()" required>
-                <option value="">-- 従業員を選択してください --</option>
-                <% if (empList != null) {
-                    for (EmpBean emp : empList) {
-                %>
-                    <option value="<%= emp.getEmpNo() %>" <%= emp.getEmpNo().equals(selectedEmpNo) ? "selected" : "" %>>
-                        <%= emp.getEmpNo() %> - <%= emp.getEmpName() %>
-                    </option>
-                <%  }
-                } %>
-            </select>
-            <input type="hidden" name="mode" value="search">
-        </form>
+        <!-- 従業員選択フォーム -->
+		<form method="post" action="<%= request.getContextPath() %>/leaveRec" class="selection-form">
+		    <label for="dept">部署：</label>
+		    <select id="dept" name="dept" onchange="this.form.submit()">
+		        <option value="">-- 全部署 --</option>
+		        <% if (deptList != null) {
+		            for (DeptBean dept : deptList) {
+		        %>
+		        <option value="<%= dept.getDeptId() %>" <%= dept.getDeptId().equals(selectedDept) ? "selected" : "" %>>
+		            <%= dept.getDeptName() %>
+		        </option>
+		        <%  }
+		        } %>
+		    </select>
+		
+		    <label for="post">役職：</label>
+		    <select id="post" name="post" onchange="this.form.submit()">
+		        <option value="">-- 全役職 --</option>
+		        <% if (postList != null) {
+		            for (PostBean post : postList) {
+		        %>
+		        <option value="<%= post.getPostId() %>" <%= post.getPostId().equals(selectedPost) ? "selected" : "" %>>
+		            <%= post.getPostName() %>
+		        </option>
+		        <%  }
+		        } %>
+		    </select>
+		
+		    <label for="empNo">従業員選択：</label>
+		    <select id="empNo" name="empNo" onchange="this.form.submit()" required>
+		        <option value="">-- 従業員を選択してください --</option>
+		        <% if (empList != null) {
+		            for (EmpBean emp : empList) {
+		        %>
+		        <option value="<%= emp.getEmpId() %>" <%= emp.getEmpId().equals(selectedEmpNo) ? "selected" : "" %>>
+		            <%= emp.getEmpId() %> - <%= emp.getEmpName() %>
+		        </option>
+		        <%  }
+		        } %>
+		    </select>
+		
+		    <input type="hidden" name="mode" value="search">
+		</form>
 
         <% if (selectedEmpNo != null && !selectedEmpNo.isEmpty()) { %>
             <!-- 残日数一覧 -->
@@ -190,7 +241,42 @@
                 </tbody>
             </table>
 
-            <!-- 休暇申請登録一覧 -->
+            
+
+            <!-- 新規休暇申請フォーム -->
+            <h2>休暇申請登録の追加</h2>
+            <form method="post" action="<%= request.getContextPath() %>/leaveRec">
+                <input type="hidden" name="mode" value="add">
+                <input type="hidden" name="empNo" value="<%= selectedEmpNo %>">
+                <div>
+                    <label for="leaveTypeId">休暇種別：</label>
+                    <select id="leaveTypeId" name="leaveTypeId" required>
+                        <option value="">-- 種別を選択 --</option>
+                        <% if (leaveTypeList != null) {
+                            for (LeaveTypeBean type : leaveTypeList) {
+                        %>
+                            <option value="<%= type.getLeaveTypeId() %>"><%= type.getLeaveTypeName() %></option>
+                        <%  }
+                        } %>
+                    </select>
+                </div>
+                <div>
+                    <label for="startDate">開始日：</label>
+                    <input type="date" id="startDate" name="startDate" required>
+                </div>
+                <div>
+                    <label for="endDate">終了日：</label>
+                    <input type="date" id="endDate" name="endDate" required>
+                </div>
+                <div>
+                    <label for="reason">理由：</label>
+                    <textarea id="reason" name="reason" placeholder="理由を入力してください" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">登録する</button>
+            </form>
+        <% } %>
+        
+        <!-- 休暇申請登録一覧 -->
             <h2>休暇申請登録一覧</h2>
             <table>
                 <thead>
@@ -246,39 +332,6 @@
                     <% } %>
                 </tbody>
             </table>
-
-            <!-- 新規休暇申請フォーム -->
-            <h2>休暇申請登録の追加</h2>
-            <form method="post" action="<%= request.getContextPath() %>/leaveRec">
-                <input type="hidden" name="mode" value="add">
-                <input type="hidden" name="empNo" value="<%= selectedEmpNo %>">
-                <div>
-                    <label for="leaveTypeId">休暇種別：</label>
-                    <select id="leaveTypeId" name="leaveTypeId" required>
-                        <option value="">-- 種別を選択 --</option>
-                        <% if (leaveTypeList != null) {
-                            for (LeaveTypeBean type : leaveTypeList) {
-                        %>
-                            <option value="<%= type.getLeaveTypeId() %>"><%= type.getLeaveTypeName() %></option>
-                        <%  }
-                        } %>
-                    </select>
-                </div>
-                <div>
-                    <label for="startDate">開始日：</label>
-                    <input type="date" id="startDate" name="startDate" required>
-                </div>
-                <div>
-                    <label for="endDate">終了日：</label>
-                    <input type="date" id="endDate" name="endDate" required>
-                </div>
-                <div>
-                    <label for="reason">理由：</label>
-                    <textarea id="reason" name="reason" placeholder="理由を入力してください" required></textarea>
-                </div>
-                <button type="submit" class="btn btn-primary">登録する</button>
-            </form>
-        <% } %>
     </div>
 </body>
 </html>

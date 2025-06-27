@@ -156,47 +156,47 @@
 	<div class="section">
     <h2>未付与サマリー</h2>
     <ul>
-        <li>年次有給休暇： <strong><%= request.getAttribute("unissuedAnnual") %></strong> 人未付与</li>
-        <li>初回付与（3・6か月）： <strong><%= request.getAttribute("unissuedInitial") %></strong> 人未付与</li>
-        <li>特別休暇（7月1日）： <strong><%= request.getAttribute("unissuedSpecial") %></strong> 人未付与</li>
+        <li>年次有給休暇： <strong><%= request.getAttribute("unissuedAnnual") %></strong> 名 未付与</li>
+        <li>初回付与（3・6か月）： <strong><%= request.getAttribute("unissuedInitial") %></strong> 名 未付与</li>
+        <li>特別休暇（期首）： <strong><%= request.getAttribute("unissuedSpecial") %></strong> 名 未付与</li>
     </ul>
 	</div>
 	
     <form method="get" action="leaveGrantManage" class="form-inline">
-        <label>付与種別：</label>
+        <label>対象休日種別：</label>
         <select name="leaveType">
             <option value="annual" <%= "annual".equals(selectedType) ? "selected" : "" %>>年次有給休暇</option>
             <option value="initial" <%= "initial".equals(selectedType) ? "selected" : "" %>>初回付与（3・6か月）</option>
             <option value="special" <%= "special".equals(selectedType) ? "selected" : "" %>>特別休暇</option>
         </select>
         <input type="hidden" name="mode" value="preview" />
-        <button class="btn btn-primary" type="submit">未付与者を確認</button>
+        <button class="btn btn-primary" type="submit">未付与者を表示</button>
     </form>
 
     <% if ("preview".equals(mode) && unissuedList != null) { %>
         <div class="section">
             <h2>未付与者一覧（<%= unissuedList.size() %>人）</h2>
             <% if (unissuedList.isEmpty()) { %>
-                <p>未付与の対象者はいません。</p>
+                <p>対象者はいません</p>
             <% } else { %>
                 <form method="post" action="leaveGrantManage">
                     <input type="hidden" name="mode" value="execute" />
                     <input type="hidden" name="leaveType" value="<%= selectedType %>" />
                     <table class="emp-table">
                         <thead>
-                        <tr><th>社員番号</th><th>氏名</th><th>入社日</th></tr>
+                        <tr><th>従業員番号</th><th>氏名</th><th>入社年月日</th></tr>
                         </thead>
                         <tbody>
                         <% for (EmpBean emp : unissuedList) { %>
                             <tr>
-                                <td><%= emp.getEmpNo() %></td>
+                                <td><%= emp.getEmpId() %></td>
                                 <td><%= emp.getEmpName() %></td>
                                 <td><%= emp.getEmpDate() %></td>
                             </tr>
                         <% } %>
                         </tbody>
                     </table>
-                    <button class="btn btn-success" type="submit">この社員に付与する</button>
+                    <button class="btn btn-success" type="submit">対象従業員に付与</button>
                 </form>
             <% } %>
         </div>
@@ -206,12 +206,12 @@
         <div class="section">
             <div class="message success-message">
             
-                <strong><%= grantedCount %></strong> 人に「<%= selectedType %>」休暇を付与しました。
+                <strong><%= grantedCount %></strong> 名に「<%= selectedType %>」休暇を付与しました。
             </div>
         </div>
     <% } %>
 
-    <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理メニューに戻る</a>
+    <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">メニューへ戻る</a>
 </div>
 </body>
 </html>

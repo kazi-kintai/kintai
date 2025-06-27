@@ -31,8 +31,8 @@ public class LeaveBalanceDao {
                     bean.setEmpNo(rs.getString("empno"));
                     bean.setLeaveTypeId(rs.getInt("leave_type_id"));
                     bean.setLeaveTypeName(rs.getString("leave_type_name"));
-                    bean.setGrantDate(rs.getDate("grant_date").toLocalDate());
-                    bean.setExpireDate(rs.getDate("expire_date").toLocalDate());
+                    bean.setGrantedDate(rs.getDate("grant_date").toLocalDate());
+                    bean.setExpirationDate(rs.getDate("expire_date").toLocalDate());
                     bean.setGrantedDays(rs.getInt("granted_days"));
                     bean.setUsedDays(rs.getInt("used_days"));
                     list.add(bean);

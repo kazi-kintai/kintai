@@ -1,13 +1,13 @@
 package kintai;
 
-import java.sql.Date;
+import java.time.LocalDate;
 
 public class LeaveBalanceBean {
     private String empNo;
     private int leaveTypeId;
     private String leaveTypeName;
-    private Date grantedDate;      // java.sql.Dateで統一
-    private Date expirationDate;
+    private LocalDate grantedDate;      // java.sql.Dateで統一
+    private LocalDate expirationDate;
     private int grantedDays;       // 付与日数
     private int usedDays;
 
@@ -20,11 +20,11 @@ public class LeaveBalanceBean {
     public String getLeaveTypeName() { return leaveTypeName; }
     public void setLeaveTypeName(String leaveTypeName) { this.leaveTypeName = leaveTypeName; }
 
-    public Date getGrantedDate() { return grantedDate; }
-    public void setGrantedDate(Date grantedDate) { this.grantedDate = grantedDate; }
+    public LocalDate getGrantedDate() { return grantedDate; }
+    public void setGrantedDate(LocalDate localDate) { this.grantedDate = localDate; }
 
-    public Date getExpirationDate() { return expirationDate; }
-    public void setExpirationDate(Date expirationDate) { this.expirationDate = expirationDate; }
+    public LocalDate getExpirationDate() { return expirationDate; }
+    public void setExpirationDate(LocalDate localDate) { this.expirationDate = localDate; }
 
     public int getGrantedDays() { return grantedDays; }
     public void setGrantedDays(int grantedDays) { this.grantedDays = grantedDays; }
