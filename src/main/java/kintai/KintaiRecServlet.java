@@ -49,7 +49,7 @@ public class KintaiRecServlet extends HttpServlet {
         }
 
         UserBean user = (UserBean) session.getAttribute("user");
-        String loggedInEmpno = user.getEmpno(); // ログイン中の従業員番号
+        String loggedInEmpId = user.getEmpId(); // ログイン中の従業員番号
         int userRoleId = user.getRoleId();          // ログイン中のユーザー権限 (旧userRoleからuserRoleIdへ変更)
 
         // --- モード判定（自分モードか全員モードか） ---
@@ -57,9 +57,9 @@ public class KintaiRecServlet extends HttpServlet {
         boolean isSelfMode = "self".equals(viewMode);
 
         // --- フィルター条件の取得 ---
-        String empNoFilter = request.getParameter("empNoFilter");
-        String deptNoFilter = request.getParameter("deptNoFilter");
-        String postNoFilter = request.getParameter("postNoFilter");
+        String empIdFilter = request.getParameter("empIdFilter");
+        String deptIdFilter = request.getParameter("deptIdFilter");
+        String postIdFilter = request.getParameter("postIdFilter");
         String startDateStr = request.getParameter("startDate");
         String endDateStr = request.getParameter("endDate");
 
@@ -89,56 +89,56 @@ public class KintaiRecServlet extends HttpServlet {
 
         // 検索対象の従業員番号リストを決定
         // ログインユーザーの権限に基づいてフィルタリングロジックを適用
-        List<String> targetEmpNos = new ArrayList<>(); // 検索対象の従業員番号リストを初期化
+        List<String> targetEmpIds = new ArrayList<>(); // 検索対象の従業員番号リストを初期化
 
         if (userRoleId == 0) { // 一般社員の場合 (ROLEIDが0)
             // 自身の勤怠記録のみを表示
-            targetEmpNos.add(loggedInEmpno); // 検索対象をログインユーザーのempnoに固定
+            targetEmpIds.add(loggedInEmpId); // 検索対象をログインユーザーのempIdに固定
             // 一般社員は他の従業員を検索できないため、フィルターパラメータをクリア
-            empNoFilter = null; // JSP側でempNoFilterの初期値として使うため、ここではnullのままにする
-            deptNoFilter = null;
-            postNoFilter = null;
+            empIdFilter = null; // JSP側でempIdFilterの初期値として使うため、ここではnullのままにする
+            deptIdFilter = null;
+            postIdFilter = null;
         } else if (userRoleId == 1) { // 管理者の場合 (ROLEIDが1)
             if (isSelfMode) {
                 // 自分モード：管理者自身の勤怠記録のみを表示
-                targetEmpNos.add(loggedInEmpno);
+                targetEmpIds.add(loggedInEmpId);
                 // 自分モードの場合、フィルターを無効化
-                empNoFilter = null;
-                deptNoFilter = null;
-                postNoFilter = null;
+                empIdFilter = null;
+                deptIdFilter = null;
+                postIdFilter = null;
             } else {
                 // 全員モード：全ての従業員の勤怠記録を検索可能
-                // empNoFilter が指定されていれば、そのempNoのみをtargetEmpNosに追加
-                if (empNoFilter != null && !empNoFilter.trim().isEmpty()) {
-                    targetEmpNos.add(empNoFilter);
+                // empIdFilter が指定されていれば、そのempNoのみをtargetEmpIdsに追加
+                if (empIdFilter != null && !empIdFilter.trim().isEmpty()) {
+                    targetEmpIds.add(empIdFilter);
                 }
-                // empNoFilter が指定されていなければ、targetEmpNosは空のまま。
-                // KintaiRecDaoはtargetEmpNosが空の場合に全従業員を対象として検索する
+                // empIdFilter が指定されていなければ、targetEmpIdsは空のまま。
+                // KintaiRecDaoはtargetEmpIdsが空の場合に全従業員を対象として検索する
             }
         } else if (userRoleId == 2) { // 部長の場合（ROLEID=2）
             if (isSelfMode) {
                 // 自分モード：部長自身の勤怠記録のみを表示
-                targetEmpNos.add(loggedInEmpno);
+                targetEmpIds.add(loggedInEmpId);
                 // 自分モードの場合、フィルターを無効化
-                empNoFilter = null;
-                deptNoFilter = null;
-                postNoFilter = null;
+                empIdFilter = null;
+                deptIdFilter = null;
+                postIdFilter = null;
             } else {
                 // 部門モード：同じ部門の従業員の勤怠記録を検索可能
                 // 部門フィルターを自動的にログインユーザーの部門に設定
-                deptNoFilter = user.getDeptNo();
-                // empNoFilter が指定されていれば、そのempNoのみをtargetEmpNosに追加
-                if (empNoFilter != null && !empNoFilter.trim().isEmpty()) {
-                    targetEmpNos.add(empNoFilter);
+                deptIdFilter = user.getDeptId();
+                // empIdFilter が指定されていれば、そのempNoのみをtargetEmpIdsに追加
+                if (empIdFilter != null && !empIdFilter.trim().isEmpty()) {
+                    targetEmpIds.add(empIdFilter);
                 }
-                // empNoFilter が指定されていなければ、targetEmpNosは空のまま。
+                // empIdFilter が指定されていなければ、targetEmpIdsは空のまま。
                 // KintaiRecDaoは部門フィルターに基づいて同部門の従業員を対象として検索する
             }
         }
         // TODO: 承認者（ROLEID=2）の場合のロジックをここに追加
         //       else if (userRoleId == 2) {
         //           // 直属の部下のempNoリストを取得
-        //           targetEmpNos = empDao.findSubordinatesEmpNos(loggedInEmpno); // ※EmpDaoにこのメソッドを実装する必要あり
+        //           targetEmpIds = empDao.findSubordinatesEmpNos(loggedInEmpno); // ※EmpDaoにこのメソッドを実装する必要あり
         //       }
 
 
@@ -147,7 +147,7 @@ public class KintaiRecServlet extends HttpServlet {
         try {
              // KintaiRecDao.getKintaiRecords() メソッドを呼び出す
             kintaiRecords = kintaiRecDao.getKintaiRecords(
-                targetEmpNos, deptNoFilter, postNoFilter, startDate, endDate, userRoleId // userRoleからuserRoleIdへ変更
+                targetEmpIds, deptIdFilter, postIdFilter, startDate, endDate, userRoleId // userRoleからuserRoleIdへ変更
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -158,26 +158,26 @@ public class KintaiRecServlet extends HttpServlet {
         // 月度統計データの取得（自分モードまたは一般社員の場合）
         MonthlySummaryBean monthlySummary = null;
         if (userRoleId == 0 || isSelfMode) {
-            String targetEmpno = (userRoleId == 0) ? loggedInEmpno : loggedInEmpno; // 自分のempno
+            String targetEmpId = (userRoleId == 0) ? loggedInEmpId : loggedInEmpId; // 自分のempno
             String currentMonth = java.time.YearMonth.now().toString(); // 現在の月 (YYYY-MM)
             try {
-                monthlySummary = kintaiRecDao.getMonthlySummary(targetEmpno, currentMonth);
+                monthlySummary = kintaiRecDao.getMonthlySummary(targetEmpId, currentMonth);
             } catch (Exception e) {
                 e.printStackTrace();
-                request.setAttribute("errorMessage", "月度統計の取得中にエラーが発生しました。");
+                request.setAttribute("errorMessage", "月度統計の取得中にエラーが発生しました");
             }
         }
 
         // 法令遵守チェック（自分モードまたは一般社員の場合）
         ComplianceCheckResult complianceResult = null;
         if (userRoleId == 0 || isSelfMode) {
-            String targetEmpno = (userRoleId == 0) ? loggedInEmpno : loggedInEmpno; // 自分のempno
+            String targetEmpId = (userRoleId == 0) ? loggedInEmpId : loggedInEmpId; // 自分のempno
             try {
                 ComplianceChecker complianceChecker = new ComplianceChecker();
-                complianceResult = complianceChecker.performComprehensiveCheck(kintaiRecords, targetEmpno);
+                complianceResult = complianceChecker.performComprehensiveCheck(kintaiRecords, targetEmpId);
             } catch (Exception e) {
                 e.printStackTrace();
-                request.setAttribute("errorMessage", "法令遵守チェック中にエラーが発生しました。");
+                request.setAttribute("errorMessage", "法令遵守チェック中にエラーが発生しました");
             }
         }
 
@@ -200,7 +200,7 @@ public class KintaiRecServlet extends HttpServlet {
                 
             } catch (Exception e) {
                 e.printStackTrace();
-                request.setAttribute("errorMessage", "今日の勤怠状況の取得中にエラーが発生しました。");
+                request.setAttribute("errorMessage", "今日の勤怠状況の取得中にエラーが発生しました");
                 // エラー時はデフォルト値を設定
                 request.setAttribute("scheduledCount", 25);
                 request.setAttribute("workingCount", 23);
@@ -223,7 +223,7 @@ public class KintaiRecServlet extends HttpServlet {
                 for (EmpBean emp : allEmployees) {
                     // 今月の勤怠データを取得
                     List<String> targetEmpList = new java.util.ArrayList<>();
-                    targetEmpList.add(emp.getEmpNo());
+                    targetEmpList.add(emp.getEmpId());
                     List<KintaiRecBean> empRecords = kintaiRecDao.getKintaiRecords(
                         targetEmpList, null, null, 
                         LocalDate.now().withDayOfMonth(1), 
@@ -232,7 +232,7 @@ public class KintaiRecServlet extends HttpServlet {
                     );
                     
                     // 法令遵守チェックを実行
-                    ComplianceCheckResult result = complianceChecker.performComprehensiveCheck(empRecords, emp.getEmpNo());
+                    ComplianceCheckResult result = complianceChecker.performComprehensiveCheck(empRecords, emp.getEmpId());
                     
                     // 違反がある場合はリストと詳細情報に追加
                     if (result.getTotalViolations() > 0) {
@@ -247,7 +247,7 @@ public class KintaiRecServlet extends HttpServlet {
                 
             } catch (Exception e) {
                 e.printStackTrace();
-                request.setAttribute("errorMessage", "法令遵守違反者リストの取得中にエラーが発生しました。");
+                request.setAttribute("errorMessage", "法令遵守違反者リストの取得中にエラーが発生しました");
                 // エラー時はサンプルデータを設定
                 violationEmployees = new java.util.ArrayList<>();
                 violationEmployees.add("田中太郎");
@@ -271,16 +271,16 @@ public class KintaiRecServlet extends HttpServlet {
                 // 部長の場合：自部門のデータのみを提供
                 request.setAttribute("deptList", deptDao.findAll()); // 部署リストは全体を表示（フィルター用）
                 request.setAttribute("postList", postDao.findAll()); // 役職リストは全体を表示（フィルター用）
-                request.setAttribute("allEmpList", empDao.findByFilters(user.getDeptNo(), null)); // 同部門の従業員のみ
+                request.setAttribute("allEmpList", empDao.findByFilters(user.getDeptId(), null)); // 同部門の従業員のみ
             }
         }
 
 
         // JSPに渡すデータをリクエスト属性として設定
         request.setAttribute("kintaiRecords", kintaiRecords);
-        request.setAttribute("empNoFilter", empNoFilter); // 現在のフィルター値をJSPに渡す
-        request.setAttribute("deptNoFilter", deptNoFilter);
-        request.setAttribute("postNoFilter", postNoFilter);
+        request.setAttribute("empIdFilter", empIdFilter); // 現在のフィルター値をJSPに渡す
+        request.setAttribute("deptIdFilter", deptIdFilter);
+        request.setAttribute("postIdFilter", postIdFilter);
         request.setAttribute("startDate", startDateStr);
         request.setAttribute("endDate", endDateStr);
         request.setAttribute("userRoleId", userRoleId); // JSPで権限に応じた表示を制御するためにロールIDを渡す

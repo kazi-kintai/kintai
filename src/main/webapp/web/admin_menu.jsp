@@ -110,5 +110,4 @@
 		<p><a href="<%= request.getContextPath() %>/CalendarManageServlet">イベント・カレンダー管理</a></p>
 	</div>
 </body>
->>>>>>> refs/heads/feature/sprint3_chou
 </html>

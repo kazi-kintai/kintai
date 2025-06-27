@@ -4,7 +4,6 @@
 <%@ page import="kintai.DeptBean" %>
 <%@ page import="kintai.PostBean" %>
 <%@ page import="kintai.RoleBean" %>    <%-- 新規追加 --%>
-<%@ page import="kintai.GradeBean" %>   <%-- 新規追加 --%>
 <%@ page import="kintai.UserBean" %>
 <jsp:useBean id="today" class="java.util.Date" />
 <%
@@ -20,7 +19,6 @@
     List<DeptBean> deptList = (List<DeptBean>) request.getAttribute("deptList");
     List<PostBean> postList = (List<PostBean>) request.getAttribute("postList");
     List<RoleBean> roleList = (List<RoleBean>) request.getAttribute("roleList");    // 新規追加
-    List<GradeBean> gradeList = (List<GradeBean>) request.getAttribute("gradeList"); // 新規追加
     String message = (String) request.getAttribute("message");
     Boolean success = (Boolean) request.getAttribute("success");
 
@@ -29,7 +27,6 @@
     if (deptList == null) deptList = new java.util.ArrayList<>();
     if (postList == null) postList = new java.util.ArrayList<>();
     if (roleList == null) roleList = new java.util.ArrayList<>();
-    if (gradeList == null) gradeList = new java.util.ArrayList<>();
 %>
 <!DOCTYPE html>
 <html>
@@ -286,7 +283,7 @@
                 <input type="hidden" name="action" value="add">
                 <div class="form-group">
                     <label for="newEmpNo">従業員番号：</label>
-                    <input type="text" id="newEmpNo" name="empNo" maxlength="10" required>
+                    <input type="text" id="newEmpId" name="empId" maxlength="10" required>
                 </div>
                 <div class="form-group">
                     <label for="newEmpName">氏名：</label>
@@ -294,21 +291,21 @@
                 </div>
                 <div class="form-group">
                     <label for="newDeptNo">部署：</label>
-                    <select id="newDeptNo" name="deptNo" required>
+                    <select id="newDeptId" name="deptId" required>
                         <option value="">選択してください</option>
                         <% if (deptList != null) { 
                             for (DeptBean dept : deptList) { %>
-                                <option value="<%= dept.getDeptNo() %>"><%= dept.getDeptName() %></option>
+                                <option value="<%= dept.getDeptId() %>"><%= dept.getDeptName() %></option>
                         <% }} %>
                     </select>
                 </div>
                 <div class="form-group">
                     <label for="newPostNo">役職：</label>
-                    <select id="newPostNo" name="postNo" required>
+                    <select id="newPostId" name="postId" required>
                         <option value="">選択してください</option>
                         <% if (postList != null) { 
                             for (PostBean post : postList) { %>
-                                <option value="<%= post.getPostNo() %>"><%= post.getPostName() %></option>
+                                <option value="<%= post.getPostId() %>"><%= post.getPostName() %></option>
                         <% }} %>
                     </select>
                 </div>
@@ -323,13 +320,13 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label for="newGradeNo">等級：</label> <%-- 新規追加 --%>
-                    <select id="newGradeNo" name="gradeNo" required> <%-- 新規追加 --%>
+                    <label for="newEmpType">社員種別：</label>
+                    <select id="newEmpType" name="empType" required>
                         <option value="">選択してください</option>
-                        <% if (gradeList != null) { 
-                            for (GradeBean grade : gradeList) { %>
-                                <option value="<%= grade.getGradeNo() %>"><%= grade.getGradeName() %></option>
-                        <% }} %>
+                        <option value="正社員">正社員</option>
+                        <option value="契約社員">契約社員</option>
+                        <option value="アルバイト">アルバイト</option>
+                        <option value="派遣">派遣</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -360,7 +357,7 @@
                     <th>部署</th>
                     <th>役職</th>
                     <th>権限</th> <%-- 旧権限から変更 --%>
-                    <th>等級</th> <%-- 新規追加 --%>
+                    <th>社員種別</th> <%-- 新規追加 --%>
                     <th>メールアドレス</th> <%-- 新規追加 --%>
                     <th>入社年月日</th> <%-- 新規追加 --%>
                     <th>操作</th>
@@ -370,8 +367,8 @@
                 <% if (empList != null && !empList.isEmpty()) { %>
                     <% for (EmpBean emp : empList) { %>
                         <%-- 表示行 --%>
-                        <tr id="display-<%= emp.getEmpNo() %>">
-                            <td><%= emp.getEmpNo() %></td>
+                        <tr id="display-<%= emp.getEmpId() %>">
+                            <td><%= emp.getEmpId() %></td>
                             <td><%= emp.getEmpName() %></td>
                             <%-- 部署名の表示（nullの場合の処理） --%>
                             <td><%= (emp.getDeptName() != null) ? emp.getDeptName() : "情報なし" %></td>
@@ -379,54 +376,54 @@
                             <td><%= (emp.getPostName() != null) ? emp.getPostName() : "情報なし" %></td>
                             <%-- 権限名の表示（emp.getRole()からemp.getRoleName()へ変更） --%>
                             <td><%= (emp.getRoleName() != null) ? emp.getRoleName() : "情報なし" %></td>
-                            <%-- 等級名の表示（新規追加） --%>
-                            <td><%= (emp.getGradeName() != null) ? emp.getGradeName() : "情報なし" %></td>
+                            <%-- 社員種別名の表示（新規追加） --%>
+                            <td><%= (emp.getEmpType() != null) ? emp.getEmpType() : "情報なし" %></td>
                             <%-- メールアドレスの表示（新規追加） --%>
                             <td><%= (emp.getMail() != null) ? emp.getMail() : "---" %></td>
                             <%-- 入社年月日の表示（新規追加） --%>
                             <td><%= (emp.getEmpDate() != null) ? emp.getEmpDate().toString() : "---" %></td>
                             <td>
-                                <button class="btn btn-success" onclick="toggleEdit('<%= emp.getEmpNo() %>')">編集</button>
-                                <button class="btn btn-danger" onclick="confirmDelete('<%= emp.getEmpNo() %>', '<%= emp.getEmpName() %>')">削除</button>
+                                <button class="btn btn-success" onclick="toggleEdit('<%= emp.getEmpId() %>')">編集</button>
+                                <button class="btn btn-danger" onclick="confirmDelete('<%= emp.getEmpId() %>', '<%= emp.getEmpName() %>')">削除</button>
                                 
                                 <%-- 削除用フォーム（非表示） --%>
-                                <form id="deleteForm-<%= emp.getEmpNo() %>" method="post" 
+                                <form id="deleteForm-<%= emp.getEmpId() %>" method="post" 
                                       action="<%= request.getContextPath() %>/empManage" style="display: none;">
                                     <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="empNo" value="<%= emp.getEmpNo() %>">
+                                    <input type="hidden" name="empId" value="<%= emp.getEmpId() %>">
                                 </form>
                             </td>
                         </tr>
                         
                         <%-- 編集行（初期状態では非表示） --%>
-                        <tr id="edit-<%= emp.getEmpNo() %>" class="edit-row" style="display: none;">
-                            <td><%= emp.getEmpNo() %></td>
+                        <tr id="edit-<%= emp.getEmpId() %>" class="edit-row" style="display: none;">
+                            <td><%= emp.getEmpId() %></td>
                             <td colspan="8"> <%-- 列数を調整 --%>
                                 <form method="post" action="<%= request.getContextPath() %>/empManage" class="form-inline" onsubmit="return confirmUpdate('<%= emp.getEmpName() %>');">
                                     <input type="hidden" name="action" value="update">
-                                    <input type="hidden" name="empNo" value="<%= emp.getEmpNo() %>">
+                                    <input type="hidden" name="empId" value="<%= emp.getEmpId() %>">
                                     
                                     <label>氏名：</label><input type="text" name="empName" value="<%= emp.getEmpName() %>" maxlength="50" required>
                                     
                                     <label>部署：</label>
-                                    <select name="deptNo" required>
+                                    <select name="deptId" required>
                                         <option value="">選択してください</option>
                                         <% if (deptList != null) { 
                                             for (DeptBean dept : deptList) { %>
-                                                <option value="<%= dept.getDeptNo() %>" 
-                                                    <%= dept.getDeptNo().equals(emp.getDeptNo()) ? "selected" : "" %>>
+                                                <option value="<%= dept.getDeptId() %>" 
+                                                    <%= dept.getDeptId().equals(emp.getDeptId()) ? "selected" : "" %>>
                                                     <%= dept.getDeptName() %>
                                                 </option>
                                         <% }} %>
                                     </select>
                                     
                                     <label>役職：</label>
-                                    <select name="postNo" required>
+                                    <select name="postId" required>
                                         <option value="">選択してください</option>
                                         <% if (postList != null) { 
                                             for (PostBean post : postList) { %>
-                                                <option value="<%= post.getPostNo() %>" 
-                                                    <%= post.getPostNo().equals(emp.getPostNo()) ? "selected" : "" %>>
+                                                <option value="<%= post.getPostId() %>" 
+                                                    <%= post.getPostId().equals(emp.getPostId()) ? "selected" : "" %>>
                                                     <%= post.getPostName() %>
                                                 </option>
                                         <% }} %>
@@ -444,16 +441,13 @@
                                         <% }} %>
                                     </select>
 
-                                    <label>等級：</label> <%-- 新規追加 --%>
-                                    <select name="gradeNo" required> <%-- 新規追加 --%>
+                                    <label>社員種別：</label>
+                                    <select name="empType" required>
                                         <option value="">選択してください</option>
-                                        <% if (gradeList != null) { 
-                                            for (GradeBean grade : gradeList) { %>
-                                                <option value="<%= grade.getGradeNo() %>" 
-                                                    <%= grade.getGradeNo() == emp.getGradeNo() ? "selected" : "" %>> <%-- == で比較 --%>
-                                                    <%= grade.getGradeName() %>
-                                                </option>
-                                        <% }} %>
+                                        <option value="正社員" <%= "正社員".equals(emp.getEmpType()) ? "selected" : "" %>>正社員</option>
+                                        <option value="契約社員" <%= "契約社員".equals(emp.getEmpType()) ? "selected" : "" %>>契約社員</option>
+                                        <option value="アルバイト" <%= "アルバイト".equals(emp.getEmpType()) ? "selected" : "" %>>アルバイト</option>
+                                        <option value="派遣" <%= "派遣".equals(emp.getEmpType()) ? "selected" : "" %>>派遣</option>
                                     </select>
                                     
                                     <label>パスワード：</label><input type="password" name="pass" value="<%= emp.getPass() %>" maxlength="64" required> <%-- maxlengthを64に増やす --%>
@@ -463,7 +457,7 @@
                                     <label>入社年月日：</label><input type="date" name="empDate" value="<%= emp.getEmpDate() != null ? emp.getEmpDate().toString() : "" %>"> <%-- 新規追加 --%>
                                     
                                     <button type="submit" class="btn btn-primary">保存</button>
-                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= emp.getEmpNo() %>')">キャンセル</button>
+                                    <button type="button" class="btn btn-secondary" onclick="toggleEdit('<%= emp.getEmpId() %>')">キャンセル</button>
                                 </form>
                             </td>
                         </tr>

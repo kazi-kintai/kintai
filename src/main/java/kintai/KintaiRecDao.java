@@ -42,24 +42,24 @@ public class KintaiRecDao {
         StringBuilder sql = new StringBuilder();
 
         sql.append("SELECT ");
-        sql.append("  k.RECID, k.KINTAIDATE, k.EMPNO, k.CLOCKIN, k.CLOCKOUT, ");
-        sql.append("  e.EMPNAME, e.DEPTNO, d.DEPTNAME, e.POSTNO, p.POSTNAME ");
+        sql.append("  k.KINTAI_REC_ID, k.KINTAI_DATE, k.EMP_ID, k.CLOCK_IN, k.CLOCK_OUT, ");
+        sql.append("  e.EMP_NAME, e.DEPT_ID, d.DEPT_NAME, e.POST_ID, p.POST_NAME ");
         sql.append("FROM kintai k ");
-        sql.append("LEFT JOIN emp e ON k.EMPNO = e.EMPNO ");
-        sql.append("LEFT JOIN dept d ON e.DEPTNO = d.DEPTNO ");
-        sql.append("LEFT JOIN post p ON e.POSTNO = p.POSTNO ");
+        sql.append("LEFT JOIN emp e ON k.EMP_ID = e.EMP_ID ");
+        sql.append("LEFT JOIN dept d ON e.DEPT_ID = d.DEPT_ID ");
+        sql.append("LEFT JOIN post p ON e.POST_ID = p.POST_ID ");
         sql.append("WHERE 1=1 "); // WHERE句の条件を容易に追加するためのダミー
 
         List<Object> params = new ArrayList<>(); // プリペアドステートメントのパラメータリスト
 
         // --- 従業員番号によるフィルター（権限に基づく）---
         if (userRole == 0) { // 一般社員の場合、自身の勤怠のみ
-            sql.append("AND k.EMPNO = ? ");
+            sql.append("AND k.EMP_ID = ? ");
             params.add(targetEmpNos.get(0)); // targetEmpNosには自身のempnoが1つだけ入っている
         } else { // 管理者または主任/リーダーの場合
             if (targetEmpNos != null && !targetEmpNos.isEmpty()) {
                 // 特定の従業員リストが指定されている場合 (例: 主任の部下、または管理者による単一従業員検索)
-                sql.append("AND k.EMPNO IN (");
+                sql.append("AND k.EMP_ID IN (");
                 for (int i = 0; i < targetEmpNos.size(); i++) {
                     sql.append("?");
                     if (i < targetEmpNos.size() - 1) {
@@ -80,23 +80,23 @@ public class KintaiRecDao {
 
         // --- その他のフィルター条件 ---
         if (deptNoFilter != null && !deptNoFilter.trim().isEmpty()) {
-            sql.append("AND e.DEPTNO = ? ");
+            sql.append("AND e.DEPT_ID = ? ");
             params.add(deptNoFilter);
         }
         if (postNoFilter != null && !postNoFilter.trim().isEmpty()) {
-            sql.append("AND e.POSTNO = ? ");
+            sql.append("AND e.POST_ID = ? ");
             params.add(postNoFilter);
         }
         if (startDate != null) {
-            sql.append("AND k.KINTAIDATE >= ? ");
+            sql.append("AND k.KINTAI_DATE >= ? ");
             params.add(Date.valueOf(startDate));
         }
         if (endDate != null) {
-            sql.append("AND k.KINTAIDATE <= ? ");
+            sql.append("AND k.KINTAI_DATE <= ? ");
             params.add(Date.valueOf(endDate));
         }
 
-        sql.append("ORDER BY k.KINTAIDATE DESC, k.EMPNO ASC"); // 日付の新しい順、従業員番号の昇順でソート
+        sql.append("ORDER BY k.KINTAI_DATE DESC, k.EMP_ID ASC"); // 日付の新しい順、従業員番号の昇順でソート
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -115,19 +115,19 @@ public class KintaiRecDao {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     KintaiRecBean bean = new KintaiRecBean();
-                    bean.setRecId(rs.getInt("RECID"));
-                    bean.setKintaiDate(rs.getDate("KINTAIDATE").toLocalDate());
-                    bean.setEmpno(rs.getString("EMPNO"));
-                    bean.setClockIn(rs.getTime("CLOCKIN"));
-                    bean.setClockOut(rs.getTime("CLOCKOUT"));
-                    bean.setEmpName(rs.getString("EMPNAME"));
-                    bean.setDeptNo(rs.getString("DEPTNO"));
-                    bean.setDeptName(rs.getString("DEPTNAME"));
-                    bean.setPostNo(rs.getString("POSTNO"));
-                    bean.setPostName(rs.getString("POSTNAME"));
+                    bean.setKintaiRecId(rs.getInt("KINTAI_REC_ID"));
+                    bean.setKintaiDate(rs.getDate("KINTAI_DATE").toLocalDate());
+                    bean.setEmpno(rs.getString("EMP_ID"));
+                    bean.setClockIn(rs.getTime("CLOCK_IN"));
+                    bean.setClockOut(rs.getTime("CLOCK_OUT"));
+                    bean.setEmpName(rs.getString("EMP_NAME"));
+                    bean.setDeptNo(rs.getString("DEPT_ID"));
+                    bean.setDeptName(rs.getString("DEPT_NAME"));
+                    bean.setPostNo(rs.getString("POST_ID"));
+                    bean.setPostName(rs.getString("POST_NAME"));
 
                     // 各勤怠記録の休憩時間を取得し、合計休憩時間を計算
-                    long totalBreakMinutes = calculateTotalBreakMinutes(bean.getRecId());
+                    long totalBreakMinutes = calculateTotalBreakMinutes(bean.getKintaiRecId());
                     bean.setTotalBreakMinutes(totalBreakMinutes);
 
                     // 実働時間を計算
@@ -156,7 +156,7 @@ public class KintaiRecDao {
      */
     private long calculateTotalBreakMinutes(int recId) {
         long totalMinutes = 0;
-        String sql = "SELECT BREAKSTART, BREAKEND FROM break WHERE RECID = ?";
+        String sql = "SELECT BREAK_START, BREAK_END FROM break WHERE KINTAI_REC_ID = ?";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -165,8 +165,8 @@ public class KintaiRecDao {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    Time breakStart = rs.getTime("BREAKSTART");
-                    Time breakEnd = rs.getTime("BREAKEND");
+                    Time breakStart = rs.getTime("BREAK_START");
+                    Time breakEnd = rs.getTime("BREAK_END");
 
                     if (breakStart != null && breakEnd != null) {
                         LocalTime start = breakStart.toLocalTime();
@@ -348,7 +348,7 @@ public class KintaiRecDao {
      * 指定期間の実際の出勤日数を取得
      */
     private int getActualAttendanceDays(String empno, LocalDate monthStart, LocalDate monthEnd) {
-        String sql = "SELECT COUNT(*) FROM kintai WHERE EMPNO = ? AND KINTAIDATE >= ? AND KINTAIDATE <= ? AND CLOCKIN IS NOT NULL";
+        String sql = "SELECT COUNT(*) FROM kintai WHERE EMP_ID = ? AND KINTAI_DATE >= ? AND KINTAI_DATE <= ? AND CLOCK_IN IS NOT NULL";
         
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -372,8 +372,8 @@ public class KintaiRecDao {
      * 月度の労働時間統計を計算
      */
     private void calculateMonthlyWorkingHours(String empno, LocalDate monthStart, LocalDate monthEnd, MonthlySummaryBean summary) {
-        String sql = "SELECT RECID, KINTAIDATE, CLOCKIN, CLOCKOUT, WORKING_HOURS, OVERTIME_HOURS FROM kintai " +
-                     "WHERE EMPNO = ? AND KINTAIDATE >= ? AND KINTAIDATE <= ? AND CLOCKIN IS NOT NULL";
+        String sql = "SELECT KINTAI_REC_ID, KINTAI_DATE, CLOCK_IN, CLOCK_OUT, WORKING_HOURS, OVERTIME_HOURS FROM kintai " +
+                     "WHERE EMP_ID = ? AND KINTAI_DATE >= ? AND KINTAI_DATE <= ? AND CLOCK_IN IS NOT NULL";
         
         BigDecimal totalWorkingHours = BigDecimal.ZERO;
         BigDecimal totalOvertimeHours = BigDecimal.ZERO;
@@ -389,8 +389,8 @@ public class KintaiRecDao {
             ResultSet rs = stmt.executeQuery();
             
             while (rs.next()) {
-                int recId = rs.getInt("RECID");
-                LocalDate kintaiDate = rs.getDate("KINTAIDATE").toLocalDate();
+                int recId = rs.getInt("KINTAI_REC_ID");
+                LocalDate kintaiDate = rs.getDate("KINTAI_DATE").toLocalDate();
                 
                 // 実働時間を累積
                 BigDecimal workingHours = rs.getBigDecimal("WORKING_HOURS");
@@ -444,7 +444,7 @@ public class KintaiRecDao {
      * @return 出勤中者数
      */
     public int getWorkingEmployeeCount(LocalDate date) {
-        String sql = "SELECT COUNT(*) FROM kintai WHERE KINTAIDATE = ? AND CLOCKIN IS NOT NULL AND CLOCKOUT IS NULL";
+        String sql = "SELECT COUNT(*) FROM kintai WHERE KINTAI_DATE = ? AND CLOCK_IN IS NOT NULL AND CLOCK_OUT IS NULL";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(date));
@@ -466,7 +466,7 @@ public class KintaiRecDao {
      */
     public int getAbsentEmployeeCount(LocalDate date) {
         String sql = "SELECT COUNT(*) FROM emp e WHERE e.ROLEID != 999 AND NOT EXISTS " +
-                    "(SELECT 1 FROM kintai k WHERE k.EMPNO = e.EMPNO AND k.KINTAIDATE = ?)";
+                    "(SELECT 1 FROM kintai k WHERE k.EMP_ID = e.EMP_ID AND k.KINTAI_DATE = ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(date));

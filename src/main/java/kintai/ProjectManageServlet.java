@@ -38,7 +38,7 @@ public class ProjectManageServlet extends HttpServlet {
 			List<ProjectBean> projectmanagelist = ProjectDao.findAll();
 			request.setAttribute("projectmanagelist", projectmanagelist);
 			
-			RequestDispatcher dispatcher = request.getRequestDispatcher("/web/projectmanage.jsp");
+			RequestDispatcher dispatcher = request.getRequestDispatcher("/web/project_manage.jsp");
 			dispatcher.forward(request, response);
 		}
 	}
@@ -105,7 +105,7 @@ public class ProjectManageServlet extends HttpServlet {
                     if (newBudgetAmount != null && !newBudgetAmount.trim().isEmpty()) {
                         budget = Integer.parseInt(newBudgetAmount);
                     }
-                    newProject.setProjectBudget(budget != null ? budget : 0);
+                    newProject.setBudgetAmount(budget != null ? budget : 0);
 //                  newProject.setStartDate(newStartdateDate);
 //                  newProject.setEndDate(newEnddateDate);
                     
@@ -165,9 +165,9 @@ public class ProjectManageServlet extends HttpServlet {
                     updateProject.setProjectName(updateProjectName);
                     Integer budgetUpd = null;
                     if (updateBudgetAmount != null && !updateBudgetAmount.trim().isEmpty()) {
-                        budget = Integer.parseInt(updateBudgetAmount);
+                        budgetUpd = Integer.parseInt(updateBudgetAmount);
                     }
-                    updateProject.setProjectBudget(budgetUpd != null ? budgetUpd : 0);
+                    updateProject.setBudgetAmount(budgetUpd != null ? budgetUpd : 0);
 //                    updateProject.setStartDate(updateStartdateDate);
 //                    updateProject.setEndDate(updateEnddateDate);
 //                    if (updateEmpDateStr != null && !updateEmpDateStr.trim().isEmpty()) {

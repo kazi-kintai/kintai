@@ -64,7 +64,7 @@ public class PasswordChangeServlet extends HttpServlet {
         }
 
         UserBean user = (UserBean) session.getAttribute("user");
-        String empno = user.getEmpno(); // ログイン中の従業員番号
+        String empId = user.getEmpId(); // ログイン中の従業員番号
 
         // フォームからパラメータを取得
         String currentPassword = request.getParameter("currentPassword");
@@ -86,11 +86,11 @@ public class PasswordChangeServlet extends HttpServlet {
                  errorMessage = "新しいパスワードは現在のパスワードと同じにはできません";
             } else {
                 // 現在のパスワードを検証
-                boolean isCurrentPasswordCorrect = userDao.verifyCurrentPassword(empno, currentPassword);
+                boolean isCurrentPasswordCorrect = userDao.verifyCurrentPassword(empId, currentPassword);
 
                 if (isCurrentPasswordCorrect) {
                     // パスワードを更新
-                    boolean updateSuccess = userDao.updatePassword(empno, newPassword);
+                    boolean updateSuccess = userDao.updatePassword(empId, newPassword);
 
                     if (updateSuccess) {
                         successMessage = "パスワードが正常に変更されました";

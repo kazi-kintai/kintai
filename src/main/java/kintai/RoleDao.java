@@ -20,7 +20,7 @@ public class RoleDao {
      */
     public List<RoleBean> findAll() {
         List<RoleBean> roleList = new ArrayList<>();
-        String sql = "SELECT ROLEID, ROLENAME FROM role ORDER BY ROLEID";
+        String sql = "SELECT ROLE_ID, ROLE_NAME FROM role ORDER BY ROLE_ID";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -28,8 +28,8 @@ public class RoleDao {
 
             while (rs.next()) {
                 RoleBean role = new RoleBean();
-                role.setRoleId(rs.getInt("ROLEID"));
-                role.setRoleName(rs.getString("ROLENAME"));
+                role.setRoleId(rs.getInt("ROLE_ID"));
+                role.setRoleName(rs.getString("ROLE_NAME"));
                 roleList.add(role);
             }
 
@@ -46,7 +46,7 @@ public class RoleDao {
      */
     public RoleBean findByRoleId(int roleId) {
         RoleBean role = null;
-        String sql = "SELECT ROLEID, ROLENAME FROM role WHERE ROLEID = ?";
+        String sql = "SELECT ROLE_ID, ROLE_NAME FROM role WHERE ROLE_ID = ?";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -56,8 +56,8 @@ public class RoleDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     role = new RoleBean();
-                    role.setRoleId(rs.getInt("ROLEID"));
-                    role.setRoleName(rs.getString("ROLENAME"));
+                    role.setRoleId(rs.getInt("ROLE_ID"));
+                    role.setRoleName(rs.getString("ROLE_NAME"));
                 }
             }
 

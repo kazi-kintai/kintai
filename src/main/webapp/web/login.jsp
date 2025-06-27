@@ -50,12 +50,12 @@
     <script>
         function validateForm() {
             // 入力フィールドを取得
-            var empno = document.getElementById("empno").value;
+            var empId = document.getElementById("empId").value;
             var password = document.getElementById("password").value;
             var errorDiv = document.getElementById("errorMessage");
             
             // 空文字チェック（スペースも除去）
-            if (empno.trim() === "" || password.trim() === "") {
+            if (empId.trim() === "" || password.trim() === "") {
                 errorDiv.innerHTML = "従業員番号とパスワードを入力してください";
                 return false; // フォーム送信を中止
             }
@@ -75,8 +75,8 @@
         <%-- ログインフォーム --%>
         <form action="<%=request.getContextPath()%>/LoginCheck" method="post" onsubmit="return validateForm()">
             <div class="form-group">
-                <label for="empno">従業員番号:</label>
-                <input type="text" id="empno" name="empno">
+                <label for="empId">従業員番号:</label>
+                <input type="text" id="empId" name="empId">
             </div>
             <div class="form-group">
                 <label for="password">パスワード:</label>

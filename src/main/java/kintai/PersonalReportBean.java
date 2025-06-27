@@ -137,4 +137,23 @@ public class PersonalReportBean {
         if (records == null || summary == null) return 0;
         return summary.getTotalWorkDays() - summary.getActualAttendanceDays();
     }
+
+    // JSPとの互換性のための追加メソッド
+    /**
+     * 従業員IDの別名ゲッター（empId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 従業員番号
+     */
+    public String getEmpId() {
+        return empno;
+    }
+
+    /**
+     * 従業員IDの別名セッター（empId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param empId 従業員番号
+     */
+    public void setEmpId(String empId) {
+        this.empno = empId;
+    }
 }
