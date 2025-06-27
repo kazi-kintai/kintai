@@ -425,7 +425,7 @@ public class KintaiRecDao {
      * @return 出勤予定者数
      */
     public int getScheduledEmployeeCount(LocalDate date) {
-        String sql = "SELECT COUNT(*) FROM emp WHERE ROLEID != 999"; // 999は退職者など除外
+        String sql = "SELECT COUNT(*) FROM emp WHERE ROLE_ID != 999"; // 999は退職者など除外
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -465,7 +465,7 @@ public class KintaiRecDao {
      * @return 未出勤者数
      */
     public int getAbsentEmployeeCount(LocalDate date) {
-        String sql = "SELECT COUNT(*) FROM emp e WHERE e.ROLEID != 999 AND NOT EXISTS " +
+        String sql = "SELECT COUNT(*) FROM emp e WHERE e.ROLE_ID != 999 AND NOT EXISTS " +
                     "(SELECT 1 FROM kintai k WHERE k.EMP_ID = e.EMP_ID AND k.KINTAI_DATE = ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

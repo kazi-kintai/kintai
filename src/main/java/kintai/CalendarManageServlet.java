@@ -70,7 +70,7 @@ public class CalendarManageServlet extends HttpServlet {
 
         // --- イベントデータの取得と展開 ---
         List<CalendarEventBean> allEvents = calendarEventDao.findAll(); // 全てのイベント（単発・繰り返し元）を取得
-        List<EventRepeatRuleBean> allRules = eventRepeatRuleDao.findAll(); // 全ての繰り返しルールを取得
+        List<EventRepeatRuleBean> allRules = new ArrayList<>(); // eventRepeatRuleDao.findAll(); // 暫時的に繰り返しルール機能を無効化
 
         // FullCalendarに渡すイベントリスト (展開済みイベントインスタンス)
         List<Map<String, Object>> fcEvents = new ArrayList<>();

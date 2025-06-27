@@ -25,7 +25,7 @@ public class CalendarEventDao {
     public List<CalendarEventBean> findAll() {
         List<CalendarEventBean> eventList = new ArrayList<>();
         // SELECT文にREPEAT_RULE_IDを追加
-        String sql = "SELECT EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID FROM calendar_event ORDER BY EVENT_DATE DESC";
+        String sql = "SELECT EVENT_DATE, EVENT_NAME, IS_WORK FROM calendar_event ORDER BY EVENT_DATE DESC";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -36,9 +36,9 @@ public class CalendarEventDao {
                 event.setEventDate(rs.getDate("EVENT_DATE").toLocalDate());
                 event.setEventName(rs.getString("EVENT_NAME"));
                 event.setWork(rs.getBoolean("IS_WORK"));
-                // REPEAT_RULE_IDを取得し、Beanにセット
-                Integer repeatRuleId = rs.getObject("REPEAT_RULE_ID", Integer.class); // nullの場合も対応
-                event.setRepeatRuleId(repeatRuleId);
+                // REPEAT_RULE_IDは暫時的に無効化（データベースに列が存在しないため）
+                // Integer repeatRuleId = rs.getObject("REPEAT_RULE_ID", Integer.class); // nullの場合も対応
+                // event.setRepeatRuleId(repeatRuleId);
                 eventList.add(event);
             }
 
