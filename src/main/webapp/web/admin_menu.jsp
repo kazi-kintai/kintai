@@ -1,8 +1,11 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="kintai.UserBean" %>
+<%@ page import="kintai.AnnouncementBean" %>
+<%@ page import="kintai.AnnouncementDao" %>
 <%@ page import="java.time.LocalDate" %>
 <%@ page import="java.time.format.DateTimeFormatter" %>
 <%@ page import="java.util.Locale" %>
+<%@ page import="java.util.List" %>
 <%
     UserBean user = (UserBean) session.getAttribute("user");
     // ログインチェック
@@ -20,6 +23,10 @@
     String[] weekdays = {"日", "月", "火", "水", "木", "金", "土"};
     String weekday = weekdays[today.getDayOfWeek().getValue() % 7];
     String dateString = "今日は" + month + "月" + day + "日です<br/>" + weekday + "曜日";
+    
+    // アナウンス情報を取得
+    AnnouncementDao announcementDao = new AnnouncementDao();
+    List<AnnouncementBean> announcements = announcementDao.findActiveAnnouncements();
 %>
 <html>
 <head>
@@ -84,12 +91,19 @@
         
         .dashboard h1 {
             grid-column: 1 / -1;
-            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             color: #333;
             margin: 0 0 20px 0;
             font-size: 1.8em;
             border-bottom: 2px solid #dc3545; /* 管理者用は赤色 */
             padding-bottom: 10px;
+        }
+        
+        .dashboard-title {
+            flex: 1;
+            text-align: center;
         }
         
         /* ウィジェットの共通スタイル */
@@ -176,47 +190,218 @@
             background: #c82333;
         }
         
-        /* システム概要ウィジェット */
-        .system-widget {
-            grid-column: 1 / -1;
-            border-left: 4px solid #ffc107;
+        .sliding-sidebar {
+            position: fixed;
+            top: 0;
+            right: -320px;
+            width: 320px;
+            height: auto;
+            max-height: 100vh;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            color: #333;
+            z-index: 1000;
+            transition: right 0.4s ease-in-out;
+            box-shadow: -2px 0 15px rgba(0,0,0,0.15);
+            padding: 0;
+            overflow-y: auto;
+            border-radius: 0 0 0 15px;
         }
         
-        .system-widget h2 {
-            color: #ffc107;
+        .sliding-sidebar.open {
+            right: 0;
         }
         
-        .system-summary {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(135deg, #28a745 0%, #218838 100%);
+            color: white;
         }
         
-        .summary-item {
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
+        .sidebar-title {
+            margin: 0;
+            font-size: 1.3em;
+            color: white;
+            font-weight: 600;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 5px;
+            transition: all 0.3s;
+            opacity: 0.8;
+        }
+        
+        .sidebar-close:hover {
+            opacity: 1;
+            transform: scale(1.1);
+        }
+        
+        .sidebar-close:hover {
+            transform: scale(1.1);
+        }
+        
+        .sidebar-content {
+            padding: 20px;
+            padding-bottom: 30px;
+        }
+        
+        .sidebar-greeting {
+            padding: 20px;
             text-align: center;
-            border-left: 4px solid #ffc107;
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f4d4 100%);
+            border-bottom: 1px solid #dee2e6;
         }
         
-        .summary-item .label {
-            font-size: 0.9em;
-            color: #666;
+        .greeting-text {
+            font-size: 1.1em;
+            color: #155724;
+            font-weight: 600;
             margin-bottom: 5px;
         }
         
-        .summary-item .value {
-            font-size: 1.3em;
+        .greeting-reminder {
+            font-size: 0.8em;
+            color: #6c757d;
+            font-style: italic;
+        }
+        
+        .sidebar-item {
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px;
+            border: 1px solid #e9ecef;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .sidebar-item.date-item {
+            background: linear-gradient(135deg, #fff9c4 0%, #fef08a 100%);
+            border: 1px solid #fbbf24;
+        }
+        
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #fbbf24;
+        }
+        
+        .info-item:last-child {
+            border-bottom: none;
+        }
+        
+        .info-item .label {
+            font-size: 0.9em;
+            color: #6c757d;
+            font-weight: 500;
+        }
+        
+        .info-item .value {
+            font-size: 1.1em;
             font-weight: bold;
-            color: #333;
+            color: #495057;
+        }
+        
+        .date-display {
+            text-align: center;
+            font-size: 1.0em;
+            color: #495057;
+            font-weight: 500;
+        }
+        
+        /* システム概要 */
+        .system-trigger {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-left: auto;
+            background: #28a745;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 2px 4px rgba(40, 167, 69, 0.3);
+        }
+        
+        .system-trigger:hover {
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 3px 6px rgba(40, 167, 69, 0.4);
+        }
+        
+        .system-label {
+            font-size: 0.55em !important;
+            color: white;
+            font-weight: 500;
+            margin-right: 5px;
+        }
+        
+        .system-arrow {
+            color: white;
+            font-size: 0.55em !important;
+            transition: transform 0.3s;
+        }
+        
+        .system-trigger:hover .system-arrow {
+            transform: translateX(2px);
+        }
+        
+        /* 遮罩层 */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
         
         /* レスポンシブ対応 */
         @media (max-width: 1024px) {
             .dashboard {
                 grid-template-columns: 1fr 1fr;
+            }
+            
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #dee2e6;
+                position: static;
+                max-height: none;
+            }
+            
+            .content-area {
+                padding-right: 0;
             }
         }
         
@@ -226,21 +411,409 @@
                 padding: 15px;
             }
             
-            .system-widget {
-                grid-column: 1;
+            .sidebar {
+                padding: 15px;
             }
+        }
+        
+        /* アナウンス横幅バナーのスタイル */
+        .announcement-banner {
+            background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
+            margin-bottom: 0;
+        }
+        
+        .banner-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .banner-title {
+            margin: 0;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .banner-icon {
+            font-size: 1.2em;
+        }
+        
+        .banner-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 0.85em;
+            cursor: pointer;
+            padding: 5px;
+            margin-left: 10px;
+            transition: transform 0.3s;
+        }
+        
+        .banner-toggle:hover {
+            transform: scale(1.1);
+        }
+        
+        .banner-content {
+            padding: 20px;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .banner-content.collapsed {
+            padding: 0;
+            max-height: 0;
+            opacity: 0;
+        }
+        
+        .announcement-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+            grid-auto-flow: column;
+        }
+        
+        .announcement-grid.waterfall {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            grid-auto-flow: row;
+        }
+        
+        .announcement-grid.waterfall .announcement-card {
+            display: block;
+            margin-bottom: 0;
+            break-inside: unset;
+        }
+        
+        .announcement-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .announcement-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .announcement-title {
+            margin: 0 0 10px 0;
+            color: #6f42c1;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: color 0.3s;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        
+        .announcement-title:hover {
+            background: #f8f9fa;
+            color: #5a32a3;
+        }
+        
+        .announcement-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .announcement-date {
+            font-size: 0.85em;
+            color: #6c757d;
+            font-weight: normal;
+        }
+        
+        .more-section {
+            text-align: center;
+            margin-top: 15px;
+        }
+        
+        .more-announcements-btn, .less-announcements-btn {
+            background: rgba(255, 255, 255, 0.9);
+            color: #6f42c1;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s;
+        }
+        
+        .more-announcements-btn:hover, .less-announcements-btn:hover {
+            background: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .announcement-edit-btn {
+            background: #ffc107;
+            color: #333;
+            border: none;
+            border-radius: 15px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .announcement-edit-btn:hover {
+            background: #e0a800;
+            transform: scale(1.05);
+        }
+        
+        .announcement-form {
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .announcement-form input, .announcement-form textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-family: inherit;
+            box-sizing: border-box;
+        }
+        
+        .announcement-form textarea {
+            height: 80px;
+            resize: vertical;
+        }
+        
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .form-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+        
+        .form-btn.submit {
+            background: #007bff;
+            color: white;
+        }
+        
+        .form-btn.submit:hover {
+            background: #0056b3;
+        }
+        
+        .form-btn.cancel {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .form-btn.cancel:hover {
+            background: #545b62;
+        }
+        
+        .no-announcement {
+            color: #6c757d;
+            font-style: italic;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .add-announcement-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: background-color 0.3s;
+            width: auto;
+            display: inline-block;
+        }
+        
+        .add-announcement-btn:hover {
+            background: #218838;
+        }
+        
+        /* モーダルダイアログのスタイル */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 50%;
+            max-width: 600px;
+            position: relative;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 10px;
+        }
+        
+        .modal-title {
+            margin: 0;
+            color: #6f42c1;
+            font-size: 1.2em;
+        }
+        
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .modal-body {
+            line-height: 1.6;
+            color: #333;
+        }
+        
+        .modal-date {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-bottom: 10px;
         }
     </style>
     
 </head>
 <body>
     <div class="container">
+        <%-- アナウンス横幅バナー --%>
+        <div class="announcement-banner">
+            <div class="banner-header">
+                <h2 class="banner-title">
+                    <i class="banner-icon">📢</i> アナウンス
+                    <button class="banner-toggle" onclick="toggleBanner()" id="bannerToggle">▶ <span id="bannerToggleText">展開</span></button>
+                </h2>
+                <button class="add-announcement-btn" onclick="showAddForm()">新しいアナウンスを追加</button>
+            </div>
+            
+            <div class="banner-content collapsed" id="bannerContent">
+                <!-- 編集フォーム（初期状態では非表示） -->
+                <form id="announcementForm" class="announcement-form" style="display: none;" method="post" action="<%= request.getContextPath() %>/announcement">
+                    <input type="hidden" name="action" value="add" id="formAction">
+                    <input type="hidden" name="announcementId" value="" id="editAnnouncementId">
+                    <input type="text" name="title" placeholder="タイトル" id="announcementTitle" required>
+                    <textarea name="content" placeholder="内容" id="announcementContent" required></textarea>
+                    <label style="display: flex; align-items: center; margin-bottom: 10px;">
+                        <input type="checkbox" name="isActive" id="announcementActive" checked style="margin-right: 8px;"> 公開する
+                    </label>
+                    <div class="form-buttons">
+                        <button type="submit" class="form-btn submit">発送</button>
+                        <button type="button" class="form-btn cancel" onclick="cancelEdit()">キャンセル</button>
+                    </div>
+                </form>
+                
+                <!-- 表示部分 -->
+                <div id="announcementDisplay">
+                    <% if (announcements != null && !announcements.isEmpty()) { %>
+                        <div class="announcement-grid">
+                            <% 
+                            int displayCount = Math.min(3, announcements.size());
+                            for (int i = 0; i < displayCount; i++) { 
+                                AnnouncementBean announcement = announcements.get(i);
+                                String dateStr = "";
+                                if (announcement.getCreatedAt() != null) {
+                                    dateStr = announcement.getCreatedAt().toLocalDate().toString();
+                                }
+                            %>
+                                <div class="announcement-card">
+                                    <h3 class="announcement-title" onclick="showAnnouncementDetail(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>', '<%= dateStr %>')">
+                                        <%= announcement.getTitle() %>
+                                    </h3>
+                                    <div class="announcement-meta">
+                                        <span class="announcement-date"><%= dateStr %></span>
+                                        <button class="announcement-edit-btn" onclick="event.stopPropagation(); editAnnouncement(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>')">編集</button>
+                                    </div>
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <% if (announcements.size() > 3) { %>
+                            <div class="more-section">
+                                <button class="more-announcements-btn" onclick="showAllAnnouncements()">さらに表示 (<%= announcements.size() - 3 %>件)</button>
+                            </div>
+                        <% } %>
+                        
+                        <!-- 隠された全アナウンス表示エリア -->
+                        <div id="allAnnouncementsArea" style="display: none;">
+                            <div class="announcement-grid waterfall">
+                                <% for (int i = 3; i < announcements.size(); i++) { 
+                                    AnnouncementBean announcement = announcements.get(i);
+                                    String dateStr = "";
+                                    if (announcement.getCreatedAt() != null) {
+                                        dateStr = announcement.getCreatedAt().toLocalDate().toString();
+                                    }
+                                %>
+                                    <div class="announcement-card">
+                                        <h3 class="announcement-title" onclick="showAnnouncementDetail(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>', '<%= dateStr %>')">
+                                            <%= announcement.getTitle() %>
+                                        </h3>
+                                        <div class="announcement-meta">
+                                            <span class="announcement-date"><%= dateStr %></span>
+                                            <button class="announcement-edit-btn" onclick="event.stopPropagation(); editAnnouncement(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>')">編集</button>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                            <div class="more-section">
+                                <button class="less-announcements-btn" onclick="hideExtraAnnouncements()">折りたたむ</button>
+                            </div>
+                        </div>
+                    <% } else { %>
+                        <div class="no-announcement">
+                            現在、アナウンスはありません
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+        
         <div class="header">
             <div class="user-info">
                 <%-- 部署名と氏名を表示 --%>
                 <p>部署：管理部<%-- <%= deptname %> --%></p>
                 <p>氏名：<%= user.getName() %> <span style="color: #dc3545; font-weight: bold;">[管理者]</span></p>
             </div>
+            
             <%-- ログアウトボタン --%>
             <form method="post" action="<%= request.getContextPath() %>/logout" style="margin: 0;">
                 <input type="submit" value="ログアウト" class="logout-button">
@@ -248,7 +821,13 @@
         </div>
         
         <div class="dashboard">
-            <h1>管理者メニュー</h1>
+            <h1>
+                <span class="dashboard-title">管理者メニュー</span>
+                <span class="system-trigger" onclick="toggleSlidingSidebar()">
+                    <span class="system-label">システム概要</span>
+                    <span class="system-arrow">▶</span>
+                </span>
+            </h1>
             
             
             <!-- 基本機能ウィジェット -->
@@ -278,41 +857,230 @@
                 <a href="#" class="function-btn" style="background: #6c757d;">休日種別管理 (準備中)</a>
             </div>
             
-            <!-- システム概要ウィジェット -->
-            <div class="widget system-widget">
-                <h2>システム概要</h2>
-                <div class="system-summary">
-                    <div class="summary-item" style="grid-column: span 2;">
-                        <div class="value" id="currentDate"><%= dateString %></div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="label">今日の出勤者</div>
-                        <div class="value" id="todayAttendance">-</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="label">総従業員数</div>
-                        <div class="value" id="totalEmployees">-</div>
-                    </div>
-                    <div class="summary-item">
-                        <div class="label">部署数</div>
-                        <div class="value" id="totalDepts">-</div>
-                    </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 滑动侧边栏 -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSlidingSidebar()"></div>
+    <div class="sliding-sidebar" id="slidingSidebar">
+        <div class="sidebar-header">
+            <h2 class="sidebar-title">システム概要</h2>
+            <button class="sidebar-close" onclick="closeSlidingSidebar()">&times;</button>
+        </div>
+        
+        <div class="sidebar-greeting" id="sidebarGreeting">
+            <div class="greeting-text" id="greetingText">おはようございます</div>
+            <div class="greeting-reminder" id="greetingReminder"></div>
+        </div>
+        
+        <div class="sidebar-content">
+            <div class="sidebar-item date-item">
+                <div class="date-display" id="slideDateDisplay"><%= dateString %></div>
+            </div>
+            
+            <div class="sidebar-item">
+                <div class="info-item">
+                    <span class="label">今日の出勤者</span>
+                    <span class="value" id="slideTodayAttendance">-</span>
                 </div>
+                <div class="info-item">
+                    <span class="label">総従業員数</span>
+                    <span class="value" id="slideTotalEmployees">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">部署数</span>
+                    <span class="value" id="slideTotalDepts">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- アナウンス詳細モーダル -->
+    <div id="announcementModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modalTitle">アナウンス詳細</h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="modal-date" id="modalDate"></div>
+                <div id="modalContent"></div>
             </div>
         </div>
     </div>
 
     <script>
         
-        // サーバーから取得したリアルデータを表示
+        // サーバーから取得したリアルデータを表示（隠しdivに設定）
+        var todayAttendanceValue = '-';
+        var totalEmployeesValue = '-';
+        var totalDeptsValue = '-';
+        
         <% if (request.getAttribute("totalEmployees") != null) { %>
-            document.getElementById('totalEmployees').textContent = '<%= request.getAttribute("totalEmployees") %>名';
+            totalEmployeesValue = '<%= request.getAttribute("totalEmployees") %>名';
         <% } %>
         <% if (request.getAttribute("todayAttendance") != null) { %>
-            document.getElementById('todayAttendance').textContent = '<%= request.getAttribute("todayAttendance") %>名';
+            todayAttendanceValue = '<%= request.getAttribute("todayAttendance") %>名';
         <% } %>
         <% if (request.getAttribute("totalDepts") != null) { %>
-            document.getElementById('totalDepts').textContent = '<%= request.getAttribute("totalDepts") %>部署';
+            totalDeptsValue = '<%= request.getAttribute("totalDepts") %>部署';
+        <% } %>
+        
+        // 隠しdivに値を設定（データ同期のため）
+        var hiddenDiv = document.createElement('div');
+        hiddenDiv.style.display = 'none';
+        hiddenDiv.innerHTML = '<span id="todayAttendance">' + todayAttendanceValue + '</span>' +
+                              '<span id="totalEmployees">' + totalEmployeesValue + '</span>' +
+                              '<span id="totalDepts">' + totalDeptsValue + '</span>';
+        document.body.appendChild(hiddenDiv);
+        
+        // アナウンス管理JavaScript
+        function showAddForm() {
+            document.getElementById('formAction').value = 'add';
+            document.getElementById('editAnnouncementId').value = '';
+            document.getElementById('announcementTitle').value = '';
+            document.getElementById('announcementContent').value = '';
+            document.getElementById('announcementActive').checked = true;
+            document.getElementById('announcementForm').style.display = 'block';
+            document.getElementById('announcementDisplay').style.display = 'none';
+        }
+        
+        function editAnnouncement(id, title, content) {
+            document.getElementById('formAction').value = 'update';
+            document.getElementById('editAnnouncementId').value = id;
+            document.getElementById('announcementTitle').value = title;
+            document.getElementById('announcementContent').value = content;
+            document.getElementById('announcementActive').checked = true;
+            document.getElementById('announcementForm').style.display = 'block';
+            document.getElementById('announcementDisplay').style.display = 'none';
+        }
+        
+        function cancelEdit() {
+            document.getElementById('announcementForm').style.display = 'none';
+            document.getElementById('announcementDisplay').style.display = 'block';
+        }
+        
+        // アナウンス詳細を表示するモーダル
+        function showAnnouncementDetail(id, title, content, date) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalDate').textContent = '投稿日: ' + date;
+            document.getElementById('modalContent').innerHTML = content.replace(/\n/g, '<br/>');
+            document.getElementById('announcementModal').style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('announcementModal').style.display = 'none';
+        }
+        
+        // モーダルの外側をクリックしたら閉じる
+        window.onclick = function(event) {
+            var modal = document.getElementById('announcementModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+        
+        // more/lessボタンの機能
+        function showAllAnnouncements() {
+            document.getElementById('allAnnouncementsArea').style.display = 'block';
+            // moreボタンを隠す
+            var moreBtn = document.querySelector('.more-announcements-btn');
+            if (moreBtn) moreBtn.style.display = 'none';
+        }
+        
+        function hideExtraAnnouncements() {
+            document.getElementById('allAnnouncementsArea').style.display = 'none';
+            // moreボタンを表示
+            var moreBtn = document.querySelector('.more-announcements-btn');
+            if (moreBtn) moreBtn.style.display = 'inline-block';
+        }
+        
+        // 横幅バナーの折りたたみ機能
+        function toggleBanner() {
+            var content = document.getElementById('bannerContent');
+            var toggle = document.getElementById('bannerToggle');
+            var toggleText = document.getElementById('bannerToggleText');
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.innerHTML = '▼ <span id="bannerToggleText">たたむ</span>';
+            } else {
+                content.classList.add('collapsed');
+                toggle.innerHTML = '▶ <span id="bannerToggleText">展開</span>';
+            }
+        }
+        
+        // サイドバー機能
+        function toggleSlidingSidebar() {
+            var sidebar = document.getElementById('slidingSidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            
+            if (sidebar.classList.contains('open')) {
+                closeSlidingSidebar();
+            } else {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+                
+                syncSidebarData();
+            }
+        }
+        
+        function closeSlidingSidebar() {
+            var sidebar = document.getElementById('slidingSidebar');
+            var overlay = document.getElementById('sidebarOverlay');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+        
+        function syncSidebarData() {
+            var todayAttendance = document.getElementById('todayAttendance');
+            var totalEmployees = document.getElementById('totalEmployees');
+            var totalDepts = document.getElementById('totalDepts');
+            
+            if (todayAttendance) {
+                document.getElementById('slideTodayAttendance').textContent = todayAttendance.textContent;
+            }
+            if (totalEmployees) {
+                document.getElementById('slideTotalEmployees').textContent = totalEmployees.textContent;
+            }
+            if (totalDepts) {
+                document.getElementById('slideTotalDepts').textContent = totalDepts.textContent;
+            }
+            
+            setGreeting();
+        }
+        
+        function setGreeting() {
+            // Set time-based greeting
+            var now = new Date();
+            var hour = now.getHours();
+            var greetingText = document.getElementById('greetingText');
+            var greetingReminder = document.getElementById('greetingReminder');
+            
+            if (hour >= 5 && hour < 12) {
+                greetingText.textContent = 'おはようございます';
+                greetingReminder.textContent = '';
+            } else if (hour >= 12 && hour < 17) {
+                greetingText.textContent = 'こんにちは';
+                greetingReminder.textContent = '';
+            } else if (hour >= 17 && hour < 22) {
+                greetingText.textContent = 'こんばんは';
+                greetingReminder.textContent = '';
+            } else {
+                greetingText.textContent = 'こんばんは';
+                greetingReminder.textContent = '一日お疲れ様でした、ごゆっくり休んでください';
+            }
+        }
+        
+        // Display message on page load if exists
+        <% 
+        String message = (String) session.getAttribute("message");
+        if (message != null) {
+            session.removeAttribute("message"); // Remove message after display
+        %>
+            alert('<%= message %>');
         <% } %>
     </script>
 </body>
