@@ -1,37 +1,217 @@
 <%@ page contentType="text/html; charset=UTF-8" %>
+<%@ page import="java.util.*, kintai.*" %>
 <%@ page import="java.time.LocalDate" %>
+<%
+    UserBean user = (UserBean) session.getAttribute("user");
+    if (user == null || user.getRoleId() != 1) {
+        response.sendRedirect(request.getContextPath() + "/web/login.jsp");
+        return;
+    }
+
+    String mode = request.getParameter("mode");
+    String selectedType = request.getParameter("leaveType");
+    if (selectedType == null) selectedType = "annual";
+
+    List<EmpBean> unissuedList = (List<EmpBean>) request.getAttribute("unissuedList");
+    Integer grantedCount = (Integer) request.getAttribute("grantedCount");
+%>
+<!DOCTYPE html>
 <html>
 <head>
-  <title>休暇付与結果</title>
+    <meta charset="UTF-8">
+    <title>休暇付与管理</title>
+	<style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1, h2 {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+      margin-bottom: 20px;
+    }
+
+    .form-inline {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    label {
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    select {
+      padding: 6px;
+      font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 6px 12px;
+      font-size: 14px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background-color: #1976d2;
+      color: white;
+    }
+
+    .btn-success {
+      background-color: #388e3c;
+      color: white;
+    }
+
+    .btn-danger {
+      background-color: #d32f2f;
+      color: white;
+    }
+
+    .emp-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+
+    .emp-table th,
+    .emp-table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .emp-table th {
+      background-color: #eeeeee;
+    }
+
+    .message {
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .success-message {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border: 1px solid #c8e6c9;
+    }
+
+    .error-message {
+      background-color: #ffebee;
+      color: #c62828;
+      border: 1px solid #ef9a9a;
+    }
+
+    .section {
+      margin-bottom: 30px;
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #1976d2;
+      font-weight: bold;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
+<div class="container">
+    <h1>休暇付与管理</h1>
+    <p>本日：<%= LocalDate.now() %></p>
 
-<h2>休暇付与処理結果</h2>
+	<% String message = (String) request.getAttribute("message");
+   	Boolean success = (Boolean) request.getAttribute("success"); %>
 
-<p>本日：<%= LocalDate.now() %></p>
+	<% if (message != null && !message.isEmpty()) { %>
+    	<div class="message <%= (success != null && success) ? "success-message" : "error-message" %>">
+        	<%= message %>
+    	</div>
+	<% } %>
+	<div class="section">
+    <h2>未付与サマリー</h2>
+    <ul>
+        <li>年次有給休暇： <strong><%= request.getAttribute("unissuedAnnual") %></strong> 人未付与</li>
+        <li>初回付与（3・6か月）： <strong><%= request.getAttribute("unissuedInitial") %></strong> 人未付与</li>
+        <li>特別休暇（7月1日）： <strong><%= request.getAttribute("unissuedSpecial") %></strong> 人未付与</li>
+    </ul>
+	</div>
+	
+    <form method="get" action="leaveGrantManage" class="form-inline">
+        <label>付与種別：</label>
+        <select name="leaveType">
+            <option value="annual" <%= "annual".equals(selectedType) ? "selected" : "" %>>年次有給休暇</option>
+            <option value="initial" <%= "initial".equals(selectedType) ? "selected" : "" %>>初回付与（3・6か月）</option>
+            <option value="special" <%= "special".equals(selectedType) ? "selected" : "" %>>特別休暇</option>
+        </select>
+        <input type="hidden" name="mode" value="preview" />
+        <button class="btn btn-primary" type="submit">未付与者を確認</button>
+    </form>
 
-<%
-  Integer annualGranted = (Integer) request.getAttribute("annualGranted");
-  Integer initialGranted = (Integer) request.getAttribute("initialGranted");
-  Integer specialGranted = (Integer) request.getAttribute("specialGranted");
-%>
+    <% if ("preview".equals(mode) && unissuedList != null) { %>
+        <div class="section">
+            <h2>未付与者一覧（<%= unissuedList.size() %>人）</h2>
+            <% if (unissuedList.isEmpty()) { %>
+                <p>未付与の対象者はいません。</p>
+            <% } else { %>
+                <form method="post" action="leaveGrantManage">
+                    <input type="hidden" name="mode" value="execute" />
+                    <input type="hidden" name="leaveType" value="<%= selectedType %>" />
+                    <table class="emp-table">
+                        <thead>
+                        <tr><th>社員番号</th><th>氏名</th><th>入社日</th></tr>
+                        </thead>
+                        <tbody>
+                        <% for (EmpBean emp : unissuedList) { %>
+                            <tr>
+                                <td><%= emp.getEmpNo() %></td>
+                                <td><%= emp.getEmpName() %></td>
+                                <td><%= emp.getEmpDate() %></td>
+                            </tr>
+                        <% } %>
+                        </tbody>
+                    </table>
+                    <button class="btn btn-success" type="submit">この社員に付与する</button>
+                </form>
+            <% } %>
+        </div>
+    <% } %>
 
-<table border="1" cellpadding="5" cellspacing="0">
-  <tr><th>付与種別</th><th>対象人数</th></tr>
-  <tr><td>年次有給休暇</td><td><%= annualGranted != null ? annualGranted : 0 %> 人</td></tr>
-  <tr><td>初回付与（3か月＋6か月）</td><td><%= initialGranted != null ? initialGranted : 0 %> 人</td></tr>
-  <tr><td>特別休暇</td><td><%= specialGranted != null ? specialGranted : 0 %> 人</td></tr>
-</table>
+    <% if ("execute".equals(mode) && grantedCount != null) { %>
+        <div class="section">
+            <div class="message success-message">
+            
+                <strong><%= grantedCount %></strong> 人に「<%= selectedType %>」休暇を付与しました。
+            </div>
+        </div>
+    <% } %>
 
-<br/>
-
-<form action="LeaveRecServlet" method="get">
-  <button type="submit">休暇管理画面へ戻る</button>
-</form>
-
-<form action="/web/admin_menu.jsp" method="get">
-  <button type="submit">管理者メニューに戻る</button>
-</form>
-
+    <a href="<%= request.getContextPath() %>/web/admin_menu.jsp" class="back-link">管理メニューに戻る</a>
+</div>
 </body>
 </html>
