@@ -22,7 +22,7 @@ public class KinmuManageBean implements Serializable {
         private static final long serialVersionUID = 1L;
 
         private int allocationId;   // 割り当てID (ALLOCATION_ID)
-        private String empno;       // 従業員番号 (EMPNO) - 参照用（ただしwork_allocのPKの一部）
+        private String empId;       // 従業員番号 (EMP_ID) - 参照用（ただしwork_allocのPKの一部）
         private int projectId;      // プロジェクトID (PROJECT_ID)
         private LocalDate workDate; // 作業日 (WORK_DATE)
         private double workHours;   // 作業時間 (WORK_HOURS)
@@ -48,11 +48,19 @@ public class KinmuManageBean implements Serializable {
         }
 
         public String getEmpno() {
-            return empno;
+            return empId;
         }
 
         public void setEmpno(String empno) {
-            this.empno = empno;
+            this.empId = empno;
+        }
+
+        public String getEmpId() {
+            return empId;
+        }
+
+        public void setEmpId(String empId) {
+            this.empId = empId;
         }
 
         public int getProjectId() {

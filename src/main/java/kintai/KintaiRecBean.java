@@ -13,7 +13,7 @@ public class KintaiRecBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // --- kintaiテーブルからの情報 ---
-    private int recId;           // 勤怠記録ID
+    private int kintaiRecId;     // 勤怠記録ID
     private LocalDate kintaiDate;  // 勤怠日付
     private String empno;        // 従業員番号
     private Time clockIn;        // 出勤時刻
@@ -39,12 +39,21 @@ public class KintaiRecBean implements Serializable {
 
     // --- アクセサメソッド (getter/setter) ---
 
+    public int getKintaiRecId() {
+        return kintaiRecId;
+    }
+
+    public void setKintaiRecId(int kintaiRecId) {
+        this.kintaiRecId = kintaiRecId;
+    }
+
+    // Backward compatibility
     public int getRecId() {
-        return recId;
+        return kintaiRecId;
     }
 
     public void setRecId(int recId) {
-        this.recId = recId;
+        this.kintaiRecId = recId;
     }
 
     public LocalDate getKintaiDate() {
@@ -61,6 +70,25 @@ public class KintaiRecBean implements Serializable {
 
     public void setEmpno(String empno) {
         this.empno = empno;
+    }
+
+    // JSPとの互換性のための追加メソッド
+    /**
+     * 従業員IDの別名ゲッター（empId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 従業員番号
+     */
+    public String getEmpId() {
+        return empno;
+    }
+
+    /**
+     * 従業員IDの別名セッター（empId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param empId 従業員番号
+     */
+    public void setEmpId(String empId) {
+        this.empno = empId;
     }
 
     public Time getClockIn() {

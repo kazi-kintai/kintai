@@ -45,4 +45,23 @@ public class GradeBean implements Serializable {
     public void setGradeName(String gradeName) {
         this.gradeName = gradeName;
     }
+
+    // JSPとの互換性のための追加メソッド
+    /**
+     * 等級IDの別名ゲッター（gradeId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 等級番号
+     */
+    public int getGradeId() {
+        return gradeNo;
+    }
+
+    /**
+     * 等級IDの別名セッター（gradeId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param gradeId 等級番号
+     */
+    public void setGradeId(int gradeId) {
+        this.gradeNo = gradeId;
+    }
 }

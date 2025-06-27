@@ -118,5 +118,4 @@
 >>>>>>> refs/remotes/origin/feature/data_change
 	</div>
 </body>
->>>>>>> refs/heads/feature/sprint3_chou
 </html>

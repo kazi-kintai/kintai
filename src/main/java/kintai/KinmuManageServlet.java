@@ -75,7 +75,7 @@ public class KinmuManageServlet extends HttpServlet {
         // JSPに渡すための勤怠データマップを作成
         Map<String, String> workTimeData = new HashMap<>();
         if (workTime != null) {
-            workTimeData.put("recId", String.valueOf(workTime.getRecId())); // RECIDを渡す
+            workTimeData.put("recId", String.valueOf(workTime.getKintaiRecId())); // KINTAI_REC_IDを渡す
             if (workTime.getClockIn() != null) {
                 workTimeData.put("clockInTime", workTime.getClockIn().toLocalTime().toString().substring(0, 5));
             }
@@ -189,7 +189,7 @@ public class KinmuManageServlet extends HttpServlet {
                         workTime.setClockOut(clockOut);
                     } else { // RECIDがない場合は新規作成
                         workTime = new WorkTimeBean();
-                        workTime.setEmpno(empno);
+                        workTime.setEmpId(empno);
                         workTime.setKintaiDate(targetDate);
                         workTime.setClockIn(clockIn);
                         workTime.setClockOut(clockOut);
@@ -240,7 +240,7 @@ public class KinmuManageServlet extends HttpServlet {
                     }
 
                     BreakBean newBreak = new BreakBean();
-                    newBreak.setRecId(currentWorkTime.getRecId());
+                    newBreak.setKintaiRecId(currentWorkTime.getKintaiRecId());
                     newBreak.setBreakStart(breakStart);
                     newBreak.setBreakEnd(breakEnd);
                     

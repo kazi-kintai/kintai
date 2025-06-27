@@ -28,11 +28,11 @@ public class LoginCheckServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         // 1. JSPから送信されたパラメータを取得
-        String empno = request.getParameter("empno");
+        String empId = request.getParameter("empId");
         String password = request.getParameter("password");
         
         // 入力値の検証（サーバー側でも検証を行う）
-        if (empno == null || empno.trim().isEmpty() || 
+        if (empId == null || empId.trim().isEmpty() || 
             password == null || password.trim().isEmpty()) {
             request.setAttribute("errorMessage", "従業員番号とパスワードを入力してください");
             RequestDispatcher dispatcher = request.getRequestDispatcher("/web/login.jsp");
@@ -46,7 +46,7 @@ public class LoginCheckServlet extends HttpServlet {
         PostDao postDao = new PostDao(); // 既存のPostDaoを使用
 
         // 3. UserDaoを使って、データベースにユーザーが存在するか問い合わせる
-        UserBean user = userDao.findByLoginInfo(empno, password);
+        UserBean user = userDao.findByLoginInfo(empId, password);
 
         // 4. 認証結果に応じて処理を分岐
         if (user != null) {
@@ -59,16 +59,16 @@ public class LoginCheckServlet extends HttpServlet {
             String deptName = null;
             String postName = null;
 
-            // 部署名を取得 (UserBeanのgetDeptId()からgetDeptNo()へ変更)
-            if (user.getDeptNo() != null && !user.getDeptNo().isEmpty()) {
-                DeptBean dept = deptDao.findByDeptNo(user.getDeptNo());
+            // 部署名を取得 (UserBeanのgetDeptId()使用)
+            if (user.getDeptId() != null && !user.getDeptId().isEmpty()) {
+                DeptBean dept = deptDao.findByDeptId(user.getDeptId());
                 if (dept != null) {
                     deptName = dept.getDeptName();
                 }
             }
-            // 役職名を取得 (UserBeanのgetPostId()からgetPostNo()へ変更)
-            if (user.getPostNo() != null && !user.getPostNo().isEmpty()) {
-                PostBean post = postDao.findByPostNo(user.getPostNo());
+            // 役職名を取得 (UserBeanのgetPostId()使用)
+            if (user.getPostId() != null && !user.getPostId().isEmpty()) {
+                PostBean post = postDao.findByPostId(user.getPostId());
                 if (post != null) {
                     postName = post.getPostName();
                 }

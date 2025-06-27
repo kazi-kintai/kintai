@@ -9,11 +9,10 @@ public class UserBean implements Serializable {
     // empテーブルの各列に対応する。新しいER図の定義に合わせる。
 
     private String empId;       // empテーブルの「EMP_ID」列に対応
-    private String name;        // empテーブルの「EMPNAME」列に対応 (旧emp_name)
+    private String name;        // empテーブルの「EMP_NAME」列に対応
     private String deptId;      // empテーブルの「DEPT_ID」列に対応
     private String postId;      // empテーブルの「POST_ID」列に対応
-    private int roleId;         // empテーブルの「ROLEID」列に対応 (旧role)
-    private int gradeNo;        // empテーブルの「GRADENO」列に対応 (新規追加)
+    private int roleId;         // empテーブルの「ROLE_ID」列に対応
     // PASS, MAIL, EMPDATE はUserBeanのログイン情報として必要であれば追加可能だが、
     // 認証には直接使用しないため、ここでは省略。
 
@@ -81,10 +80,4 @@ public class UserBean implements Serializable {
         this.roleId = roleId;
     }
 
-    public int getGradeNo() {
-        return gradeNo;
-    }
-    public void setGradeNo(int gradeNo) {
-        this.gradeNo = gradeNo;
-    }
 }

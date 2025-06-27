@@ -77,4 +77,41 @@ public class ProjectMemberReportBean {
     public void setPersonalBudgetVariance(BigDecimal personalBudgetVariance) {
         this.personalBudgetVariance = personalBudgetVariance;
     }
+
+    // JSPとの互換性のための追加メソッド
+    /**
+     * 従業員番号の別名ゲッター（empno形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 従業員番号
+     */
+    public String getEmpno() {
+        return empNo;
+    }
+
+    /**
+     * 従業員番号の別名セッター（empno形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param empno 従業員番号
+     */
+    public void setEmpno(String empno) {
+        this.empNo = empno;
+    }
+
+    /**
+     * 従業員IDの別名ゲッター（empId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 従業員番号
+     */
+    public String getEmpId() {
+        return empNo;
+    }
+
+    /**
+     * 従業員IDの別名セッター（empId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param empId 従業員番号
+     */
+    public void setEmpId(String empId) {
+        this.empNo = empId;
+    }
 }

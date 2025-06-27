@@ -288,7 +288,7 @@ public class ProjectBudgetReportServlet extends HttpServlet {
                         // データベースの時給を更新
                         if (empNo != null && hourlyRate != null) {
                             System.out.println("Updating hourly rate for empNo: " + empNo + ", rate: " + hourlyRate);
-                            boolean success = budgetReportDao.updateHourlyRate(empNo, hourlyRate);
+                            boolean success = budgetReportDao.updateHourlyRate(empNo, projectId, month, hourlyRate);
                             System.out.println("Update result: " + success);
                         }
                     }

@@ -106,40 +106,41 @@ public class EmpManageServlet extends HttpServlet {
             switch (action) {
                 case "add":
                     // 新規追加処理
-                    String newEmpNo = request.getParameter("empNo");
+                    String newEmpId = request.getParameter("empId");
                     String newEmpName = request.getParameter("empName");
-                    String newDeptNo = request.getParameter("deptNo");
-                    String newPostNo = request.getParameter("postNo");
+                    String newDeptId = request.getParameter("deptId");
+                    String newPostId = request.getParameter("postId");
                     String newRoleIdStr = request.getParameter("roleId"); // 旧roleから変更
-                    String newGradeNoStr = request.getParameter("gradeNo"); // 新規追加
+                    String newGradeIdStr = request.getParameter("gradeId"); // 新規追加
                     String newPass = request.getParameter("pass");
                     String newMail = request.getParameter("mail"); // 新規追加
                     String newEmpDateStr = request.getParameter("empDate"); // 新規追加
 
                     // 入力チェック (最低限のチェック、詳細なビジネスロジックはDAOやサービス層で)
-                    if (newEmpNo == null || newEmpNo.trim().isEmpty() || 
+                    if (newEmpId == null || newEmpId.trim().isEmpty() || 
                         newEmpName == null || newEmpName.trim().isEmpty() ||
-                        newDeptNo == null || newDeptNo.trim().isEmpty() ||
-                        newPostNo == null || newPostNo.trim().isEmpty() ||
+                        newDeptId == null || newDeptId.trim().isEmpty() ||
+                        newPostId == null || newPostId.trim().isEmpty() ||
                         newRoleIdStr == null || newRoleIdStr.trim().isEmpty() ||
-                        newGradeNoStr == null || newGradeNoStr.trim().isEmpty() ||
+                        newGradeIdStr == null || newGradeIdStr.trim().isEmpty() ||
                         newPass == null || newPass.trim().isEmpty()) {
                         message = "必須項目をすべて入力してください";
                         break;
                     }
 
                     // 従業員番号の重複チェック
-                    if (empDao.exists(newEmpNo)) {
-                        message = "従業員番号「" + newEmpNo + "」は既に存在します";
+                    if (empDao.exists(newEmpId)) {
+                        message = "従業員番号「" + newEmpId + "」は既に存在します";
                         break;
                     }
                     
                     EmpBean newEmp = new EmpBean();
-                    newEmp.setEmpNo(newEmpNo);
+                    newEmp.setEmpId(newEmpId);
                     newEmp.setEmpName(newEmpName);
-                    newEmp.setDeptId(newDeptNo);
-                    newEmp.setPostId(newPostNo);
+                    newEmp.setDeptId(newDeptId);
+                    newEmp.setPostId(newPostId);
                     newEmp.setRoleId(Integer.parseInt(newRoleIdStr)); // 旧setRoleから変更
+                    newEmp.setEmpType(newGradeIdStr); // EMP_TYPE field corresponds to grade
                     newEmp.setPass(newPass);
                     newEmp.setMail(newMail); // 新規追加
                     // EMPDATEはnull許容として、JSPからの入力がない場合はnull
@@ -153,31 +154,34 @@ public class EmpManageServlet extends HttpServlet {
                     
                 case "update":
                     // 更新処理
-                    String updateEmpNo = request.getParameter("empNo");
+                    String updateEmpId = request.getParameter("empId");
                     String updateEmpName = request.getParameter("empName");
-                    String updateDeptNo = request.getParameter("deptNo");
-                    String updatePostNo = request.getParameter("postNo");
+                    String updateDeptId = request.getParameter("deptId");
+                    String updatePostId = request.getParameter("postId");
                     String updateRoleIdStr = request.getParameter("roleId"); // 旧roleから変更
+                    String updateGradeIdStr = request.getParameter("gradeId"); // 新規追加
                     String updatePass = request.getParameter("pass"); // パスワードは更新時も入力させる想定
                     String updateMail = request.getParameter("mail"); // 新規追加
                     String updateEmpDateStr = request.getParameter("empDate"); // 新規追加
                     
                     // 入力チェック
                     if (updateEmpName == null || updateEmpName.trim().isEmpty() ||
-                        updateDeptNo == null || updateDeptNo.trim().isEmpty() ||
-                        updatePostNo == null || updatePostNo.trim().isEmpty() ||
+                        updateDeptId == null || updateDeptId.trim().isEmpty() ||
+                        updatePostId == null || updatePostId.trim().isEmpty() ||
                         updateRoleIdStr == null || updateRoleIdStr.trim().isEmpty() ||
+                        updateGradeIdStr == null || updateGradeIdStr.trim().isEmpty() ||
                         updatePass == null || updatePass.trim().isEmpty()) { // パスワードも必須
                         message = "必須項目をすべて入力してください";
                         break;
                     }
                     
                     EmpBean updateEmp = new EmpBean();
-                    updateEmp.setEmpNo(updateEmpNo);
+                    updateEmp.setEmpId(updateEmpId);
                     updateEmp.setEmpName(updateEmpName);
-                    updateEmp.setDeptId(updateDeptNo);
-                    updateEmp.setPostId(updatePostNo);
+                    updateEmp.setDeptId(updateDeptId);
+                    updateEmp.setPostId(updatePostId);
                     updateEmp.setRoleId(Integer.parseInt(updateRoleIdStr)); // 旧setRoleから変更
+                    updateEmp.setEmpType(updateGradeIdStr); // EMP_TYPE field corresponds to grade
                     updateEmp.setPass(updatePass);
                     updateEmp.setMail(updateMail); // 新規追加
                     if (updateEmpDateStr != null && !updateEmpDateStr.trim().isEmpty()) {
@@ -192,8 +196,8 @@ public class EmpManageServlet extends HttpServlet {
                     
                 case "delete":
                     // 削除処理
-                    String deleteEmpNo = request.getParameter("empNo");
-                    success = empDao.delete(deleteEmpNo);
+                    String deleteEmpId = request.getParameter("empId");
+                    success = empDao.delete(deleteEmpId);
                     
                     if (success) {
                         message = "従業員を削除しました";

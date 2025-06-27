@@ -92,35 +92,35 @@ public class DeptManageServlet extends HttpServlet {
             switch (action) {
                 case "add":
                     // 新規追加処理
-                    String newDeptNo = request.getParameter("deptNo");
+                    String newDeptId = request.getParameter("deptId");
                     String newDeptName = request.getParameter("deptName");
                     
                     // 入力チェック
-                    if (newDeptNo == null || newDeptNo.trim().isEmpty() || 
+                    if (newDeptId == null || newDeptId.trim().isEmpty() || 
                         newDeptName == null || newDeptName.trim().isEmpty()) {
                         message = "部署番号と部署名は必須入力です";
                         break;
                     }
-                    // 新しいER図のDEPTNOの長さはVARCHAR(5)
-                    if (newDeptNo.length() > 5) {
+                    // 新しいER図のDEPT_IDの長さはVARCHAR(5)
+                    if (newDeptId.length() > 5) {
                         message = "部署番号は5文字以内で入力してください";
                         break;
                     }
 
                     // 部署番号の重複チェック
-                    if (deptDao.exists(newDeptNo)) {
-                        message = "部署番号「" + newDeptNo + "」は既に存在します";
+                    if (deptDao.exists(newDeptId)) {
+                        message = "部署番号「" + newDeptId + "」は既に存在します";
                         break;
                     }
                     
-                    DeptBean newDept = new DeptBean(newDeptNo, newDeptName);
+                    DeptBean newDept = new DeptBean(newDeptId, newDeptName);
                     success = deptDao.insert(newDept);
                     message = success ? "部署を追加しました" : "部署の追加に失敗しました";
                     break;
                     
                 case "update":
                     // 更新処理
-                    String updateDeptNo = request.getParameter("deptNo");
+                    String updateDeptId = request.getParameter("deptId");
                     String updateDeptName = request.getParameter("deptName");
                     
                     // 入力チェック
@@ -128,17 +128,17 @@ public class DeptManageServlet extends HttpServlet {
                         message = "部署名は必須入力です";
                         break;
                     }
-                    // DEPTNOの長さチェックは不要（主キーなので変更されないため）
+                    // DEPT_IDの長さチェックは不要（主キーなので変更されないため）
                     
-                    DeptBean updateDept = new DeptBean(updateDeptNo, updateDeptName);
+                    DeptBean updateDept = new DeptBean(updateDeptId, updateDeptName);
                     success = deptDao.update(updateDept);
                     message = success ? "部署を更新しました" : "部署の更新に失敗しました";
                     break;
                     
                 case "delete":
                     // 削除処理
-                    String deleteDeptNo = request.getParameter("deptNo");
-                    success = deptDao.delete(deleteDeptNo);
+                    String deleteDeptId = request.getParameter("deptId");
+                    success = deptDao.delete(deleteDeptId);
                     
                     if (success) {
                         message = "部署を削除しました";

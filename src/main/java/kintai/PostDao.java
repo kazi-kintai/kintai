@@ -21,7 +21,7 @@ public class PostDao {
      */
     public List<PostBean> findAll() {
         List<PostBean> postList = new ArrayList<>();
-        String sql = "SELECT POSTNO, POSTNAME FROM post ORDER BY POSTNO";
+        String sql = "SELECT POST_ID, POST_NAME FROM post WHERE IS_DELETED = false ORDER BY POST_ID";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -29,8 +29,8 @@ public class PostDao {
             
             while (rs.next()) {
                 PostBean post = new PostBean();
-                post.setPostNo(rs.getString("POSTNO"));
-                post.setPostName(rs.getString("POSTNAME"));
+                post.setPostId(rs.getString("POST_ID"));
+                post.setPostName(rs.getString("POST_NAME"));
                 postList.add(post);
             }
             
@@ -43,23 +43,23 @@ public class PostDao {
     
     /**
      * 役職番号で役職情報を検索する
-     * @param postNo 役職番号
+     * @param postId 役職番号
      * @return 役職情報。見つからない場合はnull
      */
-    public PostBean findByPostNo(String postNo) {
+    public PostBean findByPostId(String postId) {
         PostBean post = null;
-        String sql = "SELECT POSTNO, POSTNAME FROM post WHERE POSTNO = ?";
+        String sql = "SELECT POST_ID, POST_NAME FROM post WHERE POST_ID = ? AND IS_DELETED = false";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, postNo);
+            ps.setString(1, postId);
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     post = new PostBean();
-                    post.setPostNo(rs.getString("POSTNO"));
-                    post.setPostName(rs.getString("POSTNAME"));
+                    post.setPostId(rs.getString("POST_ID"));
+                    post.setPostName(rs.getString("POST_NAME"));
                 }
             }
             
@@ -76,12 +76,12 @@ public class PostDao {
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(PostBean post) {
-        String sql = "INSERT INTO post (POSTNO, POSTNAME) VALUES (?, ?)";
+        String sql = "INSERT INTO post (POST_ID, POST_NAME, IS_DELETED, CREATED_AT, CREATED_BY) VALUES (?, ?, false, NOW(), 'system')";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, post.getPostNo());
+            ps.setString(1, post.getPostId());
             ps.setString(2, post.getPostName());
             
             int count = ps.executeUpdate();
@@ -90,7 +90,7 @@ public class PostDao {
         } catch (SQLException e) {
             // 主キー重複エラーの場合
             if (e.getSQLState().equals("23000")) {
-                System.err.println("役職番号が既に存在します: " + post.getPostNo());
+                System.err.println("役職番号が既に存在します: " + post.getPostId());
             } else {
                 e.printStackTrace();
             }
@@ -107,13 +107,13 @@ public class PostDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(PostBean post) {
-        String sql = "UPDATE post SET POSTNAME = ? WHERE POSTNO = ?";
+        String sql = "UPDATE post SET POST_NAME = ?, UPDATED_AT = NOW(), UPDATED_BY = 'system' WHERE POST_ID = ? AND IS_DELETED = false";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, post.getPostName());
-            ps.setString(2, post.getPostNo());
+            ps.setString(2, post.getPostId());
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -127,16 +127,16 @@ public class PostDao {
     
     /**
      * 役職を削除する
-     * @param postNo 削除する役職番号
+     * @param postId 削除する役職番号
      * @return 削除に成功した場合true、失敗した場合false
      */
-    public boolean delete(String postNo) {
-        String sql = "DELETE FROM post WHERE POSTNO = ?";
+    public boolean delete(String postId) {
+        String sql = "UPDATE post SET IS_DELETED = true, DELETED_AT = NOW(), DELETED_BY = 'system' WHERE POST_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, postNo);
+            ps.setString(1, postId);
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -144,7 +144,7 @@ public class PostDao {
         } catch (SQLException e) {
             // 外部キー制約エラーの場合（この役職に所属する社員がいる場合）
             if (e.getSQLState().startsWith("23")) {
-                System.err.println("この役職に所属する社員が存在するため削除できません: " + postNo);
+                System.err.println("この役職に所属する社員が存在するため削除できません: " + postId);
             } else {
                 e.printStackTrace();
             }
@@ -157,10 +157,10 @@ public class PostDao {
     
     /**
      * 役職番号の重複をチェックする
-     * @param postNo チェックする役職番号
+     * @param postId チェックする役職番号
      * @return 既に存在する場合true、存在しない場合false
      */
-    public boolean exists(String postNo) {
-        return findByPostNo(postNo) != null;
+    public boolean exists(String postId) {
+        return findByPostId(postId) != null;
     }
 }

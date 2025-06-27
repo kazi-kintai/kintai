@@ -21,7 +21,7 @@ public class DeptDao {
      */
     public List<DeptBean> findAll() {
         List<DeptBean> deptList = new ArrayList<>();
-        String sql = "SELECT DEPTNO, DEPTNAME FROM dept ORDER BY DEPTNO";
+        String sql = "SELECT DEPT_ID, DEPT_NAME FROM dept WHERE IS_DELETED = false ORDER BY DEPT_ID";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -29,8 +29,8 @@ public class DeptDao {
             
             while (rs.next()) {
                 DeptBean dept = new DeptBean();
-                dept.setDeptNo(rs.getString("DEPTNO"));
-                dept.setDeptName(rs.getString("DEPTNAME"));
+                dept.setDeptId(rs.getString("DEPT_ID"));
+                dept.setDeptName(rs.getString("DEPT_NAME"));
                 deptList.add(dept);
             }
             
@@ -43,23 +43,23 @@ public class DeptDao {
     
     /**
      * 部署番号で部署情報を検索する
-     * @param deptNo 部署番号
+     * @param deptId 部署番号
      * @return 部署情報。見つからない場合はnull
      */
-    public DeptBean findByDeptNo(String deptNo) {
+    public DeptBean findByDeptId(String deptId) {
         DeptBean dept = null;
-        String sql = "SELECT DEPTNO, DEPTNAME FROM dept WHERE DEPTNO = ?";
+        String sql = "SELECT DEPT_ID, DEPT_NAME FROM dept WHERE DEPT_ID = ? AND IS_DELETED = false";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, deptNo);
+            ps.setString(1, deptId);
             
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     dept = new DeptBean();
-                    dept.setDeptNo(rs.getString("DEPTNO"));
-                    dept.setDeptName(rs.getString("DEPTNAME"));
+                    dept.setDeptId(rs.getString("DEPT_ID"));
+                    dept.setDeptName(rs.getString("DEPT_NAME"));
                 }
             }
             
@@ -76,12 +76,12 @@ public class DeptDao {
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(DeptBean dept) {
-        String sql = "INSERT INTO dept (DEPTNO, DEPTNAME) VALUES (?, ?)";
+        String sql = "INSERT INTO dept (DEPT_ID, DEPT_NAME, IS_DELETED, CREATED_AT, CREATED_BY) VALUES (?, ?, false, NOW(), 'system')";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, dept.getDeptNo());
+            ps.setString(1, dept.getDeptId());
             ps.setString(2, dept.getDeptName());
             
             int count = ps.executeUpdate();
@@ -90,7 +90,7 @@ public class DeptDao {
         } catch (SQLException e) {
             // 主キー重複エラーの場合
             if (e.getSQLState().equals("23000")) {
-                System.err.println("部署番号が既に存在します: " + dept.getDeptNo());
+                System.err.println("部署番号が既に存在します: " + dept.getDeptId());
             } else {
                 e.printStackTrace();
             }
@@ -107,13 +107,13 @@ public class DeptDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(DeptBean dept) {
-        String sql = "UPDATE dept SET DEPTNAME = ? WHERE DEPTNO = ?";
+        String sql = "UPDATE dept SET DEPT_NAME = ?, UPDATED_AT = NOW(), UPDATED_BY = 'system' WHERE DEPT_ID = ? AND IS_DELETED = false";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, dept.getDeptName());
-            ps.setString(2, dept.getDeptNo());
+            ps.setString(2, dept.getDeptId());
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -127,16 +127,16 @@ public class DeptDao {
     
     /**
      * 部署を削除する
-     * @param deptNo 削除する部署番号
+     * @param deptId 削除する部署番号
      * @return 削除に成功した場合true、失敗した場合false
      */
-    public boolean delete(String deptNo) {
-        String sql = "DELETE FROM dept WHERE DEPTNO = ?";
+    public boolean delete(String deptId) {
+        String sql = "UPDATE dept SET IS_DELETED = true, DELETED_AT = NOW(), DELETED_BY = 'system' WHERE DEPT_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, deptNo);
+            ps.setString(1, deptId);
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -144,7 +144,7 @@ public class DeptDao {
         } catch (SQLException e) {
             // 外部キー制約エラーの場合（この部署に所属する社員がいる場合）
             if (e.getSQLState().startsWith("23")) {
-                System.err.println("この部署に所属する社員が存在するため削除できません: " + deptNo);
+                System.err.println("この部署に所属する社員が存在するため削除できません: " + deptId);
             } else {
                 e.printStackTrace();
             }
@@ -157,10 +157,10 @@ public class DeptDao {
     
     /**
      * 部署番号の重複をチェックする
-     * @param deptNo チェックする部署番号
+     * @param deptId チェックする部署番号
      * @return 既に存在する場合true、存在しない場合false
      */
-    public boolean exists(String deptNo) {
-        return findByDeptNo(deptNo) != null;
+    public boolean exists(String deptId) {
+        return findByDeptId(deptId) != null;
     }
 }

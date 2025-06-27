@@ -746,8 +746,8 @@
                                         <select id="empNoFilter" name="empNoFilter" style="font-size: 11px; padding: 4px;">
                                             <option value="">全ての従業員</option>
                                             <% for (EmpBean emp : allEmpList) { %>
-                                                <option value="<%= emp.getEmpNo() %>" <%= emp.getEmpNo().equals(empNoFilter != null ? empNoFilter : "") ? "selected" : "" %>>
-                                                    <%= emp.getEmpNo() %> <%= emp.getEmpName() %>
+                                                <option value="<%= emp.getEmpId() %>" <%= emp.getEmpId().equals(empNoFilter != null ? empNoFilter : "") ? "selected" : "" %>>
+                                                    <%= emp.getEmpId() %> <%= emp.getEmpName() %>
                                                 </option>
                                             <% } %>
                                         </select>
@@ -1176,7 +1176,7 @@
                 <% for (int i = 0; i < employeeList.size(); i++) { 
                     EmpBean emp = employeeList.get(i); %>
                 {
-                    empno: '<%= emp.getEmpNo() %>',
+                    empno: '<%= emp.getEmpId() %>',
                     empname: '<%= emp.getEmpName() %>',
                     deptname: '<%= emp.getDeptName() != null ? emp.getDeptName() : "" %>',
                     postname: '<%= emp.getPostName() != null ? emp.getPostName() : "" %>'

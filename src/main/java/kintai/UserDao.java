@@ -71,7 +71,7 @@ public class UserDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean updatePassword(String empNo, String newPassword) {
-        String sql = "UPDATE emp SET PASS = ? WHERE EMPNO = ?";
+        String sql = "UPDATE emp SET PASS = ?, UPDATED_AT = NOW(), UPDATED_BY = 'system' WHERE EMP_ID = ? AND IS_ACTIVE = true";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -98,7 +98,7 @@ public class UserDao {
      * @return 現在のパスワードが正しい場合true、そうでない場合false
      */
     public boolean verifyCurrentPassword(String empNo, String currentPassword) {
-        String sql = "SELECT PASS FROM emp WHERE EMPNO = ?";
+        String sql = "SELECT PASS FROM emp WHERE EMP_ID = ? AND IS_ACTIVE = true";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             

@@ -59,12 +59,12 @@ public class WorkPunchServlet extends HttpServlet {
 
         // セッションからログインユーザーの情報を取得
         UserBean user = (UserBean) session.getAttribute("user");
-        String empno = user.getEmpno(); // 従業員番号を取得
+        String empId = user.getEmpId(); // 従業員番号を取得
         LocalDate today = LocalDate.now(); // 今日の日付を取得
 
         // データベースから今日の勤怠データと休憩データリストを取得
-        WorkTimeBean workTime = workTimeDao.findWorkTimeByDate(empno, today);
-        List<BreakBean> breaks = workTimeDao.findBreaksByDate(empno, today);
+        WorkTimeBean workTime = workTimeDao.findWorkTimeByDate(empId, today);
+        List<BreakBean> breaks = workTimeDao.findBreaksByDate(empId, today);
 
         // JSPに渡すための勤怠データ用のマップを作成
         Map<String, String> workTimeData = new HashMap<>();
@@ -138,7 +138,7 @@ public class WorkPunchServlet extends HttpServlet {
 
         // ログインユーザーの情報を取得
         UserBean user = (UserBean) session.getAttribute("user");
-        String empno = user.getEmpno(); // 従業員番号
+        String empId = user.getEmpId(); // 従業員番号
         LocalDate today = LocalDate.now(); // 今日の日付
 
         // リクエストパラメータから実行するアクション（処理種別）を取得
@@ -146,7 +146,7 @@ public class WorkPunchServlet extends HttpServlet {
         if (action == null) action = ""; // nullの場合は空文字にする
 
         // データベースから今日の勤怠データを取得
-        WorkTimeBean workTime = workTimeDao.findWorkTimeByDate(empno, today);
+        WorkTimeBean workTime = workTimeDao.findWorkTimeByDate(empId, today);
 
         // アクションに応じて処理を分岐
         switch (action) {
@@ -155,7 +155,7 @@ public class WorkPunchServlet extends HttpServlet {
                 if (workTime == null) {
                     // 新しい勤怠データオブジェクトを作成
                     WorkTimeBean newWorkTime = new WorkTimeBean();
-                    newWorkTime.setEmpno(empno); // 従業員番号設定
+                    newWorkTime.setEmpId(empId); // 従業員番号設定
                     newWorkTime.setKintaiDate(today); // 勤怠日付設定
                     newWorkTime.setClockIn(Time.valueOf(LocalTime.now())); // 現在時刻を出勤時刻として設定
 
@@ -190,7 +190,7 @@ public class WorkPunchServlet extends HttpServlet {
 
                 // 新しい休憩データオブジェクトを作成
                 BreakBean newBreak = new BreakBean();
-                newBreak.setRecId(workTime.getRecId()); // 勤怠記録IDを関連付け
+                newBreak.setKintaiRecId(workTime.getKintaiRecId()); // 勤怠記録IDを関連付け
                 newBreak.setBreakStart(parseTime(breakStartStr)); // 休憩開始時刻を設定
                 newBreak.setBreakEnd(parseTime(breakEndStr)); // 休憩終了時刻を設定
 

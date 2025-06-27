@@ -44,4 +44,23 @@ public class GyomuBean implements Serializable {
     public void setGyomuName(String gyomuName) {
         this.gyomuName = gyomuName;
     }
+
+    // JSPとの互換性のための追加メソッド
+    /**
+     * 業務IDの別名ゲッター（gyomuId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 業務番号
+     */
+    public String getGyomuId() {
+        return gyomuNo;
+    }
+
+    /**
+     * 業務IDの別名セッター（gyomuId形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param gyomuId 業務番号
+     */
+    public void setGyomuId(String gyomuId) {
+        this.gyomuNo = gyomuId;
+    }
 }

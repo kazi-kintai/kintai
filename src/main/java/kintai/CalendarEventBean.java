@@ -76,4 +76,14 @@ public class CalendarEventBean implements Serializable {
     public String getWorkStatusName() {
         return isWork ? "出勤日" : "休日";
     }
+
+    // JSPとの互換性のための追加メソッド
+    /**
+     * isWorkのゲッターメソッド（getIsWork形式）
+     * JSPでの使用を考慮した互換性メソッド
+     * @return 出勤日かどうか
+     */
+    public boolean getIsWork() {
+        return isWork;
+    }
 }

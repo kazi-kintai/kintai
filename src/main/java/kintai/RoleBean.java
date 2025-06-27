@@ -9,7 +9,7 @@ import java.io.Serializable;
 public class RoleBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private int roleId;         // roleテーブルの「ROLEID」列に対応
+    private int roleId;         // roleテーブルの「ROLE_ID」列に対応
     private String roleName;    // roleテーブルの「ROLENAME」列に対応
 
     /**

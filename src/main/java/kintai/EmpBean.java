@@ -1,41 +1,48 @@
 package kintai;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDate; // LocalDateをインポート
 
 /**
  * 従業員情報（empテーブルのレコード）を保持するJavaBean。
+ * 新しいER図のempテーブルの全列に対応し、
+ * 部署名、役職名、ロール名、等級名も保持できるように拡張。
  */
 public class EmpBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
     // --- empテーブルの列に対応するフィールド ---
-    private String empNo;         // EMP_ID
-    private String empName;       // EMP_NAME
-    private String deptId;        // DEPT_ID
-    private String postId;        // POST_ID
-    private int roleId;           // ROLE_ID
-    private String empType;       // EMP_TYPE
-    private String pass;          // PASS
-    private String mail;          // MAIL
-    private LocalDate empDate;    // EMP_DATE
-    private boolean isActive;     // IS_ACTIVE
-    private LocalDate leaveDate;  // LEAVE_DATE
-
+    private String empId;       // empテーブルの「EMP_ID」列に対応
+    private String empName;     // empテーブルの「EMP_NAME」列に対応
+    private String deptId;      // empテーブルの「DEPT_ID」列に対応
+    private String postId;      // empテーブルの「POST_ID」列に対応
+    private int roleId;         // empテーブルの「ROLE_ID」列に対応
+    private String empType;     // empテーブルの「EMP_TYPE」列に対応
+    private String pass;        // empテーブルの「PASS」列に対応
+    private String mail;        // empテーブルの「MAIL」列に対応
+    private LocalDate empDate;  // empテーブルの「EMP_DATE」列に対応
+    private boolean isActive;   // empテーブルの「IS_ACTIVE」列に対応
+    private LocalDate leaveDate; // empテーブルの「LEAVE_DATE」列に対応
+    
     // --- 表示用の追加フィールド（JOINで取得） ---
-    private String deptName;      // 部署名
-    private String postName;      // 役職名
-    private String roleName;      // ロール名
+    private String deptName;    // 部署名（dept.DEPT_NAME）
+    private String postName;    // 役職名（post.POST_NAME）
+    private String roleName;    // ロール名（role.ROLE_NAME）
 
+    /**
+     * デフォルトコンストラクタ
+     */
     public EmpBean() {
     }
 
-    public String getEmpNo() {
-        return empNo;
+    // --- 以下、各フィールドのアクセサメソッド (getter/setter) ---
+
+    public String getEmpId() {
+        return empId;
     }
 
-    public void setEmpNo(String empNo) {
-        this.empNo = empNo;
+    public void setEmpId(String empId) {
+        this.empId = empId;
     }
 
     public String getEmpName() {
@@ -62,6 +69,7 @@ public class EmpBean implements Serializable {
         this.postId = postId;
     }
 
+    // 旧getRole/setRoleからgetRoleId/setRoleIdへ変更
     public int getRoleId() {
         return roleId;
     }
@@ -102,22 +110,6 @@ public class EmpBean implements Serializable {
         this.empDate = empDate;
     }
 
-    public boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public LocalDate getLeaveDate() {
-        return leaveDate;
-    }
-
-    public void setLeaveDate(LocalDate leaveDate) {
-        this.leaveDate = leaveDate;
-    }
-
     public String getDeptName() {
         return deptName;
     }
@@ -140,5 +132,85 @@ public class EmpBean implements Serializable {
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
+    }
+
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    /**
+     * isActiveのゲッターメソッド（getIsActive形式）
+     * JSPでの使用を考慮した互換性メソッド
+     * @return アクティブかどうか
+     */
+    public boolean getIsActive() {
+        return isActive;
+    }
+
+    public LocalDate getLeaveDate() {
+        return leaveDate;
+    }
+
+    public void setLeaveDate(LocalDate leaveDate) {
+        this.leaveDate = leaveDate;
+    }
+
+    // JSPとの互換性のための追加メソッド
+    /**
+     * 従業員番号の別名ゲッター（empno形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 従業員ID（従業員番号）
+     */
+    public String getEmpno() {
+        return empId;
+    }
+
+    /**
+     * 従業員番号の別名セッター（empno形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param empno 従業員番号
+     */
+    public void setEmpno(String empno) {
+        this.empId = empno;
+    }
+
+    /**
+     * 部署番号の別名ゲッター（deptNo形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 部署ID（部署番号）
+     */
+    public String getDeptNo() {
+        return deptId;
+    }
+
+    /**
+     * 部署番号の別名セッター（deptNo形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param deptNo 部署番号
+     */
+    public void setDeptNo(String deptNo) {
+        this.deptId = deptNo;
+    }
+
+    /**
+     * 役職番号の別名ゲッター（postNo形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @return 役職ID（役職番号）
+     */
+    public String getPostNo() {
+        return postId;
+    }
+
+    /**
+     * 役職番号の別名セッター（postNo形式）
+     * JSPでの使用を考慮した後方互換性メソッド
+     * @param postNo 役職番号
+     */
+    public void setPostNo(String postNo) {
+        this.postId = postNo;
     }
 }

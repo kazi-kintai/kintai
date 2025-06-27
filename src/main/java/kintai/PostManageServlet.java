@@ -92,35 +92,35 @@ public class PostManageServlet extends HttpServlet {
             switch (action) {
                 case "add":
                     // 新規追加処理
-                    String newPostNo = request.getParameter("postNo");
+                    String newPostId = request.getParameter("postId");
                     String newPostName = request.getParameter("postName");
                     
                     // 入力チェック
-                    if (newPostNo == null || newPostNo.trim().isEmpty() || 
+                    if (newPostId == null || newPostId.trim().isEmpty() || 
                         newPostName == null || newPostName.trim().isEmpty()) {
                         message = "役職番号と役職名は必須入力です";
                         break;
                     }
-                    // 新しいER図のPOSTNOの長さはVARCHAR(5)
-                    if (newPostNo.length() > 5) {
+                    // 新しいER図のPOST_IDの長さはVARCHAR(5)
+                    if (newPostId.length() > 5) {
                         message = "役職番号は5文字以内で入力してください";
                         break;
                     }
                     
                     // 役職番号の重複チェック
-                    if (postDao.exists(newPostNo)) {
-                        message = "役職番号「" + newPostNo + "」は既に存在します";
+                    if (postDao.exists(newPostId)) {
+                        message = "役職番号「" + newPostId + "」は既に存在します";
                         break;
                     }
                     
-                    PostBean newPost = new PostBean(newPostNo, newPostName);
+                    PostBean newPost = new PostBean(newPostId, newPostName);
                     success = postDao.insert(newPost);
                     message = success ? "役職を追加しました" : "役職の追加に失敗しました";
                     break;
                     
                 case "update":
                     // 更新処理
-                    String updatePostNo = request.getParameter("postNo");
+                    String updatePostId = request.getParameter("postId");
                     String updatePostName = request.getParameter("postName");
                     
                     // 入力チェック
@@ -128,17 +128,17 @@ public class PostManageServlet extends HttpServlet {
                         message = "役職名は必須入力です";
                         break;
                     }
-                    // POSTNOの長さチェックは不要（主キーなので変更されないため）
+                    // POST_IDの長さチェックは不要（主キーなので変更されないため）
                     
-                    PostBean updatePost = new PostBean(updatePostNo, updatePostName);
+                    PostBean updatePost = new PostBean(updatePostId, updatePostName);
                     success = postDao.update(updatePost);
                     message = success ? "役職を更新しました" : "役職の更新に失敗しました";
                     break;
                     
                 case "delete":
                     // 削除処理
-                    String deletePostNo = request.getParameter("postNo");
-                    success = postDao.delete(deletePostNo);
+                    String deletePostId = request.getParameter("postId");
+                    success = postDao.delete(deletePostId);
                     
                     if (success) {
                         message = "役職を削除しました";

@@ -27,7 +27,7 @@ public class ProjectDao {
                 ProjectBean project = new ProjectBean();
                 project.setProjectId(rs.getInt("PROJECT_ID"));
                 project.setProjectName(rs.getString("PROJECT_NAME"));
-                project.setProjectBudget(rs.getInt("BUDGET_AMOUNT"));
+                project.setBudgetAmount(rs.getInt("BUDGET_AMOUNT"));
                 
                 Date start = rs.getDate("START_DATE");
                 Date end = rs.getDate("END_DATE");
@@ -62,7 +62,7 @@ public class ProjectDao {
                     project = new ProjectBean();
                     project.setProjectId(rs.getInt("PROJECT_ID"));
                     project.setProjectName(rs.getString("PROJECT_NAME"));
-                    project.setProjectBudget(rs.getInt("BUDGET_AMOUNT"));
+                    project.setBudgetAmount(rs.getInt("BUDGET_AMOUNT"));
                     
                     Date start = rs.getDate("START_DATE");
                     Date end = rs.getDate("END_DATE");
@@ -100,8 +100,8 @@ public class ProjectDao {
             
             ps.setString(1, projectBean.getProjectName());
             
-            if (projectBean.getProjectBudget() != null) {
-                ps.setInt(2, projectBean.getProjectBudget());
+            if (projectBean.getBudgetAmount() != null) {
+                ps.setInt(2, projectBean.getBudgetAmount());
             } else {
                 ps.setNull(2, java.sql.Types.INTEGER);
             }
@@ -147,8 +147,8 @@ public class ProjectDao {
             
             ps.setString(1, updateProject.getProjectName());
             
-            if (updateProject.getProjectBudget() != null) {
-                ps.setInt(2, updateProject.getProjectBudget());
+            if (updateProject.getBudgetAmount() != null) {
+                ps.setInt(2, updateProject.getBudgetAmount());
             } else {
                 ps.setNull(2, java.sql.Types.INTEGER);
             }
