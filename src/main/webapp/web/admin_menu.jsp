@@ -432,6 +432,51 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
         
+        .announcement-preview {
+            flex: 1;
+            margin: 0 20px;
+            text-align: center;
+            max-width: 500px;
+            overflow: hidden;
+        }
+        
+        .preview-title {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.0em;
+            cursor: pointer;
+            transition: color 0.3s;
+            text-decoration: underline;
+            text-decoration-color: transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .preview-title:hover {
+            color: white;
+            text-decoration-color: white;
+        }
+        
+        .preview-more {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8em;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: color 0.3s;
+            text-decoration: underline;
+            text-decoration-color: transparent;
+        }
+        
+        .preview-more:hover {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration-color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .preview-empty {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8em;
+            font-style: italic;
+        }
+        
         .banner-title {
             margin: 0;
             font-size: 1.3em;
@@ -572,6 +617,25 @@
             transform: scale(1.05);
         }
         
+        .announcement-delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: all 0.3s;
+            position: relative;
+            z-index: 10;
+            margin-left: 5px;
+        }
+        
+        .announcement-delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+        
         .announcement-form {
             background: rgba(255, 255, 255, 0.95);
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -583,7 +647,7 @@
         
         .announcement-form input, .announcement-form textarea {
             width: 100%;
-            padding: 8px;
+            padding: 8px 60px 8px 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             margin-bottom: 10px;
@@ -626,6 +690,29 @@
         
         .form-btn.cancel:hover {
             background: #545b62;
+        }
+        
+        .char-count {
+            position: absolute;
+            bottom: 18px;
+            right: 8px;
+            font-size: 0.7em;
+            color: #6c757d;
+            background: rgba(248, 249, 250, 0.95);
+            padding: 1px 4px;
+            border-radius: 2px;
+            pointer-events: none;
+            z-index: 10;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            line-height: 1.2;
+        }
+        
+        .char-count.warning {
+            color: #fd7e14;
+        }
+        
+        .char-count.danger {
+            color: #dc3545;
         }
         
         .no-announcement {
@@ -723,6 +810,25 @@
                     <i class="banner-icon">📢</i> アナウンス
                     <button class="banner-toggle" onclick="toggleBanner()" id="bannerToggle">▶ <span id="bannerToggleText">展開</span></button>
                 </h2>
+                
+                <!-- 公告标题预览区域 -->
+                <div class="announcement-preview" id="announcementPreview">
+                    <% if (announcements != null && !announcements.isEmpty()) { %>
+                        <% for (int i = 0; i < Math.min(3, announcements.size()); i++) { 
+                            AnnouncementBean announcement = announcements.get(i);
+                        %>
+                            <span class="preview-title" onclick="expandAndShowDetail(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>', '<%= announcement.getCreatedAt() != null ? announcement.getCreatedAt().toLocalDate().toString() : "" %>')">
+                                <%= (i + 1) %>. <%= announcement.getTitle() %><%= i < Math.min(3, announcements.size()) - 1 ? " ｜ " : "" %>
+                            </span>
+                        <% } %>
+                        <% if (announcements.size() > 3) { %>
+                            <span class="preview-more" onclick="expandAnnouncements()">他<%= announcements.size() - 3 %>件</span>
+                        <% } %>
+                    <% } else { %>
+                        <span class="preview-empty">現在、アナウンスはありません</span>
+                    <% } %>
+                </div>
+                
                 <button class="add-announcement-btn" onclick="showAddForm()">新しいアナウンスを追加</button>
             </div>
             
@@ -731,10 +837,16 @@
                 <form id="announcementForm" class="announcement-form" style="display: none;" method="post" action="<%= request.getContextPath() %>/announcement">
                     <input type="hidden" name="action" value="add" id="formAction">
                     <input type="hidden" name="announcementId" value="" id="editAnnouncementId">
-                    <input type="text" name="title" placeholder="タイトル" id="announcementTitle" required>
-                    <textarea name="content" placeholder="内容" id="announcementContent" required></textarea>
+                    <div style="position: relative;">
+                        <input type="text" name="title" placeholder="タイトル" id="announcementTitle" required maxlength="30" oninput="updateCharCount('announcementTitle', 'titleCharCount', 30)">
+                        <div class="char-count" id="titleCharCount">0/30文字</div>
+                    </div>
+                    <div style="position: relative;">
+                        <textarea name="content" placeholder="内容" id="announcementContent" required maxlength="5000" oninput="updateCharCount('announcementContent', 'contentCharCount', 5000)"></textarea>
+                        <div class="char-count" id="contentCharCount">0/5000文字</div>
+                    </div>
                     <input type="hidden" name="isActive" value="true">
-                    <div class="form-buttons">
+                    <div class="form-buttons" style="justify-content: center;">
                         <button type="submit" class="form-btn submit">送信</button>
                         <button type="button" class="form-btn cancel" onclick="cancelEdit()">キャンセル</button>
                     </div>
@@ -755,11 +867,14 @@
                             %>
                                 <div class="announcement-card">
                                     <h3 class="announcement-title" onclick="showAnnouncementDetail(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>', '<%= dateStr %>')">
-                                        <%= announcement.getTitle() %>
+                                        <%= (i + 1) %>. <%= announcement.getTitle() %>
                                     </h3>
                                     <div class="announcement-meta">
                                         <span class="announcement-date"><%= dateStr %></span>
-                                        <button class="announcement-edit-btn" onclick="event.stopPropagation(); editAnnouncement(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>')">編集</button>
+                                        <div>
+                                            <button class="announcement-edit-btn" onclick="event.stopPropagation(); editAnnouncement(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>')">編集</button>
+                                            <button class="announcement-delete-btn" onclick="event.stopPropagation(); deleteAnnouncement(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>')">削除</button>
+                                        </div>
                                     </div>
                                 </div>
                             <% } %>
@@ -783,11 +898,14 @@
                                 %>
                                     <div class="announcement-card">
                                         <h3 class="announcement-title" onclick="showAnnouncementDetail(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>', '<%= dateStr %>')">
-                                            <%= announcement.getTitle() %>
+                                            <%= (i + 1) %>. <%= announcement.getTitle() %>
                                         </h3>
                                         <div class="announcement-meta">
                                             <span class="announcement-date"><%= dateStr %></span>
-                                            <button class="announcement-edit-btn" onclick="event.stopPropagation(); editAnnouncement(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>')">編集</button>
+                                            <div>
+                                                <button class="announcement-edit-btn" onclick="event.stopPropagation(); editAnnouncement(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>')">編集</button>
+                                                <button class="announcement-delete-btn" onclick="event.stopPropagation(); deleteAnnouncement(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>')">削除</button>
+                                            </div>
                                         </div>
                                     </div>
                                 <% } %>
@@ -933,6 +1051,23 @@
                               '<span id="totalDepts">' + totalDeptsValue + '</span>';
         document.body.appendChild(hiddenDiv);
         
+        // 文字数カウント機能
+        function updateCharCount(inputId, countId, maxLength) {
+            var input = document.getElementById(inputId);
+            var counter = document.getElementById(countId);
+            var currentLength = input.value.length;
+            
+            counter.textContent = currentLength + '/' + maxLength + '文字';
+            
+            // 文字数に応じて色を変更
+            counter.className = 'char-count';
+            if (currentLength > maxLength * 0.9) {
+                counter.className += ' danger';
+            } else if (currentLength > maxLength * 0.7) {
+                counter.className += ' warning';
+            }
+        }
+        
         // アナウンス管理JavaScript
         function showAddForm() {
             // アナウンスバナーを展開
@@ -947,6 +1082,9 @@
             document.getElementById('editAnnouncementId').value = '';
             document.getElementById('announcementTitle').value = '';
             document.getElementById('announcementContent').value = '';
+            // 文字数をリセット
+            updateCharCount('announcementTitle', 'titleCharCount', 30);
+            updateCharCount('announcementContent', 'contentCharCount', 5000);
             document.getElementById('announcementForm').style.display = 'block';
             document.getElementById('announcementDisplay').style.display = 'none';
         }
@@ -956,6 +1094,9 @@
             document.getElementById('editAnnouncementId').value = id;
             document.getElementById('announcementTitle').value = title;
             document.getElementById('announcementContent').value = content;
+            // 文字数を更新
+            updateCharCount('announcementTitle', 'titleCharCount', 30);
+            updateCharCount('announcementContent', 'contentCharCount', 5000);
             document.getElementById('announcementForm').style.display = 'block';
             document.getElementById('announcementDisplay').style.display = 'none';
         }
@@ -963,6 +1104,53 @@
         function cancelEdit() {
             document.getElementById('announcementForm').style.display = 'none';
             document.getElementById('announcementDisplay').style.display = 'block';
+        }
+        
+        function deleteAnnouncement(id, title) {
+            if (confirm('「' + title + '」を削除してもよろしいですか？')) {
+                // 削除用の隠しフォームを作成して送信
+                var form = document.createElement('form');
+                form.method = 'post';
+                form.action = '<%= request.getContextPath() %>/announcement';
+                
+                var actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.value = 'delete';
+                form.appendChild(actionInput);
+                
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'announcementId';
+                idInput.value = id;
+                form.appendChild(idInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        // プレビュータイトルクリック時、展開して詳細表示
+        function expandAndShowDetail(id, title, content, date) {
+            // まずアナウンスエリアを展開
+            var bannerContent = document.getElementById('bannerContent');
+            var toggle = document.getElementById('bannerToggle');
+            if (bannerContent.classList.contains('collapsed')) {
+                bannerContent.classList.remove('collapsed');
+                toggle.innerHTML = '▼ <span id="bannerToggleText">折りたたむ</span>';
+            }
+            // その後詳細モーダルを表示
+            showAnnouncementDetail(id, title, content, date);
+        }
+        
+        // 「他X件」クリック時アナウンスエリアを展開
+        function expandAnnouncements() {
+            var bannerContent = document.getElementById('bannerContent');
+            var toggle = document.getElementById('bannerToggle');
+            if (bannerContent.classList.contains('collapsed')) {
+                bannerContent.classList.remove('collapsed');
+                toggle.innerHTML = '▼ <span id="bannerToggleText">折りたたむ</span>';
+            }
         }
         
         // アナウンス詳細を表示するモーダル

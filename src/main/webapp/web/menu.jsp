@@ -2,6 +2,8 @@
 <%@ page import="kintai.UserBean" %>
 <%@ page import="kintai.AnnouncementBean" %>
 <%@ page import="kintai.AnnouncementDao" %>
+<%@ page import="kintai.KintaiRecDao" %>
+<%@ page import="kintai.MonthlySummaryBean" %>
 <%@ page import="java.util.List" %>
 <%
     UserBean user = (UserBean) session.getAttribute("user");
@@ -16,6 +18,16 @@
     // アナウンス情報を取得
     AnnouncementDao announcementDao = new AnnouncementDao();
     List<AnnouncementBean> announcements = announcementDao.findActiveAnnouncements();
+    
+    // 統計データを取得
+    KintaiRecDao kintaiRecDao = new KintaiRecDao();
+    String currentMonth = java.time.YearMonth.now().toString();
+    MonthlySummaryBean monthlySummary = null;
+    try {
+        monthlySummary = kintaiRecDao.getMonthlySummary(user.getEmpId(), currentMonth);
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
 %>
 <html>
   <head>
@@ -70,11 +82,11 @@
 
       /* ダッシュボードレイアウト */
       .dashboard {
-        padding: 20px;
+        padding: 15px;
         display: grid;
         grid-template-columns: 1fr 1fr;
         grid-template-rows: auto auto auto;
-        gap: 20px;
+        gap: 15px;
         height: calc(100vh - 100px);
       }
 
@@ -82,10 +94,10 @@
         grid-column: 1 / -1;
         text-align: center;
         color: #333;
-        margin: 0 0 20px 0;
-        font-size: 1.8em;
+        margin: 0 0 12px 0;
+        font-size: 1.6em;
         border-bottom: 2px solid #007bff;
-        padding-bottom: 10px;
+        padding-bottom: 6px;
       }
 
       /* ウィジェットの共通スタイル */
@@ -93,7 +105,7 @@
         background: white;
         border: 1px solid #ddd;
         border-radius: 8px;
-        padding: 20px;
+        padding: 15px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         transition: box-shadow 0.3s;
       }
@@ -103,11 +115,11 @@
       }
 
       .widget h2 {
-        margin: 0 0 15px 0;
+        margin: 0 0 12px 0;
         color: #007bff;
-        font-size: 1.3em;
+        font-size: 1.2em;
         border-bottom: 1px solid #eee;
-        padding-bottom: 8px;
+        padding-bottom: 6px;
       }
 
       /* 打刻ウィジェット */
@@ -188,27 +200,27 @@
 
       .records-summary {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 15px;
-        margin-bottom: 15px;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 12px;
       }
 
       .summary-item {
         background: #f8f9fa;
-        padding: 15px;
+        padding: 12px;
         border-radius: 5px;
         text-align: center;
         border-left: 4px solid #007bff;
       }
 
       .summary-item .label {
-        font-size: 0.9em;
+        font-size: 0.85em;
         color: #666;
-        margin-bottom: 5px;
+        margin-bottom: 4px;
       }
 
       .summary-item .value {
-        font-size: 1.4em;
+        font-size: 1.3em;
         font-weight: bold;
         color: #333;
       }
@@ -257,6 +269,51 @@
         align-items: center;
         padding: 15px 20px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .announcement-preview {
+        flex: 1;
+        margin: 0 20px;
+        text-align: center;
+        max-width: 500px;
+        overflow: hidden;
+      }
+      
+      .preview-title {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 1.0em;
+        cursor: pointer;
+        transition: color 0.3s;
+        text-decoration: underline;
+        text-decoration-color: transparent;
+        transition: all 0.3s;
+        font-weight: 500;
+      }
+      
+      .preview-title:hover {
+        color: white;
+        text-decoration-color: white;
+      }
+      
+      .preview-more {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.8em;
+        margin-left: 10px;
+        cursor: pointer;
+        transition: color 0.3s;
+        text-decoration: underline;
+        text-decoration-color: transparent;
+      }
+      
+      .preview-more:hover {
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration-color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .preview-empty {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.8em;
+        font-style: italic;
       }
       
       .banner-title {
@@ -458,6 +515,24 @@
             <i class="banner-icon">📢</i> アナウンス
             <button class="banner-toggle" onclick="toggleBanner()" id="bannerToggle">▶ <span id="bannerToggleText">展開</span></button>
           </h2>
+          
+          <!-- 公告标题预览区域 -->
+          <div class="announcement-preview" id="announcementPreview">
+            <% if (announcements != null && !announcements.isEmpty()) { %>
+              <% for (int i = 0; i < Math.min(3, announcements.size()); i++) { 
+                  AnnouncementBean announcement = announcements.get(i);
+              %>
+                  <span class="preview-title" onclick="expandAndShowDetail(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>', '<%= announcement.getCreatedAt() != null ? announcement.getCreatedAt().toLocalDate().toString() : "" %>')">
+                      <%= (i + 1) %>. <%= announcement.getTitle() %><%= i < Math.min(3, announcements.size()) - 1 ? " ｜ " : "" %>
+                  </span>
+              <% } %>
+              <% if (announcements.size() > 3) { %>
+                  <span class="preview-more" onclick="expandAnnouncements()">他<%= announcements.size() - 3 %>件</span>
+              <% } %>
+            <% } else { %>
+                <span class="preview-empty">現在、アナウンスはありません</span>
+            <% } %>
+          </div>
         </div>
         
         <div class="banner-content collapsed" id="bannerContent">
@@ -474,7 +549,7 @@
               %>
                 <div class="announcement-card">
                   <h3 class="announcement-title" onclick="showAnnouncementDetail(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>', '<%= dateStr %>')">
-                    <%= announcement.getTitle() %>
+                    <%= (i + 1) %>. <%= announcement.getTitle() %>
                   </h3>
                   <div class="announcement-meta">
                     <span class="announcement-date"><%= dateStr %></span>
@@ -501,7 +576,7 @@
                 %>
                   <div class="announcement-card">
                     <h3 class="announcement-title" onclick="showAnnouncementDetail(<%= announcement.getAnnouncementId() %>, '<%= announcement.getTitle().replace("'", "\\'") %>', '<%= announcement.getContent().replace("'", "\\'").replace("\n", "\\n") %>', '<%= dateStr %>')">
-                      <%= announcement.getTitle() %>
+                      <%= (i + 1) %>. <%= announcement.getTitle() %>
                     </h3>
                     <div class="announcement-meta">
                       <span class="announcement-date"><%= dateStr %></span>
@@ -539,7 +614,7 @@
       </div>
 
       <div class="dashboard">
-        <h1>勤怠管理ダッシュボード</h1>
+        <h1>基本メニュー</h1>
 
         <!-- 今日の打刻ウィジェット -->
         <div class="widget punch-widget">
@@ -578,7 +653,18 @@
 
         <!-- 勤怠記録概要ウィジェット -->
         <div class="widget records-widget">
-          <h2>勤怠記録概要</h2>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px">
+            <a
+              href="<%= request.getContextPath() %>/KintaiRecServlet"
+              class="view-all-btn"
+              ><% if (user.getRoleId() == 1) { %>従業員別勤怠記録表示<% } else if (user.getRoleId() == 2) { %>部下の勤怠記録表示<% } else { %>勤怠記録表示<% } %></a
+            >
+            <a
+              href="<%= request.getContextPath() %>/KinmuManageServlet"
+              class="view-all-btn"
+              >勤務時間管理</a
+            >
+          </div>
           <div class="records-summary">
             <div class="summary-item">
               <div class="label">今月の出勤日数</div>
@@ -589,25 +675,13 @@
               <div class="value" id="totalHours">-</div>
             </div>
             <div class="summary-item">
-              <div class="label">今週の労働時間</div>
+              <div class="label">今月の残業時間</div>
               <div class="value" id="weekHours">-</div>
             </div>
             <div class="summary-item">
-              <div class="label">平均出勤時刻</div>
+              <div class="label">今月の休憩時間</div>
               <div class="value" id="avgStartTime">-</div>
             </div>
-          </div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px">
-            <a
-              href="<%= request.getContextPath() %>/KintaiRecServlet"
-              class="view-all-btn"
-              >詳細な記録を見る</a
-            >
-            <a
-              href="<%= request.getContextPath() %>/KinmuManageServlet"
-              class="view-all-btn"
-              >勤務時間管理</a
-            >
           </div>
         </div>
       </div>
@@ -652,11 +726,41 @@
       updateCurrentTime();
       setInterval(updateCurrentTime, 1000);
 
-      // サンプルデータの表示（実際のデータは別途取得）
-      document.getElementById("workDays").textContent = "12日";
-      document.getElementById("totalHours").textContent = "96時間";
-      document.getElementById("weekHours").textContent = "24時間";
-      document.getElementById("avgStartTime").textContent = "09:15";
+      // 統計データの表示
+      <% if (monthlySummary != null) { %>
+        document.getElementById("workDays").textContent = "<%= monthlySummary.getAttendanceRateString() %>";
+        document.getElementById("totalHours").textContent = "<%= monthlySummary.getTotalWorkingHoursString() %>";
+        document.getElementById("weekHours").textContent = "<%= monthlySummary.getTotalOvertimeHoursString() %>";
+        document.getElementById("avgStartTime").textContent = "<%= monthlySummary.getTotalBreakHoursString() %>";
+      <% } else { %>
+        document.getElementById("workDays").textContent = "-";
+        document.getElementById("totalHours").textContent = "-";
+        document.getElementById("weekHours").textContent = "-";
+        document.getElementById("avgStartTime").textContent = "-";
+      <% } %>
+      
+      // プレビュータイトルクリック時、展開して詳細表示
+      function expandAndShowDetail(id, title, content, date) {
+        // まずアナウンスエリアを展開
+        var bannerContent = document.getElementById('bannerContent');
+        var toggle = document.getElementById('bannerToggle');
+        if (bannerContent.classList.contains('collapsed')) {
+          bannerContent.classList.remove('collapsed');
+          toggle.innerHTML = '▼ <span id="bannerToggleText">折りたたむ</span>';
+        }
+        // その後詳細モーダルを表示
+        showAnnouncementDetail(id, title, content, date);
+      }
+      
+      // 「他X件」クリック時アナウンスエリアを展開
+      function expandAnnouncements() {
+        var bannerContent = document.getElementById('bannerContent');
+        var toggle = document.getElementById('bannerToggle');
+        if (bannerContent.classList.contains('collapsed')) {
+          bannerContent.classList.remove('collapsed');
+          toggle.innerHTML = '▼ <span id="bannerToggleText">折りたたむ</span>';
+        }
+      }
       
       // アナウンス関連のJavaScript
       function showAnnouncementDetail(id, title, content, date) {
