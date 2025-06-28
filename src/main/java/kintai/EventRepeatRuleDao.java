@@ -103,7 +103,7 @@ public class EventRepeatRuleDao {
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(EventRepeatRuleBean rule) {
-        String sql = "INSERT INTO event_repeat_rule (EVENT_DATE_FK, REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO event_repeat_rule (EVENT_DATE_FK, REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, ?, ?, ?, NOW(), 'admin', NOW(), 'admin')";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -141,7 +141,7 @@ public class EventRepeatRuleDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(EventRepeatRuleBean rule) {
-        String sql = "UPDATE event_repeat_rule SET EVENT_DATE_FK = ?, REPEAT_TYPE = ?, REPEAT_INTERVAL = ?, REPEAT_DAYS_OF_WEEK = ?, REPEAT_END_DATE = ? WHERE RULE_ID = ?";
+        String sql = "UPDATE event_repeat_rule SET EVENT_DATE_FK = ?, REPEAT_TYPE = ?, REPEAT_INTERVAL = ?, REPEAT_DAYS_OF_WEEK = ?, REPEAT_END_DATE = ?, UPDATED_AT = NOW(), UPDATED_BY = 'admin' WHERE RULE_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
