@@ -123,7 +123,7 @@ public class LeaveGrantManageServlet extends HttpServlet {
         }
 
         if (grantedCount > 0) {
-            request.setAttribute("message", grantedCount + "人に「" + leaveType + "」休暇を付与しました。");
+            request.setAttribute("message", grantedCount + "名に「" + leaveType + "」休暇を付与しました。");
             request.setAttribute("success", true);
         } else {
             request.setAttribute("message", "該当する従業員がいなかったか、すでに付与済みです。");
