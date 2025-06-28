@@ -245,9 +245,9 @@
       
       /* アナウンス横幅バナーのスタイル */
       .announcement-banner {
-        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
         color: white;
-        box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        box-shadow: 0 2px 8px rgba(111, 66, 193, 0.3);
         margin-bottom: 0;
       }
       
@@ -275,7 +275,7 @@
         background: none;
         border: none;
         color: white;
-        font-size: 1.2em;
+        font-size: 0.85em;
         cursor: pointer;
         padding: 5px;
         margin-left: 10px;
@@ -300,9 +300,23 @@
       
       .announcement-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 15px;
         margin-bottom: 15px;
+        grid-auto-flow: column;
+      }
+      
+      .announcement-grid.waterfall {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        grid-auto-flow: row;
+      }
+      
+      .announcement-grid.waterfall .announcement-card {
+        display: block;
+        margin-bottom: 0;
+        break-inside: unset;
       }
       
       .announcement-card {
@@ -320,7 +334,7 @@
       
       .announcement-title {
         margin: 0 0 10px 0;
-        color: #007bff;
+        color: #6f42c1;
         font-size: 1.1em;
         cursor: pointer;
         transition: color 0.3s;
@@ -330,7 +344,7 @@
       
       .announcement-title:hover {
         background: #f8f9fa;
-        color: #0056b3;
+        color: #5a32a3;
       }
       
       .announcement-meta {
@@ -352,7 +366,7 @@
       
       .more-announcements-btn, .less-announcements-btn {
         background: rgba(255, 255, 255, 0.9);
-        color: #007bff;
+        color: #6f42c1;
         border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 20px;
         padding: 8px 16px;
@@ -368,7 +382,7 @@
       }
       
       .no-announcement {
-        color: rgba(255, 255, 255, 0.8);
+        color: #6c757d;
         font-style: italic;
         text-align: center;
         padding: 20px;
@@ -408,7 +422,7 @@
       
       .modal-title {
         margin: 0;
-        color: #007bff;
+        color: #6f42c1;
         font-size: 1.2em;
       }
       
@@ -477,7 +491,7 @@
             
             <!-- 隠された全アナウンス表示エリア -->
             <div id="allAnnouncementsArea" style="display: none;">
-              <div class="announcement-grid">
+              <div class="announcement-grid waterfall">
                 <% for (int i = 3; i < announcements.size(); i++) { 
                     AnnouncementBean announcement = announcements.get(i);
                     String dateStr = "";
@@ -687,7 +701,7 @@
         
         if (content.classList.contains('collapsed')) {
           content.classList.remove('collapsed');
-          toggle.innerHTML = '▼ <span id="bannerToggleText">収納</span>';
+          toggle.innerHTML = '▼ <span id="bannerToggleText">折りたたむ</span>';
         } else {
           content.classList.add('collapsed');
           toggle.innerHTML = '▶ <span id="bannerToggleText">展開</span>';
