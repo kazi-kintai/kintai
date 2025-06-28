@@ -14,7 +14,7 @@ public class LeaveTypeDao {
 
     private DBAccess db = new DBAccess();
 
-    /** 有効な休暇種別一覧を取得（IS_DELETED = false） */
+    /** 有効な休日種別一覧を取得（IS_DELETED = false） */
     public List<LeaveTypeBean> findAll() {
         List<LeaveTypeBean> list = new ArrayList<>();
         String sql = "SELECT LEAVE_TYPE_ID, LEAVE_TYPE_NAME, IS_PAID FROM leave_type WHERE IS_DELETED = FALSE ORDER BY LEAVE_TYPE_ID";
@@ -39,7 +39,7 @@ public class LeaveTypeDao {
         return list;
     }
 
-    /** IDで休暇種別を取得（削除済みも含む） */
+    /** IDで休日種別を取得（削除済みも含む） */
     public LeaveTypeBean findById(int leaveTypeId) {
         String sql = "SELECT LEAVE_TYPE_ID, LEAVE_TYPE_NAME, IS_PAID, IS_DELETED FROM leave_type WHERE LEAVE_TYPE_ID = ?";
         LeaveTypeBean bean = null;
@@ -67,20 +67,21 @@ public class LeaveTypeDao {
 
     /** 新規登録（IS_DELETED = false で追加） */
     public boolean insert(LeaveTypeBean bean) {
-        String sql = "INSERT INTO leave_type (LEAVE_TYPE_ID, LEAVE_TYPE_NAME, IS_PAID, IS_DELETED) VALUES (?, ?, ?, FALSE)";
-
+    	String sql = "INSERT INTO leave_type (LEAVE_TYPE_ID, LEAVE_TYPE_NAME, IS_PAID, IS_DELETED, CREATED_BY, UPDATED_BY) VALUES (?, ?, ?, FALSE, ?, ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, bean.getLeaveTypeId());
+        	ps.setInt(1, bean.getLeaveTypeId());
             ps.setString(2, bean.getLeaveTypeName());
             ps.setBoolean(3, bean.isPaid());
-
+            ps.setString(4, bean.getCreatedBy());
+            ps.setString(5, bean.getCreatedBy());
+            
             return ps.executeUpdate() > 0;
 
         } catch (SQLException | ClassNotFoundException e) {
             if ("23000".equals(((SQLException) e).getSQLState())) {
-                System.err.println("休暇種別IDが既に存在しています: " + bean.getLeaveTypeId());
+                System.err.println("休日種別IDが既に存在しています: " + bean.getLeaveTypeId());
             } else {
                 e.printStackTrace();
             }
@@ -91,7 +92,7 @@ public class LeaveTypeDao {
 
     /** 更新処理（IDは変更可能） */
     public boolean update(int originalId, LeaveTypeBean bean) {
-        String sql = "UPDATE leave_type SET LEAVE_TYPE_ID = ?, LEAVE_TYPE_NAME = ?, IS_PAID = ? WHERE LEAVE_TYPE_ID = ?";
+        String sql = "UPDATE leave_type SET LEAVE_TYPE_ID = ?, LEAVE_TYPE_NAME = ?, IS_PAID = ?, UPDATED_BY = ? WHERE LEAVE_TYPE_ID = ?";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -99,7 +100,8 @@ public class LeaveTypeDao {
             ps.setInt(1, bean.getLeaveTypeId());
             ps.setString(2, bean.getLeaveTypeName());
             ps.setBoolean(3, bean.isPaid());
-            ps.setInt(4, originalId);
+            ps.setString(4, bean.getUpdatedBy());
+            ps.setInt(5, originalId);
 
             return ps.executeUpdate() > 0;
 
@@ -111,13 +113,15 @@ public class LeaveTypeDao {
     }
 
     /** 論理削除（IS_DELETED = true に更新） */
-    public boolean delete(int leaveTypeId) {
-        String sql = "UPDATE leave_type SET IS_DELETED = TRUE WHERE LEAVE_TYPE_ID = ?";
+    public boolean delete(int leaveTypeId, String updatedBy) {
+        String sql = "UPDATE leave_type SET IS_DELETED = TRUE, UPDATED_BY = ? WHERE LEAVE_TYPE_ID = ?";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, leaveTypeId);
+            ps.setString(1, updatedBy);
+            ps.setInt(2, leaveTypeId);
+
             return ps.executeUpdate() > 0;
 
         } catch (SQLException | ClassNotFoundException e) {

@@ -20,10 +20,13 @@ public class LeaveGrantManageServlet extends HttpServlet {
     private LeaveGrantDao grantDao;
     private EmpDao empDao;
 
+    
+    
     @Override
     public void init() throws ServletException {
         grantDao = new LeaveGrantDao();
         empDao = new EmpDao();
+        
     }
 
     @Override
@@ -34,7 +37,17 @@ public class LeaveGrantManageServlet extends HttpServlet {
         String leaveType = request.getParameter("leaveType");
         if (leaveType == null) leaveType = "annual";
 
-        LocalDate today = LocalDate.now();
+        String grantDateStr = request.getParameter("grantDate");
+        LocalDate grantDate;
+        if (grantDateStr != null && !grantDateStr.isEmpty()) {
+            grantDate = LocalDate.parse(grantDateStr);
+        } else {
+            grantDate = LocalDate.now();
+        }
+        
+        LocalDate grantDateForAnnual = LocalDate.of(grantDate.getYear(), 7, 1);
+        LocalDate grantDateForSpecial = LocalDate.of(grantDate.getYear(), 7, 1);
+        
         List<EmpBean> allEmp = empDao.findAllFullTimeEmployees();
         List<EmpBean> unissuedList = new ArrayList<>();
 
@@ -43,23 +56,22 @@ public class LeaveGrantManageServlet extends HttpServlet {
         int unissuedSpecial = 0;
 
         for (EmpBean emp : allEmp) {
-            boolean notGrantedAnnual = !grantDao.alreadyGranted(emp.getEmpId(), LocalDate.of(today.getYear(), 7, 1), LeaveGrantDao.LEAVE_TYPE_ANNUAL)
-                    && grantDao.isEligible(emp, LocalDate.of(today.getYear(), 7, 1));
-            if (notGrantedAnnual) unissuedAnnual++;
+        	// 年次有給休暇未付与判定
+        	boolean notGrantedAnnual = !grantDao.alreadyGranted(emp.getEmpId(), grantDateForAnnual, LeaveGrantDao.LEAVE_TYPE_ANNUAL);
 
-            LocalDate date3m = emp.getEmpDate().plusMonths(3);
-            LocalDate date6m = emp.getEmpDate().plusMonths(6);
+        	// 特別休暇未付与判定
+        	boolean notGrantedSpecial = (grantDate.isEqual(grantDateForSpecial) || grantDate.isAfter(grantDateForSpecial))
+        	    && !grantDao.alreadyGranted(emp.getEmpId(), grantDateForSpecial, LeaveGrantDao.LEAVE_TYPE_SPECIAL);
 
-            boolean need3m = !grantDao.alreadyGranted(emp.getEmpId(), date3m, LeaveGrantDao.LEAVE_TYPE_INITIAL_3M)
-                    && !today.isBefore(date3m) && grantDao.isEligible(emp, date3m);
-            boolean need6m = !grantDao.alreadyGranted(emp.getEmpId(), date6m, LeaveGrantDao.LEAVE_TYPE_INITIAL_6M)
-                    && !today.isBefore(date6m) && grantDao.isEligible(emp, date6m);
-            if (need3m || need6m) unissuedInitial++;
-
-            LocalDate specialDate = LocalDate.of(today.getYear(), 7, 1);
-            boolean notGrantedSpecial = (today.isEqual(specialDate) || today.isAfter(specialDate))
-                    && !grantDao.alreadyGranted(emp.getEmpId(), specialDate, LeaveGrantDao.LEAVE_TYPE_SPECIAL);
+        	// 初回付与は従来どおり対象月日で判定
+        	LocalDate date3m = emp.getEmpDate().plusMonths(3);
+        	LocalDate date6m = emp.getEmpDate().plusMonths(6);
+        	boolean need3m = !grantDao.alreadyGranted(emp.getEmpId(), date3m, LeaveGrantDao.LEAVE_TYPE_INITIAL_3M)
+        	    && !grantDate.isBefore(date3m) && grantDao.isEligible(emp, date3m);
+        	boolean need6m = !grantDao.alreadyGranted(emp.getEmpId(), date6m, LeaveGrantDao.LEAVE_TYPE_INITIAL_6M)
+        	    && !grantDate.isBefore(date6m) && grantDao.isEligible(emp, date6m);
             if (notGrantedSpecial) unissuedSpecial++;
+            if (need3m || need6m) unissuedInitial++;
 
             if ("preview".equals(mode)) {
                 switch (leaveType) {
@@ -94,8 +106,18 @@ public class LeaveGrantManageServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        String leaveType = request.getParameter("leaveType");
-        LocalDate today = LocalDate.now();
+    	String leaveType = request.getParameter("leaveType");
+        String grantDateStr = request.getParameter("grantDate");
+        LocalDate grantDate;
+        if (grantDateStr != null && !grantDateStr.isEmpty()) {
+            grantDate = LocalDate.parse(grantDateStr);
+        } else {
+            grantDate = LocalDate.now();
+        }
+        
+        LocalDate grantDateForAnnual = LocalDate.of(grantDate.getYear(), 7, 1);
+        LocalDate grantDateForSpecial = LocalDate.of(grantDate.getYear(), 7, 1);
+
         int grantedCount = 0;
 
         HttpSession session = request.getSession();
@@ -106,19 +128,19 @@ public class LeaveGrantManageServlet extends HttpServlet {
 
         for (EmpBean emp : empList) {
             switch (leaveType) {
-                case "annual":
-                    if (grantDao.grantAnnualLeave(emp, loginUser)) grantedCount++;
-                    break;
-                case "initial":
-                    if (grantDao.grantInitialAnnualLeave(emp, 1, loginUser)) grantedCount++;
-                    if (grantDao.grantInitialAnnualLeave(emp, 2, loginUser)) grantedCount++;
-                    break;
-                case "special":
-                    LocalDate grantDate = LocalDate.of(today.getYear(), 7, 1);
-                    if ((today.isEqual(grantDate) || today.isAfter(grantDate)) && !grantDao.alreadyGranted(emp.getEmpId(), grantDate, LeaveGrantDao.LEAVE_TYPE_SPECIAL)) {
-                        if (grantDao.grantSpecialLeave(emp, loginUser)) grantedCount++;
-                    }
-                    break;
+	            case "annual":
+	                if (grantDao.grantAnnualLeave(emp, grantDateForAnnual, loginUser)) grantedCount++;
+	                break;
+	            case "initial":
+	                if (grantDao.grantInitialAnnualLeave(emp, 1, grantDate, loginUser)) grantedCount++;
+	                if (grantDao.grantInitialAnnualLeave(emp, 2, grantDate, loginUser)) grantedCount++;
+	                break;
+	            case "special":
+	                if ((grantDate.isEqual(grantDateForSpecial) || grantDate.isAfter(grantDateForSpecial))
+	                    && !grantDao.alreadyGranted(emp.getEmpId(), grantDateForSpecial, LeaveGrantDao.LEAVE_TYPE_SPECIAL)) {
+	                    if (grantDao.grantSpecialLeave(emp, grantDateForSpecial, loginUser)) grantedCount++;
+	                }
+	                break;
             }
         }
 
@@ -133,6 +155,7 @@ public class LeaveGrantManageServlet extends HttpServlet {
         request.setAttribute("grantedCount", grantedCount);
         request.setAttribute("mode", "execute");
         request.setAttribute("leaveType", leaveType);
+        request.setAttribute("grantDate", grantDate); 
 
         RequestDispatcher dispatcher = request.getRequestDispatcher("/web/leave_grant.jsp");
         dispatcher.forward(request, response);

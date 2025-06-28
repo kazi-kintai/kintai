@@ -12,7 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * 休暇種別管理機能のサーブレット
+ * 休日種別管理機能のサーブレット
  */
 @WebServlet("/leaveTypeManage")
 public class LeaveTypeManageServlet extends HttpServlet {
@@ -40,6 +40,11 @@ public class LeaveTypeManageServlet extends HttpServlet {
         String message = "";
         boolean success = false;
 
+        // セッションから従業員番号取得
+        UserBean user = (UserBean) request.getSession().getAttribute("user");
+        String empId = (user != null) ? user.getEmpId() : "unknown";
+
+        
         try {
             switch (action) {
                 case "add": {
@@ -48,17 +53,18 @@ public class LeaveTypeManageServlet extends HttpServlet {
                     boolean isPaid = "true".equals(request.getParameter("isPaid"));
 
                     if (name == null || name.trim().isEmpty()) {
-                        message = "休暇種別名は必須です";
+                        message = "休日種別名は必須です";
                         break;
                     }
                     if (leaveTypeDao.exists(id)) {
-                        message = "休暇種別ID「" + id + "」は既に存在します";
+                        message = "休日種別ID「" + id + "」は既に存在します";
                         break;
                     }
 
                     LeaveTypeBean newBean = new LeaveTypeBean(id, name, isPaid);
+                    newBean.setCreatedBy(empId);
                     success = leaveTypeDao.insert(newBean);
-                    message = success ? "休暇種別を追加しました" : "休暇種別の追加に失敗しました";
+                    message = success ? "休日種別を追加しました" : "休日種別の追加に失敗しました";
                     break;
                 }
 
@@ -69,30 +75,31 @@ public class LeaveTypeManageServlet extends HttpServlet {
                     boolean isPaid = "true".equals(request.getParameter("isPaid"));
 
                     if (FIXED_IDS.contains(originalId)) {
-                        message = "この休暇種別は編集できません（ID: " + originalId + "）";
+                        message = "この休日種別は編集できません（ID: " + originalId + "）";
                         break;
                     }
 
                     if (name == null || name.trim().isEmpty()) {
-                        message = "休暇種別名は必須です";
+                        message = "休日種別名は必須です";
                         break;
                     }
 
                     LeaveTypeBean updatedBean = new LeaveTypeBean(newId, name, isPaid);
+                    updatedBean.setUpdatedBy(empId);
                     success = leaveTypeDao.update(originalId, updatedBean);
-                    message = success ? "休暇種別を更新しました" : "休暇種別の更新に失敗しました";
+                    message = success ? "休日種別を更新しました" : "休日種別の更新に失敗しました";
                     break;
                 }
 
                 case "delete": {
                     int deleteId = Integer.parseInt(request.getParameter("leaveTypeId"));
                     if (FIXED_IDS.contains(deleteId)) {
-                        message = "この休暇種別は削除できません（ID: " + deleteId + "）";
+                        message = "この休日種別は削除できません（ID: " + deleteId + "）";
                         break;
                     }
 
-                    success = leaveTypeDao.delete(deleteId);
-                    message = success ? "休暇種別を削除しました" : "休暇種別の削除に失敗しました";
+                    success = leaveTypeDao.delete(deleteId,empId);
+                    message = success ? "休日種別を削除しました" : "休日種別の削除に失敗しました";
                     break;
                 }
 
