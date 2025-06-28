@@ -146,7 +146,7 @@ public class AnnouncementServlet extends HttpServlet {
         AnnouncementBean announcement = new AnnouncementBean();
         announcement.setTitle(title.trim());
         announcement.setContent(content.trim());
-        announcement.setActive("on".equals(isActiveStr));
+        announcement.setActive("true".equals(isActiveStr) || "on".equals(isActiveStr));
         
         // 表示順序の設定
         int displayOrder = 0;
@@ -197,7 +197,7 @@ public class AnnouncementServlet extends HttpServlet {
             announcement.setAnnouncementId(announcementId);
             announcement.setTitle(title.trim());
             announcement.setContent(content.trim());
-            announcement.setActive("on".equals(isActiveStr));
+            announcement.setActive("true".equals(isActiveStr) || "on".equals(isActiveStr));
             
             // 表示順序の設定
             int displayOrder = 0;

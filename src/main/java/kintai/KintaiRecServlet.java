@@ -55,6 +55,14 @@ public class KintaiRecServlet extends HttpServlet {
         // --- モード判定（自分モードか全員モードか） ---
         String viewMode = request.getParameter("mode");
         boolean isSelfMode = "self".equals(viewMode);
+        
+        // 一般社員の場合は強制的に自分モードにする
+        if (userRoleId == 0) {
+            isSelfMode = true;
+            System.out.println("DEBUG: 一般社員モード強制適用 - userRoleId=" + userRoleId + ", isSelfMode=" + isSelfMode + ", empId=" + loggedInEmpId);
+        } else {
+            System.out.println("DEBUG: 管理者/部長モード - userRoleId=" + userRoleId + ", isSelfMode=" + isSelfMode + ", empId=" + loggedInEmpId);
+        }
 
         // --- フィルター条件の取得 ---
         String empIdFilter = request.getParameter("empIdFilter");

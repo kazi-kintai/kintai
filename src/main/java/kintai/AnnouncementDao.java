@@ -25,7 +25,7 @@ public class AnnouncementDao {
         String sql = "SELECT ANNOUNCEMENT_ID, TITLE, CONTENT, IS_ACTIVE, DISPLAY_ORDER, " +
                      "IS_DELETED, DELETED_AT, DELETED_BY, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY " +
                      "FROM announcement " +
-                     "WHERE IS_ACTIVE = true AND IS_DELETED = false " +
+                     "WHERE (IS_ACTIVE = true OR IS_ACTIVE = 1) AND (IS_DELETED = false OR IS_DELETED = 0) " +
                      "ORDER BY DISPLAY_ORDER ASC, CREATED_AT DESC";
         
         try (Connection conn = db.getConnection();
