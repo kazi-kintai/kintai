@@ -1004,7 +1004,7 @@
             
             if (content.classList.contains('collapsed')) {
                 content.classList.remove('collapsed');
-                toggle.innerHTML = '▼ <span id="bannerToggleText">たたむ</span>';
+                toggle.innerHTML = '▼ <span id="bannerToggleText">折りたたむ</span>';
             } else {
                 content.classList.add('collapsed');
                 toggle.innerHTML = '▶ <span id="bannerToggleText">展開</span>';
