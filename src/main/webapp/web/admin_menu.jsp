@@ -733,11 +733,9 @@
                     <input type="hidden" name="announcementId" value="" id="editAnnouncementId">
                     <input type="text" name="title" placeholder="タイトル" id="announcementTitle" required>
                     <textarea name="content" placeholder="内容" id="announcementContent" required></textarea>
-                    <label style="display: flex; align-items: center; margin-bottom: 10px;">
-                        <input type="checkbox" name="isActive" id="announcementActive" checked style="margin-right: 8px;"> 公開する
-                    </label>
+                    <input type="hidden" name="isActive" value="true">
                     <div class="form-buttons">
-                        <button type="submit" class="form-btn submit">発送</button>
+                        <button type="submit" class="form-btn submit">送信</button>
                         <button type="button" class="form-btn cancel" onclick="cancelEdit()">キャンセル</button>
                     </div>
                 </form>
@@ -937,11 +935,18 @@
         
         // アナウンス管理JavaScript
         function showAddForm() {
+            // アナウンスバナーを展開
+            var content = document.getElementById('bannerContent');
+            var toggle = document.getElementById('bannerToggle');
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                toggle.innerHTML = '▼ <span id="bannerToggleText">折りたたむ</span>';
+            }
+            
             document.getElementById('formAction').value = 'add';
             document.getElementById('editAnnouncementId').value = '';
             document.getElementById('announcementTitle').value = '';
             document.getElementById('announcementContent').value = '';
-            document.getElementById('announcementActive').checked = true;
             document.getElementById('announcementForm').style.display = 'block';
             document.getElementById('announcementDisplay').style.display = 'none';
         }
@@ -951,7 +956,6 @@
             document.getElementById('editAnnouncementId').value = id;
             document.getElementById('announcementTitle').value = title;
             document.getElementById('announcementContent').value = content;
-            document.getElementById('announcementActive').checked = true;
             document.getElementById('announcementForm').style.display = 'block';
             document.getElementById('announcementDisplay').style.display = 'none';
         }
