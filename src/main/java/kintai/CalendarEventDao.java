@@ -25,7 +25,7 @@ public class CalendarEventDao {
     public List<CalendarEventBean> findAll() {
         List<CalendarEventBean> eventList = new ArrayList<>();
         // SELECT文にREPEAT_RULE_IDを追加
-        String sql = "SELECT EVENT_DATE, EVENT_NAME, IS_WORK FROM calendar_event ORDER BY EVENT_DATE DESC";
+        String sql = "SELECT EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID FROM calendar_event ORDER BY EVENT_DATE DESC";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -36,9 +36,9 @@ public class CalendarEventDao {
                 event.setEventDate(rs.getDate("EVENT_DATE").toLocalDate());
                 event.setEventName(rs.getString("EVENT_NAME"));
                 event.setWork(rs.getBoolean("IS_WORK"));
-                // REPEAT_RULE_IDは暫時的に無効化（データベースに列が存在しないため）
-                // Integer repeatRuleId = rs.getObject("REPEAT_RULE_ID", Integer.class); // nullの場合も対応
-                // event.setRepeatRuleId(repeatRuleId);
+                // REPEAT_RULE_IDを取得し、Beanにセット
+                Integer repeatRuleId = rs.getObject("REPEAT_RULE_ID", Integer.class); // nullの場合も対応
+                event.setRepeatRuleId(repeatRuleId);
                 eventList.add(event);
             }
 
@@ -87,8 +87,8 @@ public class CalendarEventDao {
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(CalendarEventBean event) {
-        // INSERT文にREPEAT_RULE_IDを追加
-        String sql = "INSERT INTO calendar_event (EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID) VALUES (?, ?, ?, ?)";
+        // INSERT文にREPEAT_RULE_IDと監査フィールドを追加
+        String sql = "INSERT INTO calendar_event (EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, ?, ?, NOW(), 'admin', NOW(), 'admin')";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -125,8 +125,8 @@ public class CalendarEventDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(CalendarEventBean event) {
-        // UPDATE文にREPEAT_RULE_IDを追加
-        String sql = "UPDATE calendar_event SET EVENT_NAME = ?, IS_WORK = ?, REPEAT_RULE_ID = ? WHERE EVENT_DATE = ?";
+        // UPDATE文にREPEAT_RULE_IDと監査フィールドを追加
+        String sql = "UPDATE calendar_event SET EVENT_NAME = ?, IS_WORK = ?, REPEAT_RULE_ID = ?, UPDATED_AT = NOW(), UPDATED_BY = 'admin' WHERE EVENT_DATE = ?";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {

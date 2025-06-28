@@ -206,9 +206,9 @@ public class CalendarManageServlet extends HttpServlet {
                     }
 
                     // CalendarEventBeanを作成し、calendar_eventテーブルに挿入（まずはREPEAT_RULE_IDはnullで）
-                    CalendarEventBean newEvent = new CalendarEventBean(eventDate, eventName, isWork);
-                    newEvent.setRepeatRuleId(null); 
-                    success = calendarEventDao.insert(newEvent);
+                    CalendarEventBean addEvent = new CalendarEventBean(eventDate, eventName, isWork);
+                    addEvent.setRepeatRuleId(null); 
+                    success = calendarEventDao.insert(addEvent);
 
                     if (success && !repeatType.equals("NONE")) { // 繰り返しイベントの場合
                         EventRepeatRuleBean newRule = createEventRepeatRuleBean(eventDate, repeatType, repeatIntervalStr, repeatDaysOfWeekArr, repeatEndDateStr);
@@ -217,8 +217,8 @@ public class CalendarManageServlet extends HttpServlet {
                             // 新規挿入したルールのRULE_IDを取得し、calendar_eventのREPEAT_RULE_IDを更新
                             EventRepeatRuleBean insertedRule = eventRepeatRuleDao.findByEventDateFk(eventDate);
                             if (insertedRule != null) {
-                                newEvent.setRepeatRuleId(insertedRule.getRuleId());
-                                calendarEventDao.update(newEvent); // REPEAT_RULE_IDをcalendar_eventに紐付け
+                                addEvent.setRepeatRuleId(insertedRule.getRuleId());
+                                calendarEventDao.update(addEvent); // REPEAT_RULE_IDをcalendar_eventに紐付け
                             }
                             message = "イベントと繰り返しルールを追加しました。";
                         } else {
@@ -249,19 +249,36 @@ public class CalendarManageServlet extends HttpServlet {
                         break;
                     }
                     
-                    // 主キーである日付が変わった場合（JSPではreadonlyなのでこのパスには来ないはずだが念のため）
+                    // 主キーである日付が変わった場合、DELETE & INSERTで処理
                     if (!eventDate.equals(originalEventDate)) {
-                        // 主キー変更を伴う更新はDELETE & INSERTとして処理するなど複雑になるため、今回は許可しない
-                        message = "イベント日付の変更は許可されていません。";
-                        success = false;
-                        break;
+                        // 新しい日付で既存イベントがないかチェック
+                        if (calendarEventDao.exists(eventDate)) {
+                            message = "変更先の日付(" + eventDateStr + ")は既にイベントが登録されています。";
+                            success = false;
+                            break;
+                        }
+                        
+                        // 既存イベントを削除してから新しい日付で挿入
+                        success = calendarEventDao.delete(originalEventDate);
+                        if (success) {
+                            CalendarEventBean newEvent = new CalendarEventBean(eventDate, eventName, isWork);
+                            newEvent.setRepeatRuleId(existingEvent.getRepeatRuleId()); // 既存のREPEAT_RULE_IDを引き継ぎ
+                            success = calendarEventDao.insert(newEvent);
+                            if (!success) {
+                                message = "新しい日付でのイベント作成に失敗しました。";
+                                break;
+                            }
+                            existingEvent = newEvent; // 以降の処理で使用するため更新
+                        } else {
+                            message = "元のイベントの削除に失敗しました。";
+                            break;
+                        }
+                    } else {
+                        // 日付変更がない場合は通常の更新
+                        existingEvent.setEventName(eventName);
+                        existingEvent.setWork(isWork);
+                        success = calendarEventDao.update(existingEvent);
                     }
-
-                    // calendar_eventテーブルの更新（イベント名、種別）
-                    existingEvent.setEventName(eventName);
-                    existingEvent.setWork(isWork);
-                    // REPEAT_RULE_IDは繰り返しルール処理後に更新
-                    success = calendarEventDao.update(existingEvent);
 
                     if (success) {
                         EventRepeatRuleBean existingRule = null;
@@ -272,7 +289,7 @@ public class CalendarManageServlet extends HttpServlet {
                         }
                         
                         if (!repeatType.equals("NONE")) { // 繰り返しイベントとして更新する場合（既存ルール操作or新規作成）
-                            EventRepeatRuleBean ruleToSave = createEventRepeatRuleBean(originalEventDate, repeatType, repeatIntervalStr, repeatDaysOfWeekArr, repeatEndDateStr);
+                            EventRepeatRuleBean ruleToSave = createEventRepeatRuleBean(eventDate, repeatType, repeatIntervalStr, repeatDaysOfWeekArr, repeatEndDateStr);
                             
                             boolean ruleOpSuccess;
                             if (existingRule != null) { // 既存ルールがあれば更新
@@ -284,7 +301,7 @@ public class CalendarManageServlet extends HttpServlet {
 
                             if (ruleOpSuccess) {
                                 // calendar_eventのREPEAT_RULE_IDを更新/紐付け
-                                EventRepeatRuleBean currentRule = eventRepeatRuleDao.findByEventDateFk(originalEventDate);
+                                EventRepeatRuleBean currentRule = eventRepeatRuleDao.findByEventDateFk(eventDate);
                                 if (currentRule != null && (existingEvent.getRepeatRuleId() == null || currentRule.getRuleId() != existingEvent.getRepeatRuleId())) {
                                     existingEvent.setRepeatRuleId(currentRule.getRuleId());
                                     calendarEventDao.update(existingEvent); // REPEAT_RULE_IDを更新

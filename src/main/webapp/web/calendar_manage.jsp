@@ -578,7 +578,7 @@
                                     <td><%= event.getEventName() %></td>
                                     <td><%= event.isWork() ? "出勤日" : "休日" %></td>
                                     <td class="action-cell">
-                                        <button type="button" class="btn btn-success" onclick="openEditModal('<%= event.getEventDate() %>', '<%= event.getEventName() %>', '<%= event.isWork() %>', <%= event.getRepeatRuleId() %>)">編集</button>
+                                        <button type="button" class="btn btn-success" onclick="openEditModal('<%= event.getEventDate() %>', '<%= event.getEventName() %>', <%= event.isWork() %>, <%= event.getRepeatRuleId() != null ? event.getRepeatRuleId() : "null" %>)">編集</button>
                                         <button type="button" class="btn btn-danger" onclick="confirmDelete('<%= event.getEventDate() %>', '<%= event.getEventName() %>')">削除</button>
                                         <%-- 削除用フォーム（非表示） --%>
                                         <form id="deleteForm-<%= event.getEventDate().toString().replace("-", "_") %>" method="post" 
@@ -684,7 +684,7 @@
 
                 <div class="modal-form-group">
                     <label for="modalEventDate">日付：</label>
-                    <input type="date" id="modalEventDate" name="eventDate" required readonly> <%-- 日付はクリックで設定、編集時は変更不可 --%>
+                    <input type="date" id="modalEventDate" name="eventDate" required> <%-- 日付編集可能 --%>
                 </div>
                 <div class="modal-form-group">
                     <label for="modalEventName">イベント名：</label>
@@ -807,6 +807,8 @@
         }
 
         var calendar; // グローバル変数として定義
+        var modal, modalTitle, modalDeleteButton, modalRepeatTypeSelect, modalRepeatIntervalInput, modalRepeatDaysOfWeekCheckboxes, rulesByRuleId; // グローバル変数として定義
+        var toggleRepeatFields, resetModalForm; // 関数もグローバルに
 
         document.addEventListener('DOMContentLoaded', function() {
             var calendarEl = document.getElementById('calendar');
@@ -814,23 +816,23 @@
             var eventAddPanel = document.getElementById('event-add-panel');
             
             // モーダル関連のDOM要素
-            var modal = document.getElementById('eventModal');
-            var modalTitle = document.getElementById('modalTitle');
+            modal = document.getElementById('eventModal');
+            modalTitle = document.getElementById('modalTitle');
             var closeButton = document.querySelector('.close-button');
             var cancelButton = document.querySelector('.btn-cancel');
-            var modalDeleteButton = document.getElementById('modalDeleteButton');
+            modalDeleteButton = document.getElementById('modalDeleteButton');
             var eventForm = document.getElementById('eventForm');
 
             // モーダル内の繰り返し設定フィールドのDOM要素
-            var modalRepeatTypeSelect = document.getElementById('modalRepeatType');
+            modalRepeatTypeSelect = document.getElementById('modalRepeatType');
             var modalRepeatIntervalGroup = document.getElementById('modalRepeatIntervalGroup');
-            var modalRepeatIntervalInput = document.getElementById('modalRepeatInterval');
+            modalRepeatIntervalInput = document.getElementById('modalRepeatInterval');
             var modalRepeatDaysOfWeekGroup = document.getElementById('modalRepeatDaysOfWeekGroup');
-            var modalRepeatDaysOfWeekCheckboxes = document.querySelectorAll('#modalRepeatDaysOfWeekGroup input[type="checkbox"]');
+            modalRepeatDaysOfWeekCheckboxes = document.querySelectorAll('#modalRepeatDaysOfWeekGroup input[type="checkbox"]');
             var modalRepeatEndDateGroup = document.getElementById('modalRepeatEndDateGroup');
 
             // JSPから渡された繰り返しルールをJavaScriptで利用できるよう変換
-            var rulesByRuleId = JSON.parse('<%= rulesByRuleIdJson %>');
+            rulesByRuleId = JSON.parse('<%= rulesByRuleIdJson %>');
             // サーブレットで事前にJSON変換されたデータを使用
 
             // FullCalendar初期化
@@ -911,7 +913,7 @@
                 modal.style.display = 'block'; // モーダル表示
             }
 
-            function resetModalForm() {
+            resetModalForm = function() {
                 eventForm.reset(); 
                 document.getElementById('action').value = 'add';
                 document.getElementById('modalRepeatRuleId').value = '';
@@ -924,18 +926,54 @@
             }
 
             // 繰り返し設定フィールドの表示/非表示を切り替える関数
-            function toggleRepeatFields(repeatType) {
+            toggleRepeatFields = function(repeatType) {
                 const isRepeating = (repeatType !== 'NONE');
                 const isWeeklyOrMonthlyWeekday = (repeatType === 'WEEKLY' || repeatType === 'MONTHLY_WEEKDAY');
 
-                // 繰り返し間隔の表示/非表示
+                // 繰り返し間隔の表示/非表示とラベル変更
+                const modalIntervalLabel = modalRepeatIntervalGroup.querySelector('label');
                 modalRepeatIntervalGroup.style.display = (isRepeating ? 'flex' : 'none');
                 modalRepeatIntervalInput.required = isRepeating;
+                
+                // ラベルを繰り返しタイプに応じて変更
+                switch(repeatType) {
+                    case 'DAILY':
+                        modalIntervalLabel.textContent = '繰り返し間隔（日ごと）：';
+                        break;
+                    case 'WEEKLY':
+                        modalIntervalLabel.textContent = '繰り返し間隔（週ごと）：';
+                        break;
+                    case 'MONTHLY_DAY':
+                        modalIntervalLabel.textContent = '繰り返し間隔（月ごと）：';
+                        break;
+                    case 'YEARLY':
+                        modalIntervalLabel.textContent = '繰り返し間隔（年ごと）：';
+                        break;
+                    default:
+                        modalIntervalLabel.textContent = '繰り返し間隔（週/月/年ごと）：';
+                }
 
-                // 繰り返し曜日の表示/非表示
+                // 繰り返し曜日の表示/非表示と無効化
+                const modalDaysOfWeekLabels = document.querySelectorAll('#modalRepeatDaysOfWeekGroup label');
                 modalRepeatDaysOfWeekGroup.style.display = (isWeeklyOrMonthlyWeekday ? 'flex' : 'none');
                 modalRepeatDaysOfWeekCheckboxes.forEach(checkbox => {
                     checkbox.required = isWeeklyOrMonthlyWeekday;
+                    // DAILYの場合は無効化して灰色に
+                    if (repeatType === 'DAILY') {
+                        checkbox.disabled = true;
+                        checkbox.checked = false;
+                    } else {
+                        checkbox.disabled = false;
+                    }
+                });
+                
+                // ラベルも灰色に
+                modalDaysOfWeekLabels.forEach(label => {
+                    if (repeatType === 'DAILY') {
+                        label.style.color = '#ccc';
+                    } else {
+                        label.style.color = '';
+                    }
                 });
 
                 // 繰り返し終了日の表示/非表示
@@ -977,19 +1015,64 @@
             // 初期表示時の繰り返しフィールドの表示/非表示を調整
             toggleSidePanelRepeatFields(document.getElementById('newRepeatType').value);
 
+            // モーダルの繰り返しタイプ選択時の処理
+            modalRepeatTypeSelect.addEventListener('change', function() {
+                toggleRepeatFields(this.value);
+            });
+
             // サイドパネルの繰り返し設定フィールドの表示/非表示を切り替える関数
             function toggleSidePanelRepeatFields(repeatType) {
                 const isRepeating = (repeatType !== 'NONE');
                 const isWeeklyOrMonthlyWeekday = (repeatType === 'WEEKLY' || repeatType === 'MONTHLY_WEEKDAY');
 
-                // 繰り返し間隔の表示/非表示
-                document.getElementById('newRepeatIntervalGroup').style.display = (isRepeating ? 'flex' : 'none');
+                // 繰り返し間隔の表示/非表示とラベル変更
+                const intervalGroup = document.getElementById('newRepeatIntervalGroup');
+                const intervalLabel = intervalGroup.querySelector('label');
+                intervalGroup.style.display = (isRepeating ? 'flex' : 'none');
                 document.getElementById('newRepeatInterval').required = isRepeating;
+                
+                // ラベルを繰り返しタイプに応じて変更
+                switch(repeatType) {
+                    case 'DAILY':
+                        intervalLabel.textContent = '繰り返し間隔（日ごと）：';
+                        break;
+                    case 'WEEKLY':
+                        intervalLabel.textContent = '繰り返し間隔（週ごと）：';
+                        break;
+                    case 'MONTHLY_DAY':
+                        intervalLabel.textContent = '繰り返し間隔（月ごと）：';
+                        break;
+                    case 'YEARLY':
+                        intervalLabel.textContent = '繰り返し間隔（年ごと）：';
+                        break;
+                    default:
+                        intervalLabel.textContent = '繰り返し間隔（週/月/年ごと）：';
+                }
 
-                // 繰り返し曜日の表示/非表示
-                document.getElementById('newRepeatDaysOfWeekGroup').style.display = (isWeeklyOrMonthlyWeekday ? 'flex' : 'none');
-                document.querySelectorAll('#newRepeatDaysOfWeekGroup input[type="checkbox"]').forEach(checkbox => {
+                // 繰り返し曜日の表示/非表示と無効化
+                const daysOfWeekGroup = document.getElementById('newRepeatDaysOfWeekGroup');
+                const daysOfWeekCheckboxes = document.querySelectorAll('#newRepeatDaysOfWeekGroup input[type="checkbox"]');
+                const daysOfWeekLabels = document.querySelectorAll('#newRepeatDaysOfWeekGroup label');
+                
+                daysOfWeekGroup.style.display = (isWeeklyOrMonthlyWeekday ? 'flex' : 'none');
+                daysOfWeekCheckboxes.forEach(checkbox => {
                     checkbox.required = isWeeklyOrMonthlyWeekday;
+                    // DAILYの場合は無効化して灰色に（表示はするが操作不可）
+                    if (repeatType === 'DAILY') {
+                        checkbox.disabled = true;
+                        checkbox.checked = false;
+                    } else {
+                        checkbox.disabled = false;
+                    }
+                });
+                
+                // ラベルも灰色に
+                daysOfWeekLabels.forEach(label => {
+                    if (repeatType === 'DAILY') {
+                        label.style.color = '#ccc';
+                    } else {
+                        label.style.color = '';
+                    }
                 });
 
                 // 繰り返し終了日の表示/非表示
@@ -999,6 +1082,14 @@
 
         // テーブルの編集ボタンからモーダルを開く関数
         function openEditModal(eventDate, eventName, isWork, repeatRuleId) {
+            // フォームをリセット
+            resetModalForm();
+            
+            // モーダルのタイトルと操作を設定
+            modalTitle.textContent = 'イベント編集';
+            document.getElementById('action').value = 'update';
+            modalDeleteButton.style.display = 'inline-block';
+
             // モーダルフォームに値を設定
             document.getElementById('modalEventDate').value = eventDate;
             document.getElementById('originalEventDate').value = eventDate;
@@ -1006,28 +1097,27 @@
             document.getElementById(isWork ? 'modalIsWorkTrue' : 'modalIsWorkFalse').checked = true;
 
             // 繰り返しルール情報をセット
-            if (repeatRuleId) {
+            if (repeatRuleId && repeatRuleId !== 'null') {
                 const rule = rulesByRuleId[repeatRuleId];
                 if (rule) {
-                    document.getElementById('modalRepeatType').value = rule.repeatType;
-                    document.getElementById('modalRepeatInterval').value = rule.repeatInterval;
-                    document.getElementById('modalRepeatDaysOfWeekGroup').querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
-                        checkbox.checked = rule.repeatDaysOfWeek.split(',').includes(checkbox.value);
+                    modalRepeatTypeSelect.value = rule.repeatType;
+                    modalRepeatIntervalInput.value = rule.repeatInterval;
+                    modalRepeatDaysOfWeekCheckboxes.forEach(checkbox => {
+                        checkbox.checked = rule.repeatDaysOfWeek && rule.repeatDaysOfWeek.split(',').includes(checkbox.value);
                     });
-                    document.getElementById('modalRepeatEndDate').value = rule.repeatEndDate;
+                    document.getElementById('modalRepeatEndDate').value = rule.repeatEndDate || '';
                     document.getElementById('modalRepeatRuleId').value = rule.ruleId;
                 }
             } else {
-                document.getElementById('modalRepeatType').value = 'NONE';
+                modalRepeatTypeSelect.value = 'NONE';
+                document.getElementById('modalRepeatRuleId').value = '';
             }
-            toggleRepeatFields(document.getElementById('modalRepeatType').value); // 繰り返しフィールドの表示/非表示を調整
+            
+            // 繰り返しフィールドの表示/非表示を調整
+            toggleRepeatFields(modalRepeatTypeSelect.value);
 
-            // モーダルを開く
-            openModalForEdit({
-                startStr: eventDate,
-                title: eventName,
-                extendedProps: { isWork: isWork, repeatRuleId: repeatRuleId }
-            });
+            // モーダルを表示
+            modal.style.display = 'block';
         }
         
         // 削除確認関数
