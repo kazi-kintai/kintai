@@ -1,6 +1,7 @@
 package kintai;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import jakarta.servlet.RequestDispatcher;
@@ -19,11 +20,12 @@ public class LeaveTypeManageServlet extends HttpServlet {
 
     private LeaveTypeDao leaveTypeDao = new LeaveTypeDao();
 
+    // 編集・削除不可ID
+    private static final List<Integer> FIXED_IDS = Arrays.asList(1, 2, 3, 11, 12);
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // セッションと権限チェックは必要に応じて追加してください
-
         List<LeaveTypeBean> leaveTypeList = leaveTypeDao.findAll();
         request.setAttribute("leaveTypeList", leaveTypeList);
 
@@ -34,52 +36,65 @@ public class LeaveTypeManageServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // セッションと権限チェックは必要に応じて追加してください
-
         String action = request.getParameter("action");
         String message = "";
         boolean success = false;
 
         try {
             switch (action) {
-                case "add":
-                    int addId = Integer.parseInt(request.getParameter("leaveTypeId"));
-                    String addName = request.getParameter("leaveTypeName");
-                    boolean addIsPaid = request.getParameter("isPaid") != null;
-                    if (addName == null || addName.trim().isEmpty()) {
+                case "add": {
+                    int id = Integer.parseInt(request.getParameter("leaveTypeId"));
+                    String name = request.getParameter("leaveTypeName");
+                    boolean isPaid = "true".equals(request.getParameter("isPaid"));
+
+                    if (name == null || name.trim().isEmpty()) {
                         message = "休暇種別名は必須です";
                         break;
                     }
-                    if (leaveTypeDao.exists(addId)) {
-                        message = "休暇種別ID「" + addId + "」は既に存在します";
+                    if (leaveTypeDao.exists(id)) {
+                        message = "休暇種別ID「" + id + "」は既に存在します";
                         break;
                     }
 
-                    LeaveTypeBean addBean = new LeaveTypeBean(addId, addName, addIsPaid);
-                    success = leaveTypeDao.insert(addBean);
+                    LeaveTypeBean newBean = new LeaveTypeBean(id, name, isPaid);
+                    success = leaveTypeDao.insert(newBean);
                     message = success ? "休暇種別を追加しました" : "休暇種別の追加に失敗しました";
                     break;
+                }
 
-                case "update":
-                    int updateId = Integer.parseInt(request.getParameter("leaveTypeId"));
-                    String updateName = request.getParameter("leaveTypeName");
-                    boolean updateIsPaid = "true".equals(request.getParameter("isPaid"));
+                case "update": {
+                    int originalId = Integer.parseInt(request.getParameter("originalLeaveTypeId"));
+                    int newId = Integer.parseInt(request.getParameter("leaveTypeId"));
+                    String name = request.getParameter("leaveTypeName");
+                    boolean isPaid = "true".equals(request.getParameter("isPaid"));
 
-                    if (updateName == null || updateName.trim().isEmpty()) {
+                    if (FIXED_IDS.contains(originalId)) {
+                        message = "この休暇種別は編集できません（ID: " + originalId + "）";
+                        break;
+                    }
+
+                    if (name == null || name.trim().isEmpty()) {
                         message = "休暇種別名は必須です";
                         break;
                     }
 
-                    LeaveTypeBean updateBean = new LeaveTypeBean(updateId, updateName, updateIsPaid);
-                    success = leaveTypeDao.update(updateBean);
+                    LeaveTypeBean updatedBean = new LeaveTypeBean(newId, name, isPaid);
+                    success = leaveTypeDao.update(originalId, updatedBean);
                     message = success ? "休暇種別を更新しました" : "休暇種別の更新に失敗しました";
                     break;
+                }
 
-                case "delete":
+                case "delete": {
                     int deleteId = Integer.parseInt(request.getParameter("leaveTypeId"));
+                    if (FIXED_IDS.contains(deleteId)) {
+                        message = "この休暇種別は削除できません（ID: " + deleteId + "）";
+                        break;
+                    }
+
                     success = leaveTypeDao.delete(deleteId);
                     message = success ? "休暇種別を削除しました" : "休暇種別の削除に失敗しました";
                     break;
+                }
 
                 default:
                     message = "不正な操作です";

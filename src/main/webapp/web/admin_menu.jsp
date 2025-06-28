@@ -843,8 +843,8 @@
             <div class="widget admin-widget">
                 <h2>業務管理</h2>
                 <a href="<%= request.getContextPath() %>/projectManage" class="function-btn admin">プロジェクト管理</a>
-                <a href="#" class="function-btn" style="background: #6c757d;">休暇申請管理 (準備中)</a>
-                <a href="#" class="function-btn" style="background: #6c757d;">休暇付与管理 (準備中)</a>
+                <a href="<%= request.getContextPath() %>/leaveRec" class="function-btn" style="background: #6c757d;">休暇申請管理 (準備中)</a>
+                <a href="<%= request.getContextPath() %>/leaveGrantManage" class="function-btn" style="background: #6c757d;">休暇付与管理 (準備中)</a>
             </div>
             
             <!-- マスタ管理ウィジェット -->
@@ -854,7 +854,7 @@
                 <a href="<%= request.getContextPath() %>/deptManage" class="function-btn" style="background: #fd7e14;">部署管理</a>
                 <a href="<%= request.getContextPath() %>/postManage" class="function-btn" style="background: #fd7e14;">役職管理</a>
                 <a href="<%= request.getContextPath() %>/CalendarManageServlet" class="function-btn" style="background: #fd7e14;">カレンダー・イベント管理</a>
-                <a href="#" class="function-btn" style="background: #6c757d;">休日種別管理 (準備中)</a>
+                <a href="<%= request.getContextPath() %>/leaveTypeManage" class="function-btn" style="background: #6c757d;">休日種別管理 (準備中)</a>
             </div>
             
             </div>
