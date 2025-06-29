@@ -1064,7 +1064,7 @@
                 const modalDaysOfWeekLabels = document.querySelectorAll('#modalRepeatDaysOfWeekGroup label');
                 modalRepeatDaysOfWeekGroup.style.display = (isWeeklyOrMonthlyWeekday ? 'flex' : 'none');
                 modalRepeatDaysOfWeekCheckboxes.forEach(checkbox => {
-                    checkbox.required = isWeeklyOrMonthlyWeekday;
+                    checkbox.required = false; // 曜日選択を任意とする
                     // DAILYの場合は無効化して灰色に
                     if (repeatType === 'DAILY') {
                         checkbox.disabled = true;
@@ -1163,7 +1163,7 @@
                 
                 daysOfWeekGroup.style.display = (isWeeklyOrMonthlyWeekday ? 'flex' : 'none');
                 daysOfWeekCheckboxes.forEach(checkbox => {
-                    checkbox.required = isWeeklyOrMonthlyWeekday;
+                    checkbox.required = false; // 曜日選択を任意とする
                     // DAILYの場合は無効化して灰色に（表示はするが操作不可）
                     if (repeatType === 'DAILY') {
                         checkbox.disabled = true;
@@ -1260,12 +1260,7 @@
                     alert("繰り返し間隔は1以上の半角数字で入力してください。");
                     return false;
                 }
-                if (repeatType === 'WEEKLY') {
-                    if (repeatDaysOfWeek.length === 0) {
-                        alert("毎週の場合、繰り返し曜日を1つ以上選択してください。");
-                        return false;
-                    }
-                }
+                // 毎週の場合でも曜日選択は任意とする（単発日のみの追加も可能）
             }
             return confirm('イベント（日付：「' + eventDate + '」、イベント名：「' + eventName + '」）を追加してもよろしいですか？');
         }
@@ -1291,12 +1286,7 @@
                     alert("繰り返し間隔は1以上の半角数字で入力してください。");
                     return false;
                 }
-                if (repeatType === 'WEEKLY') {
-                    if (repeatDaysOfWeek.length === 0) {
-                        alert("毎週の場合、繰り返し曜日を1つ以上選択してください。");
-                        return false;
-                    }
-                }
+                // 毎週の場合でも曜日選択は任意とする（単発日のみの追加も可能）
             }
             return confirm('イベント（日付：「' + eventDate + '」）の情報を更新してもよろしいですか？');
         }

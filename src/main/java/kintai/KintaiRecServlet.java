@@ -65,9 +65,9 @@ public class KintaiRecServlet extends HttpServlet {
         }
 
         // --- フィルター条件の取得 ---
-        String empIdFilter = request.getParameter("empIdFilter");
-        String deptIdFilter = request.getParameter("deptIdFilter");
-        String postIdFilter = request.getParameter("postIdFilter");
+        String empIdFilter = request.getParameter("empNoFilter");
+        String deptIdFilter = request.getParameter("deptNoFilter");
+        String postIdFilter = request.getParameter("postNoFilter");
         String startDateStr = request.getParameter("startDate");
         String endDateStr = request.getParameter("endDate");
 

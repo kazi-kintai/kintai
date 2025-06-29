@@ -241,8 +241,11 @@
             });
             
             // パラメータ取得
-            var projectId = '<%= request.getParameter("projectId") %>';
+            var projectId = '<%= project != null ? project.getProjectId() : "" %>';
             var month = '<%= selectedMonth %>';
+            
+            console.log('計算開始 - projectId:', projectId, 'month:', month);
+            console.log('hourlyRateData:', hourlyRateData);
             
             // ボタンを無効化
             var calcButton = document.getElementById('calculateButton');

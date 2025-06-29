@@ -188,11 +188,55 @@ public class WorkPunchServlet extends HttpServlet {
                 String breakStartStr = request.getParameter("breakStartTime");
                 String breakEndStr = request.getParameter("breakEndTime");
 
+                // 時間形式の検証
+                Time breakStart = parseTime(breakStartStr);
+                Time breakEnd = parseTime(breakEndStr);
+                
+                if (breakStart == null || breakEnd == null) {
+                    request.setAttribute("errorMessage", "時間は正しい形式（HH:MM）で入力してください");
+                    break;
+                }
+
+                // 開始時間が終了時間より後でないかチェック
+                if (breakStart.after(breakEnd)) {
+                    request.setAttribute("errorMessage", "休憩開始時間は終了時間より前に設定してください");
+                    break;
+                }
+
+                // 出勤・退勤時間の範囲内かチェック
+                if (workTime.getClockIn() != null && breakStart.before(workTime.getClockIn())) {
+                    request.setAttribute("errorMessage", "休憩開始時間は出勤時間以降に設定してください");
+                    break;
+                }
+                if (workTime.getClockOut() != null && breakEnd.after(workTime.getClockOut())) {
+                    request.setAttribute("errorMessage", "休憩終了時間は退勤時間以前に設定してください");
+                    break;
+                }
+
+                // 既存の休憩時間と重複していないかチェック
+                List<BreakBean> existingBreaks = workTimeDao.findBreaksByDate(empId, today);
+                boolean hasTimeConflict = false;
+                for (BreakBean existingBreak : existingBreaks) {
+                    if (existingBreak.getBreakStart() != null && existingBreak.getBreakEnd() != null) {
+                        // 新しい休憩時間が既存の休憩時間と重複しているかチェック
+                        if (!(breakEnd.before(existingBreak.getBreakStart()) || breakStart.after(existingBreak.getBreakEnd()))) {
+                            hasTimeConflict = true;
+                            break;
+                        }
+                    }
+                }
+                if (hasTimeConflict) {
+                    request.setAttribute("errorMessage", "この時間帯は既に休憩時間として登録されています");
+                    break;
+                }
+
                 // 新しい休憩データオブジェクトを作成
                 BreakBean newBreak = new BreakBean();
                 newBreak.setKintaiRecId(workTime.getKintaiRecId()); // 勤怠記録IDを関連付け
-                newBreak.setBreakStart(parseTime(breakStartStr)); // 休憩開始時刻を設定
-                newBreak.setBreakEnd(parseTime(breakEndStr)); // 休憩終了時刻を設定
+                newBreak.setBreakStart(breakStart); // 休憩開始時刻を設定
+                newBreak.setBreakEnd(breakEnd); // 休憩終了時刻を設定
+                newBreak.setCreatedBy(empId); // 作成者を設定
+                newBreak.setUpdatedBy(empId); // 更新者を設定
 
                 // データベースに保存
                 workTimeDao.addBreak(newBreak);
@@ -240,8 +284,7 @@ public class WorkPunchServlet extends HttpServlet {
             // LocalTimeをjava.sql.Timeに変換して返す
             return Time.valueOf(localTime);
         } catch (DateTimeParseException e) {
-            // パースに失敗した場合のエラーログ出力
-            System.err.println("時間フォーマットのパースに失敗しました: " + timeStr);
+            // パースに失敗した場合はnullを返す（エラーメッセージは呼び出し元で処理）
             return null; // フォーマットが不正な場合はnullを返す
         }
     }

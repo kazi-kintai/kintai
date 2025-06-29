@@ -177,6 +177,13 @@ public class KinmuManageServlet extends HttpServlet {
                     Time clockIn = parseTime(clockInStr);
                     Time clockOut = parseTime(clockOutStr);
 
+                    // 時間形式の検証（nullは許可されるが、形式が不正な場合はエラー）
+                    if ((clockInStr != null && !clockInStr.trim().isEmpty() && clockIn == null) ||
+                        (clockOutStr != null && !clockOutStr.trim().isEmpty() && clockOut == null)) {
+                        errorMessage = "時間は正しい形式（HH:MM）で入力してください";
+                        break;
+                    }
+
                     WorkTimeBean workTime = null;
                     if (recId != -1) {
                         // 既存の勤怠記録を取得
@@ -218,31 +225,51 @@ public class KinmuManageServlet extends HttpServlet {
                     Time breakStart = parseTime(breakStartStr);
                     Time breakEnd = parseTime(breakEndStr);
 
-                    // 休憩時間が出勤退勤時間範囲内かチェック
-                    if (currentWorkTime.getClockOut() != null) {
-                        if (breakStart.before(currentWorkTime.getClockIn()) || 
-                            breakEnd.after(currentWorkTime.getClockOut()) ||
-                            breakStart.after(currentWorkTime.getClockOut()) ||
-                            breakEnd.before(currentWorkTime.getClockIn())) {
-                            errorMessage = "休憩時間が出勤・退勤時間の範囲外です。出勤時間: " + 
-                                         currentWorkTime.getClockIn() + " ～ 退勤時間: " + 
-                                         currentWorkTime.getClockOut() + " の範囲内で設定してください。";
-                            break;
+                    // 時間形式の検証
+                    if (breakStart == null || breakEnd == null) {
+                        errorMessage = "時間は正しい形式（HH:MM）で入力してください";
+                        break;
+                    }
+
+                    // 開始時間が終了時間より後でないかチェック
+                    if (breakStart.after(breakEnd)) {
+                        errorMessage = "休憩開始時間は終了時間より前に設定してください";
+                        break;
+                    }
+
+                    // 出勤・退勤時間の範囲内かチェック
+                    if (currentWorkTime.getClockIn() != null && breakStart.before(currentWorkTime.getClockIn())) {
+                        errorMessage = "休憩開始時間は出勤時間以降に設定してください";
+                        break;
+                    }
+                    if (currentWorkTime.getClockOut() != null && breakEnd.after(currentWorkTime.getClockOut())) {
+                        errorMessage = "休憩終了時間は退勤時間以前に設定してください";
+                        break;
+                    }
+
+                    // 既存の休憩時間と重複していないかチェック
+                    List<BreakBean> existingBreaks = workTimeDao.findBreaksByDate(empno, targetDate);
+                    boolean hasTimeConflict = false;
+                    for (BreakBean existingBreak : existingBreaks) {
+                        if (existingBreak.getBreakStart() != null && existingBreak.getBreakEnd() != null) {
+                            // 新しい休憩時間が既存の休憩時間と重複しているかチェック
+                            if (!(breakEnd.before(existingBreak.getBreakStart()) || breakStart.after(existingBreak.getBreakEnd()))) {
+                                hasTimeConflict = true;
+                                break;
+                            }
                         }
-                    } else {
-                        // 退勤時間が未設定の場合は出勤時間以降かのみチェック
-                        if (breakStart.before(currentWorkTime.getClockIn()) || 
-                            breakEnd.before(currentWorkTime.getClockIn())) {
-                            errorMessage = "休憩時間は出勤時間以降に設定してください。出勤時間: " + 
-                                         currentWorkTime.getClockIn();
-                            break;
-                        }
+                    }
+                    if (hasTimeConflict) {
+                        errorMessage = "この時間帯は既に休憩時間として登録されています";
+                        break;
                     }
 
                     BreakBean newBreak = new BreakBean();
                     newBreak.setKintaiRecId(currentWorkTime.getKintaiRecId());
                     newBreak.setBreakStart(breakStart);
                     newBreak.setBreakEnd(breakEnd);
+                    newBreak.setCreatedBy(empno); // 作成者を設定
+                    newBreak.setUpdatedBy(empno); // 更新者を設定
                     
                     workTimeDao.addBreak(newBreak); // 休憩を追加
                     successMessage = "休憩時間を追加しました。";
@@ -274,6 +301,8 @@ public class KinmuManageServlet extends HttpServlet {
                     newWorkAlloc.setProjectId(projectId);
                     newWorkAlloc.setWorkDate(targetDate);
                     newWorkAlloc.setWorkHours(workHours);
+                    newWorkAlloc.setCreatedBy(empno); // 作成者を設定
+                    newWorkAlloc.setUpdatedBy(empno); // 更新者を設定
                     // newWorkAlloc.setDescription(description); // work_allocテーブルにはdescription列はないため設定しない
 
                     // WorkTimeDaoに新しく実装するメソッド (addWorkDetailから変更)
@@ -335,7 +364,7 @@ public class KinmuManageServlet extends HttpServlet {
             LocalTime localTime = LocalTime.parse(timeStr, java.time.format.DateTimeFormatter.ofPattern("H:mm"));
             return Time.valueOf(localTime);
         } catch (DateTimeParseException e) {
-            System.err.println("時間フォーマットのパースに失敗しました: " + timeStr);
+            // パースに失敗した場合はnullを返す（エラーメッセージは呼び出し元で処理）
             return null;
         }
     }

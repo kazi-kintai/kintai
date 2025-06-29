@@ -19,15 +19,14 @@ public class ProjectBudgetReportDao {
     public List<ProjectMemberReportBean> getProjectMemberReports(int projectId, String month) {
         List<ProjectMemberReportBean> reports = new ArrayList<>();
         
-        // 当月の実績と全期間の工作時間を取得するSQL（初期表示では実績額を計算しない）
+        // 当月の工数のみを取得するSQL（初期表示では実績額を計算しない）
         String sql = "SELECT " +
                     "    e.EMP_ID, " +
                     "    e.EMP_NAME, " +
                     "    SUM(CASE WHEN DATE_FORMAT(wa.WORK_DATE, '%Y-%m') = ? THEN wa.WORK_HOURS ELSE 0 END) as MONTHLY_HOURS, " +
                     "    SUM(wa.WORK_HOURS) as TOTAL_PROJECT_HOURS, " +
                     "    COALESCE(hrm.HOURLY_RATE, 0) as HOURLY_RATE, " +
-                    "    NULL as ACTUAL_AMOUNT, " +  // 初期表示では実績額を計算しない
-                    "    NULL as PERSONAL_BUDGET " +  // 初期表示では個人予算を計算しない
+                    "    NULL as ACTUAL_AMOUNT " +  // 初期表示では実績額を計算しない
                     "FROM work_alloc wa " +
                     "INNER JOIN emp e ON wa.EMP_ID = e.EMP_ID " +
                     "LEFT JOIN hourly_rate_monthly hrm ON e.EMP_ID = hrm.EMP_ID " +
@@ -77,15 +76,14 @@ public class ProjectBudgetReportDao {
     public List<ProjectMemberReportBean> getProjectMemberReportsWithCalculation(int projectId, String month) {
         List<ProjectMemberReportBean> reports = new ArrayList<>();
         
-        // 保存された時給データを使用して実績額を計算するSQL
+        // 保存された時給データを使用して実績額を計算するSQL（当月の工数のみ使用）
         String sql = "SELECT " +
                     "    e.EMP_ID, " +
                     "    e.EMP_NAME, " +
                     "    SUM(CASE WHEN DATE_FORMAT(wa.WORK_DATE, '%Y-%m') = ? THEN wa.WORK_HOURS ELSE 0 END) as MONTHLY_HOURS, " +
                     "    SUM(wa.WORK_HOURS) as TOTAL_PROJECT_HOURS, " +
                     "    COALESCE(hrm.HOURLY_RATE, 0) as HOURLY_RATE, " +
-                    "    (SUM(CASE WHEN DATE_FORMAT(wa.WORK_DATE, '%Y-%m') = ? THEN wa.WORK_HOURS ELSE 0 END) * COALESCE(hrm.HOURLY_RATE, 0)) as ACTUAL_AMOUNT, " +
-                    "    (SUM(wa.WORK_HOURS) * COALESCE(hrm.HOURLY_RATE, 0)) as PERSONAL_BUDGET " +
+                    "    (SUM(CASE WHEN DATE_FORMAT(wa.WORK_DATE, '%Y-%m') = ? THEN wa.WORK_HOURS ELSE 0 END) * COALESCE(hrm.HOURLY_RATE, 0)) as ACTUAL_AMOUNT " +
                     "FROM work_alloc wa " +
                     "INNER JOIN emp e ON wa.EMP_ID = e.EMP_ID " +
                     "LEFT JOIN hourly_rate_monthly hrm ON e.EMP_ID = hrm.EMP_ID " +
@@ -101,8 +99,9 @@ public class ProjectBudgetReportDao {
             
             stmt.setString(1, month);
             stmt.setString(2, month);
-            stmt.setInt(3, projectId);
-            stmt.setString(4, month);
+            stmt.setString(3, month);
+            stmt.setInt(4, projectId);
+            stmt.setString(5, month);
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -113,14 +112,8 @@ public class ProjectBudgetReportDao {
                     report.setTotalProjectHours(rs.getBigDecimal("TOTAL_PROJECT_HOURS"));
                     report.setHourlyRate(rs.getBigDecimal("HOURLY_RATE"));
                     report.setActualAmount(rs.getBigDecimal("ACTUAL_AMOUNT"));
-                    report.setPersonalBudget(rs.getBigDecimal("PERSONAL_BUDGET"));
-                    
-                    // 個人予算実績差異を計算
-                    BigDecimal personalBudget = rs.getBigDecimal("PERSONAL_BUDGET");
-                    BigDecimal actualAmount = rs.getBigDecimal("ACTUAL_AMOUNT");
-                    if (personalBudget != null && actualAmount != null) {
-                        report.setPersonalBudgetVariance(personalBudget.subtract(actualAmount));
-                    }
+                    report.setPersonalBudget(null); // 当月実績額のみ計算
+                    report.setPersonalBudgetVariance(null); // 個人予算差異は計算しない
                     
                     reports.add(report);
                 }
@@ -170,6 +163,7 @@ public class ProjectBudgetReportDao {
      * 指定された従業員、プロジェクト、月の時給を更新または挿入
      */
     public boolean updateHourlyRate(String empId, int projectId, String month, BigDecimal hourlyRate) {
+        System.out.println("updateHourlyRate called with: empId=" + empId + ", projectId=" + projectId + ", month=" + month + ", hourlyRate=" + hourlyRate);
         // 従業員が実際に存在するかチェック
         String checkEmpSql = "SELECT COUNT(*) as cnt FROM emp WHERE EMP_ID = ? AND IS_ACTIVE = TRUE";
         
@@ -185,7 +179,7 @@ public class ProjectBudgetReportDao {
         
         // 挿入SQL
         String insertSql = "INSERT INTO hourly_rate_monthly (EMP_ID, PROJECT_ID, TARGET_MONTH, HOURLY_RATE, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) " +
-                          "VALUES (?, ?, STR_TO_DATE(?, '%Y-%m'), ?, FALSE, NOW(), ?, NOW(), ?)";
+                          "VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-01'), ?, FALSE, NOW(), ?, NOW(), ?)";
         
         try (Connection conn = db.getConnection()) {
             conn.setAutoCommit(false);
@@ -196,6 +190,7 @@ public class ProjectBudgetReportDao {
                     checkEmpStmt.setString(1, empId);
                     try (ResultSet rs = checkEmpStmt.executeQuery()) {
                         if (rs.next() && rs.getInt("cnt") == 0) {
+                            System.out.println("Employee not found: " + empId);
                             return false; // 従業員が見つからない
                         }
                     }
@@ -209,12 +204,14 @@ public class ProjectBudgetReportDao {
                     checkStmt.setString(3, month);
                     try (ResultSet rs = checkStmt.executeQuery()) {
                         recordExists = rs.next();
+                        System.out.println("Record exists check for empId=" + empId + ", projectId=" + projectId + ", month=" + month + ": " + recordExists);
                     }
                 }
                 
                 int updateCount = 0;
                 if (recordExists) {
                     // 既存レコードを更新
+                    System.out.println("Updating existing record...");
                     try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
                         updateStmt.setBigDecimal(1, hourlyRate);
                         updateStmt.setString(2, empId); // UPDATED_BY
@@ -222,25 +219,30 @@ public class ProjectBudgetReportDao {
                         updateStmt.setInt(4, projectId);
                         updateStmt.setString(5, month);
                         updateCount = updateStmt.executeUpdate();
+                        System.out.println("Update count: " + updateCount);
                     }
                 } else {
                     // 新規レコードを挿入
+                    System.out.println("Inserting new record...");
                     try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
                         insertStmt.setString(1, empId);
                         insertStmt.setInt(2, projectId);
-                        insertStmt.setString(3, month + "-01"); // 月の1日として保存
+                        insertStmt.setString(3, month + "-01"); // YYYY-MM-01形式で保存
                         insertStmt.setBigDecimal(4, hourlyRate);
                         insertStmt.setString(5, empId); // CREATED_BY
                         insertStmt.setString(6, empId); // UPDATED_BY
                         updateCount = insertStmt.executeUpdate();
+                        System.out.println("Insert count: " + updateCount);
                     }
                 }
                 
                 if (updateCount > 0) {
                     conn.commit();
+                    System.out.println("Transaction committed successfully");
                     return true;
                 } else {
                     conn.rollback();
+                    System.out.println("Transaction rolled back - updateCount was 0");
                     return false;
                 }
                 
@@ -313,7 +315,7 @@ public class ProjectBudgetReportDao {
         
         // 挿入SQL
         String insertSql = "INSERT INTO hourly_rate_monthly (EMP_ID, PROJECT_ID, TARGET_MONTH, HOURLY_RATE, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) " +
-                          "VALUES (?, ?, STR_TO_DATE(?, '%Y-%m'), ?, FALSE, NOW(), ?, NOW(), ?)";
+                          "VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-01'), ?, FALSE, NOW(), ?, NOW(), ?)";
         
         // 既存レコードの確認
         boolean recordExists = false;
@@ -342,7 +344,7 @@ public class ProjectBudgetReportDao {
             try (PreparedStatement insertStmt = conn.prepareStatement(insertSql)) {
                 insertStmt.setString(1, empId);
                 insertStmt.setInt(2, projectId);
-                insertStmt.setString(3, month + "-01"); // 月の1日として保存
+                insertStmt.setString(3, month + "-01"); // YYYY-MM-01形式で保存
                 insertStmt.setBigDecimal(4, hourlyRate);
                 insertStmt.setString(5, empId); // CREATED_BY
                 insertStmt.setString(6, empId); // UPDATED_BY

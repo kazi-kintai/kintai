@@ -68,9 +68,13 @@ public class ProjectBudgetReportServlet extends HttpServlet {
         try {
             int projectId = Integer.parseInt(projectIdStr);
             
+            // デバッグ用ログ
+            System.out.println("getProjectMembers called with projectId: " + projectId + ", month: " + month);
+            
             // プロジェクト情報を取得
             ProjectBean project = projectDao.findById(projectId);
             if (project == null) {
+                System.out.println("Project not found for ID: " + projectId);
                 response.sendError(HttpServletResponse.SC_NOT_FOUND, "プロジェクトが見つかりません");
                 return;
             }
@@ -87,6 +91,8 @@ public class ProjectBudgetReportServlet extends HttpServlet {
                 // 初回表示の場合は基本データのみ
                 memberReports = budgetReportDao.getProjectMemberReports(projectId, month);
             }
+            
+            System.out.println("Found " + memberReports.size() + " member reports for project " + projectId + ", month " + month);
             
             // 総集計を計算
             BigDecimal totalActual = BigDecimal.ZERO;

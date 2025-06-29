@@ -200,13 +200,13 @@ public class CalendarManageServlet extends HttpServlet {
                     if (eventDateStr == null || eventDateStr.trim().isEmpty() ||
                         eventName == null || eventName.trim().isEmpty() ||
                         request.getParameter("isWork") == null || request.getParameter("isWork").trim().isEmpty()) {
-                        message = "日付、イベント名、種別は必須です。";
+                        message = "日付、イベント名、種別は必須です";
                         success = false;
                         break;
                     }
                     // 主キー重複チェック
                     if (calendarEventDao.exists(eventDate)) { 
-                        message = "指定された日付(" + eventDateStr + ")は既にイベントが登録されています。";
+                        message = "指定された日付(" + eventDateStr + ")は既にイベントが登録されています";
                         success = false;
                         break;
                     }
@@ -230,15 +230,15 @@ public class CalendarManageServlet extends HttpServlet {
                                 addEvent.setRepeatRuleId(insertedRule.getRuleId());
                                 calendarEventDao.update(addEvent); // REPEAT_RULE_IDを更新
                             }
-                            message = "イベントと繰り返しルールを追加しました。";
+                            message = "イベントと繰り返しルールを追加しました";
                         } else {
-                            message = "イベントは追加されましたが、繰り返しルールの追加に失敗しました。";
+                            message = "イベントは追加されましたが、繰り返しルールの追加に失敗しました";
                             // TODO: イベントだけ追加された場合のロールバック処理や手動修正の案内 (重要度低)
                         }
                     } else if (success) { // 単発イベントの場合
-                        message = "イベントを追加しました。";
+                        message = "イベントを追加しました";
                     } else { // イベント追加自体が失敗した場合
-                        message = "イベントの追加に失敗しました。";
+                        message = "イベントの追加に失敗しました";
                     }
                     break;
 
@@ -247,14 +247,14 @@ public class CalendarManageServlet extends HttpServlet {
                      if (eventDateStr == null || eventDateStr.trim().isEmpty() ||
                         eventName == null || eventName.trim().isEmpty() ||
                         request.getParameter("isWork") == null || request.getParameter("isWork").trim().isEmpty()) {
-                        message = "日付、イベント名、種別は必須です。";
+                        message = "日付、イベント名、種別は必須です";
                         success = false;
                         break;
                     }
                     
                     CalendarEventBean existingEvent = calendarEventDao.findByEventDate(originalEventDate); // 元の主キーで検索
                     if (existingEvent == null) {
-                        message = "更新対象のイベントが見つかりません。";
+                        message = "更新対象のイベントが見つかりません";
                         success = false;
                         break;
                     }
@@ -263,7 +263,7 @@ public class CalendarManageServlet extends HttpServlet {
                     if (!eventDate.equals(originalEventDate)) {
                         // 新しい日付で既存イベントがないかチェック
                         if (calendarEventDao.exists(eventDate)) {
-                            message = "変更先の日付(" + eventDateStr + ")は既にイベントが登録されています。";
+                            message = "変更先の日付(" + eventDateStr + ")は既にイベントが登録されています";
                             success = false;
                             break;
                         }
@@ -275,12 +275,12 @@ public class CalendarManageServlet extends HttpServlet {
                             newEvent.setRepeatRuleId(existingEvent.getRepeatRuleId()); // 既存のREPEAT_RULE_IDを引き継ぎ
                             success = calendarEventDao.insert(newEvent);
                             if (!success) {
-                                message = "新しい日付でのイベント作成に失敗しました。";
+                                message = "新しい日付でのイベント作成に失敗しました";
                                 break;
                             }
                             existingEvent = newEvent; // 以降の処理で使用するため更新
                         } else {
-                            message = "元のイベントの削除に失敗しました。";
+                            message = "元のイベントの削除に失敗しました";
                             break;
                         }
                     } else {
@@ -321,30 +321,30 @@ public class CalendarManageServlet extends HttpServlet {
                             }
 
                             if (ruleOpSuccess) {
-                                message = "イベントと繰り返しルールを更新しました。";
+                                message = "イベントと繰り返しルールを更新しました";
                             } else {
-                                message = "イベントは更新されましたが、繰り返しルールの操作に失敗しました。";
+                                message = "イベントは更新されましたが、繰り返しルールの操作に失敗しました";
                             }
                         } else { // 単発イベントとして更新（既存ルールがあれば削除）
                             if (existingRule != null) {
                                 eventRepeatRuleDao.delete(existingRule.getRuleId());
-                                message = "イベントは更新され、繰り返しルールが削除されました。";
+                                message = "イベントは更新され、繰り返しルールが削除されました";
                             } else {
-                                message = "イベントを更新しました。";
+                                message = "イベントを更新しました";
                             }
                             // calendar_eventのREPEAT_RULE_IDをNULLに更新
                             existingEvent.setRepeatRuleId(null);
                             calendarEventDao.update(existingEvent); // REPEAT_RULE_IDをNULLに更新
                         }
                     } else { // イベント更新自体が失敗した場合
-                        message = "イベントの更新に失敗しました。";
+                        message = "イベントの更新に失敗しました";
                     }
                     break;
 
                 case "delete":
                     String deleteEventDateStr = request.getParameter("eventDate"); // 削除対象の日付
                     if (deleteEventDateStr == null || deleteEventDateStr.trim().isEmpty()) {
-                        message = "削除対象のイベント日付が指定されていません。";
+                        message = "削除対象のイベント日付が指定されていません";
                         success = false;
                         break;
                     }
@@ -352,7 +352,7 @@ public class CalendarManageServlet extends HttpServlet {
                     
                     CalendarEventBean eventToDelete = calendarEventDao.findByEventDate(deleteEventDate);
                     if (eventToDelete == null) {
-                        message = "削除対象のイベントが見つかりません。";
+                        message = "削除対象のイベントが見つかりません";
                         success = false;
                         break;
                     }
@@ -364,24 +364,24 @@ public class CalendarManageServlet extends HttpServlet {
                     
                     success = calendarEventDao.delete(deleteEventDate); // calendar_event を削除
 
-                    message = success ? "イベントを削除しました。" : "イベントの削除に失敗しました。";
+                    message = success ? "イベントを削除しました" : "イベントの削除に失敗しました";
                     break;
 
                 default:
-                    message = "不正な操作です。";
+                    message = "不正な操作です";
                     success = false;
             }
         } catch (NumberFormatException e) {
             e.printStackTrace();
-            message = "入力された数値（繰り返し間隔）が不正です。";
+            message = "入力された数値（繰り返し間隔）が不正です";
             success = false;
         } catch (DateTimeParseException e) {
             e.printStackTrace();
-            message = "日付の形式が不正です。YYYY-MM-DD形式で入力してください。";
+            message = "日付の形式が不正です。YYYY-MM-DD形式で入力してください";
             success = false;
         } catch (Exception e) {
             e.printStackTrace();
-            message = "処理中にエラーが発生しました。";
+            message = "処理中にエラーが発生しました";
             success = false;
         }
 

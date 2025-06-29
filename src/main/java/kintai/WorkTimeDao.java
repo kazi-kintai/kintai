@@ -106,12 +106,12 @@ public class WorkTimeDao {
         String sql;
         if (existingWorkTime == null) {
             // INSERT処理 (WORKING_HOURSなども初期値として含める)
-        	sql = "INSERT INTO kintai (KINTAI_DATE, EMP_ID, CLOCK_IN, CLOCK_OUT, WORKING_HOURS, OVERTIME_HOURS, NIGHT_HOURS, IS_DELETED, IS_FINALIZED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) " +
-        		      "VALUES (?, ?, ?, ?, ?, ?, ?, FALSE, FALSE, NOW(), ?, NOW(), ?)";
+        	sql = "INSERT INTO kintai (KINTAI_DATE, EMP_ID, CLOCK_IN, CLOCK_OUT, WORKING_HOURS, OVERTIME_HOURS, NIGHT_HOURS, IS_DELETED, IS_FINALIZED) " +
+        		      "VALUES (?, ?, ?, ?, ?, ?, ?, FALSE, FALSE)";
         } else {
             // UPDATE処理
             workTime.setKintaiRecId(existingWorkTime.getKintaiRecId()); // 既存のIDをセット
-            sql = "UPDATE kintai SET CLOCK_IN = ?, CLOCK_OUT = ?, WORKING_HOURS = ?, OVERTIME_HOURS = ?, NIGHT_HOURS = ?, UPDATED_AT = NOW(), UPDATED_BY = ? WHERE KINTAI_REC_ID = ?";
+            sql = "UPDATE kintai SET CLOCK_IN = ?, CLOCK_OUT = ?, WORKING_HOURS = ?, OVERTIME_HOURS = ?, NIGHT_HOURS = ? WHERE KINTAI_REC_ID = ?";
         }
 
         try (Connection conn = db.getConnection();
@@ -125,8 +125,6 @@ public class WorkTimeDao {
             	ps.setBigDecimal(5, workTime.getWorkingHours() != null ? workTime.getWorkingHours() : BigDecimal.ZERO);
             	ps.setBigDecimal(6, workTime.getOvertimeHours() != null ? workTime.getOvertimeHours() : BigDecimal.ZERO);
             	ps.setBigDecimal(7, workTime.getNightHours() != null ? workTime.getNightHours() : BigDecimal.ZERO);
-            	ps.setString(8, workTime.getCreatedBy());
-            	ps.setString(9, workTime.getUpdatedBy());
                 ps.executeUpdate();
                 // 新しく生成されたKINTAI_REC_IDを取得
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -140,8 +138,7 @@ public class WorkTimeDao {
             	ps.setBigDecimal(3, workTime.getWorkingHours());
             	ps.setBigDecimal(4, workTime.getOvertimeHours());
             	ps.setBigDecimal(5, workTime.getNightHours());
-            	ps.setString(6, workTime.getUpdatedBy());
-            	ps.setInt(7, workTime.getKintaiRecId());
+            	ps.setInt(6, workTime.getKintaiRecId());
                 ps.executeUpdate();
             }
 
@@ -213,7 +210,7 @@ public class WorkTimeDao {
                 "p.PROJECT_NAME " +
                 "FROM work_alloc wa " +
                 "LEFT JOIN project p ON wa.PROJECT_ID = p.PROJECT_ID " +
-                "WHERE wa.EMP_ID = ? AND wa.WORK_DATE = ? AND wa.IS_DELETED IS NULL " + // 追加
+                "WHERE wa.EMP_ID = ? AND wa.WORK_DATE = ? AND (wa.IS_DELETED = FALSE OR wa.IS_DELETED IS NULL) " + // 修正
                 "ORDER BY wa.ALLOCATION_ID"; // 割り当てIDでソート
 
         try (Connection conn = db.getConnection();

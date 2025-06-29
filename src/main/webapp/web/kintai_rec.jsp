@@ -495,12 +495,13 @@
         .modal-content {
             background-color: white;
             margin: 5% auto;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
-            width: 80%;
-            max-width: 800px;
-            max-height: 80%;
+            width: 70%;
+            max-width: 600px;
+            max-height: 75%;
             overflow-y: auto;
+            font-size: 12px;
         }
         
         /* 勤務時間一覧モーダル専用スタイル */
@@ -517,13 +518,14 @@
         .kintai-modal-content {
             background-color: white;
             margin: 3% auto;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
-            width: 95%;
-            max-width: 1200px;
-            max-height: 90%;
+            width: 85%;
+            max-width: 900px;
+            max-height: 85%;
             overflow-y: auto;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            font-size: 12px;
         }
         .kintai-modal-header {
             display: flex;
@@ -535,7 +537,7 @@
         }
         .kintai-modal-close {
             color: #aaa;
-            font-size: 32px;
+            font-size: 24px;
             font-weight: bold;
             cursor: pointer;
             transition: color 0.2s;
@@ -551,7 +553,7 @@
         }
         .modal-close {
             color: #aaa;
-            font-size: 28px;
+            font-size: 20px;
             font-weight: bold;
             cursor: pointer;
         }
@@ -876,7 +878,7 @@
                                 <button class="report-btn" onclick="generateReport('department')">📊 部署別集計報告</button>
                             </div>
                             <div class="compliance-check-buttons">
-                                <button class="compliance-btn" onclick="performComplianceCheck('legal')">📋 法令遵守チェック</button>
+                                <button class="compliance-btn" onclick="performComplianceCheck('legal')">📋 会社規則や法令遵守チェック</button>
                             </div>
                             <div class="format-options">
                                 <span>出力形式:</span>
@@ -1393,6 +1395,35 @@
             document.getElementById('kintaiTableModal').style.display = 'block';
         }
 
+        // ページ内の勤務時間一覧を更新
+        function updateMainKintaiTable(tableHtml, empName) {
+            // 管理者モードの場合のみ更新する
+            const isAdminMode = document.getElementById('adminSearchForm') !== null;
+            if (!isAdminMode) {
+                return; // 一般ユーザーモードでは更新しない
+            }
+            
+            // 勤務時間一覧のタイトルを更新
+            const titleElement = document.querySelector('h3[style*="📊"]');
+            if (titleElement) {
+                titleElement.innerHTML = '📊 ' + empName + 'の勤務時間一覧';
+            }
+            
+            // 勤務時間一覧の表格部分を更新
+            const tableContainer = document.querySelector('div[style*="max-height: 300px; overflow-y: auto;"]');
+            if (tableContainer) {
+                // テーブルのスタイルを調整
+                let adjustedTableHtml = tableHtml;
+                if (tableHtml.includes('<table')) {
+                    adjustedTableHtml = tableHtml.replace(
+                        /<table[^>]*>/,
+                        '<table style="width: 100%; border-collapse: collapse; font-size: 11px;">'
+                    );
+                }
+                tableContainer.innerHTML = adjustedTableHtml;
+            }
+        }
+
         // 管理者モードの検索処理
         function searchKintaiRecords(event) {
             event.preventDefault();
@@ -1417,13 +1448,22 @@
                             title += ' - ' + empSelect.selectedOptions[0].text;
                         }
                         showKintaiTable(title, table.outerHTML);
+                        
+                        // ページ内の勤務時間一覧も更新
+                        updateMainKintaiTable(table.outerHTML, empSelect.selectedOptions[0] ? empSelect.selectedOptions[0].text : '選択された従業員');
                     } else {
                         showKintaiTable('勤務時間一覧', '<p style="text-align: center; padding: 50px;">検索結果がありません。</p>');
+                        
+                        // ページ内の勤務時間一覧も更新
+                        updateMainKintaiTable('<p style="text-align: center; padding: 50px;">検索結果がありません。</p>', '検索結果');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
                     showKintaiTable('エラー', '<p style="text-align: center; padding: 50px; color: red;">データの取得に失敗しました。</p>');
+                    
+                    // ページ内の勤務時間一覧も更新
+                    updateMainKintaiTable('<p style="text-align: center; padding: 50px; color: red;">データの取得に失敗しました。</p>', 'エラー');
                 });
         }
         
@@ -1545,10 +1585,10 @@
 
         // チェック項目を表示するモーダル
         function showCheckItems() {
-            let checkItemsHtml = '<div style="padding: 20px;">';
-            checkItemsHtml += '<h3 style="margin-bottom: 15px; color: #495057;">📋 法令遵守チェック項目</h3>';
-            checkItemsHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px;">';
-            checkItemsHtml += '<div style="font-size: 13px; color: #495057; line-height: 1.8;">';
+            let checkItemsHtml = '<div style="padding: 15px;">';
+            checkItemsHtml += '<h3 style="margin-bottom: 12px; color: #495057; font-size: 14px;">📋 法令遵守チェック項目</h3>';
+            checkItemsHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px;">';
+            checkItemsHtml += '<div style="font-size: 11px; color: #495057; line-height: 1.6;">';
             checkItemsHtml += '<strong>以下の項目について法令遵守をチェックしています：</strong><br><br>';
             checkItemsHtml += '• <strong>休憩時間の適切性</strong> - 6-8時間勤務時に45分以上、8時間超勤務時に60分以上の休憩を取得しているか<br>';
             checkItemsHtml += '• <strong>深夜勤務の確認</strong> - 22:00～翌5:00の深夜時間帯での勤務状況<br>';
@@ -1782,15 +1822,15 @@
                 const doc = parser.parseFromString(html, 'text/html');
                 
                 // 合規チェック結果を抽出（実際の実装に応じて調整が必要）
-                let resultHtml = '<div style="padding: 20px;">';
-                resultHtml += '<h3>📋 法令遵守チェック結果</h3>';
-                resultHtml += '<p>対象従業員: ' + document.getElementById('empNoFilter').selectedOptions[0].text + '</p>';
-                resultHtml += '<div style="margin-top: 15px;">';
-                resultHtml += '<div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 10px; margin-bottom: 10px;">';
+                let resultHtml = '<div style="padding: 15px;">';
+                resultHtml += '<h3 style="font-size: 14px; margin-bottom: 10px;">📋 法令遵守チェック結果</h3>';
+                resultHtml += '<p style="font-size: 11px;">対象従業員: ' + document.getElementById('empNoFilter').selectedOptions[0].text + '</p>';
+                resultHtml += '<div style="margin-top: 12px;">';
+                resultHtml += '<div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 4px; padding: 8px; margin-bottom: 8px; font-size: 11px;">';
                 resultHtml += '<strong>✅ チェック完了</strong><br>';
                 resultHtml += '労働基準法および会社規程に基づく合規性をチェックしました。';
                 resultHtml += '</div>';
-                resultHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px;">';
+                resultHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 8px; font-size: 11px;">';
                 resultHtml += '<strong>チェック項目:</strong><br>';
                 resultHtml += '• 休憩時間の適切性（6-8時間勤務で45分以上、8時間超で60分以上）<br>';
                 resultHtml += '• 深夜勤務の確認（22:00～翌5:00）<br>';
@@ -1814,22 +1854,26 @@
             const empSelect = document.getElementById('empNoFilter');
             const empName = empSelect.selectedOptions[0] ? empSelect.selectedOptions[0].text : data.empName;
             
-            let reportHtml = '<div style="padding: 20px;">';
-            reportHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #007bff; padding-bottom: 10px;">';
-            reportHtml += '<h3>📋 個人別月次報告</h3>';
+            let reportHtml = '<div style="padding: 15px;">';
+            reportHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 8px;">';
+            reportHtml += '<h3 style="font-size: 14px; margin: 0;">📋 個人別月次報告</h3>';
             reportHtml += '<div style="display: flex; gap: 10px;">';
             reportHtml += '<button class="format-btn" onclick="downloadIndividualReport(\'excel\')" style="background-color: #28a745;">📊 Excel出力</button>';
             reportHtml += '</div>';
             reportHtml += '</div>';
             
-            reportHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px;">';
-            reportHtml += '<h4 style="margin: 0 0 10px 0; color: #495057;">対象従業員情報</h4>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>従業員番号:</strong> ' + data.empno + '</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>従業員名:</strong> ' + data.empName + '</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>部署:</strong> ' + data.deptName + '</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>役職:</strong> ' + data.postName + '</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>対象期間:</strong> ' + data.targetMonth + '</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>生成日時:</strong> ' + new Date().toLocaleString('ja-JP') + '</p>';
+            reportHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 15px;">';
+            reportHtml += '<h4 style="margin: 0 0 8px 0; color: #495057; font-size: 13px;">対象従業員情報</h4>';
+            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 8px;">';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>従業員番号:</strong> ' + data.empno + '</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>従業員名:</strong> ' + data.empName + '</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>部署:</strong> ' + data.deptName + '</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>役職:</strong> ' + data.postName + '</p>';
+            reportHtml += '</div>';
+            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象期間:</strong> ' + data.targetMonth + '</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>生成日時:</strong> ' + new Date().toLocaleString('ja-JP') + '</p>';
+            reportHtml += '</div>';
             reportHtml += '</div>';
             
             // 真実の月次統計データ
@@ -1917,21 +1961,25 @@
             const deptSelect = document.getElementById('deptNoFilter');
             const deptName = deptSelect.selectedOptions[0] ? deptSelect.selectedOptions[0].text : data.targetDeptName;
             
-            let reportHtml = '<div style="padding: 20px;">';
-            reportHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #007bff; padding-bottom: 10px;">';
-            reportHtml += '<h3>📊 部署別集計報告</h3>';
+            let reportHtml = '<div style="padding: 15px;">';
+            reportHtml += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #007bff; padding-bottom: 8px;">';
+            reportHtml += '<h3 style="font-size: 14px; margin: 0;">📊 部署別集計報告</h3>';
             reportHtml += '<div style="display: flex; gap: 10px;">';
             reportHtml += '<button class="format-btn" onclick="downloadDepartmentReport(\'excel\')" style="background-color: #28a745;">📊 Excel出力</button>';
             reportHtml += '</div>';
             reportHtml += '</div>';
             
-            reportHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin-bottom: 20px;">';
-            reportHtml += '<h4 style="margin: 0 0 10px 0; color: #495057;">対象部署情報</h4>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>対象部署:</strong> ' + deptName + '</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>対象期間:</strong> ' + data.targetPeriod + '</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>総記録数:</strong> ' + data.totalRecords + '件</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>対象従業員数:</strong> ' + data.totalEmployees + '名</p>';
-            reportHtml += '<p style="margin: 5px 0;"><strong>生成日時:</strong> ' + new Date().toLocaleString('ja-JP') + '</p>';
+            reportHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 15px;">';
+            reportHtml += '<h4 style="margin: 0 0 8px 0; color: #495057; font-size: 13px;">対象部署情報</h4>';
+            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 8px;">';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象部署:</strong> ' + deptName + '</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象期間:</strong> ' + data.targetPeriod + '</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>総記録数:</strong> ' + data.totalRecords + '件</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象従業員数:</strong> ' + data.totalEmployees + '名</p>';
+            reportHtml += '</div>';
+            reportHtml += '<div style="display: grid; grid-template-columns: 1fr; gap: 15px;">';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>生成日時:</strong> ' + new Date().toLocaleString('ja-JP') + '</p>';
+            reportHtml += '</div>';
             reportHtml += '</div>';
             
             // 部署別統計サマリー
