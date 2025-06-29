@@ -14,6 +14,7 @@ public class CalendarEventBean implements Serializable {
     private String eventName;       // calendar_eventテーブルの「EVENT_NAME」列に対応
     private boolean isWork;         // calendar_eventテーブルの「IS_WORK」列に対応（1:出勤日, 0:休日）
     private Integer repeatRuleId;   // calendar_eventテーブルの「REPEAT_RULE_ID」列に対応（新規追加、null許容のためInteger）
+    private boolean isSystemDefined; // calendar_eventテーブルの「IS_SYSTEM_DEFINED」列に対応（システム定義フラグ）
 
     /**
      * デフォルトコンストラクタ
@@ -32,6 +33,7 @@ public class CalendarEventBean implements Serializable {
         this.eventName = eventName;
         this.isWork = isWork;
         this.repeatRuleId = null; // デフォルトではnull
+        this.isSystemDefined = false; // デフォルトではユーザー定義
     }
 
     // --- 以下、各フィールドのアクセサメソッド (getter/setter) ---
@@ -85,5 +87,17 @@ public class CalendarEventBean implements Serializable {
      */
     public boolean getIsWork() {
         return isWork;
+    }
+
+    public boolean isSystemDefined() {
+        return isSystemDefined;
+    }
+
+    public void setSystemDefined(boolean isSystemDefined) {
+        this.isSystemDefined = isSystemDefined;
+    }
+
+    public boolean getIsSystemDefined() {
+        return isSystemDefined;
     }
 }

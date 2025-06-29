@@ -952,7 +952,7 @@
                 <a href="<%= request.getContextPath() %>/showWorkPunchForm" class="function-btn basic">本日分の打刻</a>
                 <a href="<%= request.getContextPath() %>/KintaiRecServlet" class="function-btn basic">従業員別勤怠記録表示</a>
                 <a href="<%= request.getContextPath() %>/KinmuManageServlet" class="function-btn basic">勤務時間管理</a>
-                <a href="<%= request.getContextPath() %>/PasswordChangeServlet" class="function-btn basic">パスワード変更</a>
+                <a href="<%= request.getContextPath() %>/PasswordChangeServlet" class="function-btn basic">パスワード再設定</a>
             </div>
             
             <!-- 業務管理ウィジェット -->

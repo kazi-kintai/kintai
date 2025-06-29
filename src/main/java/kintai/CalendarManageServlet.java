@@ -70,7 +70,7 @@ public class CalendarManageServlet extends HttpServlet {
 
         // --- イベントデータの取得と展開 ---
         List<CalendarEventBean> allEvents = calendarEventDao.findAll(); // 全てのイベント（単発・繰り返し元）を取得
-        List<EventRepeatRuleBean> allRules = new ArrayList<>(); // eventRepeatRuleDao.findAll(); // 暫時的に繰り返しルール機能を無効化
+        List<EventRepeatRuleBean> allRules = eventRepeatRuleDao.findAll(); // 繰り返しルール機能を有効化
 
         // FullCalendarに渡すイベントリスト (展開済みイベントインスタンス)
         List<Map<String, Object>> fcEvents = new ArrayList<>();
@@ -85,10 +85,16 @@ public class CalendarManageServlet extends HttpServlet {
             // イベントを識別するためのユニークなID（単発イベントの編集時に元のイベントを特定するため）
             fcEvent.put("id", event.getEventDate().toString()); 
             
+            // イベントの種類に応じて色を設定
+            String eventColor = getEventColor(event);
+            fcEvent.put("backgroundColor", eventColor);
+            fcEvent.put("borderColor", eventColor);
+            
             // isWorkとrepeatRuleIdをextendedPropsに含める
             Map<String, Object> extendedProps = new HashMap<>();
             extendedProps.put("isWork", event.isWork());
             extendedProps.put("repeatRuleId", event.getRepeatRuleId());
+            extendedProps.put("isSystemDefined", event.isSystemDefined());
             fcEvent.put("extendedProps", extendedProps);
 
             fcEvents.add(fcEvent);
@@ -214,11 +220,15 @@ public class CalendarManageServlet extends HttpServlet {
                         EventRepeatRuleBean newRule = createEventRepeatRuleBean(eventDate, repeatType, repeatIntervalStr, repeatDaysOfWeekArr, repeatEndDateStr);
                         boolean ruleInsertSuccess = eventRepeatRuleDao.insert(newRule);
                         if (ruleInsertSuccess) {
-                            // 新規挿入したルールのRULE_IDを取得し、calendar_eventのREPEAT_RULE_IDを更新
-                            EventRepeatRuleBean insertedRule = eventRepeatRuleDao.findByEventDateFk(eventDate);
+                            // 新しく挿入されたルールのIDを取得して、イベントに関連付ける
+                            // 最新のルールを取得（INSERT直後なので最大IDのルール）
+                            List<EventRepeatRuleBean> allRules = eventRepeatRuleDao.findAll();
+                            EventRepeatRuleBean insertedRule = allRules.stream()
+                                    .max((r1, r2) -> Integer.compare(r1.getRuleId(), r2.getRuleId()))
+                                    .orElse(null);
                             if (insertedRule != null) {
                                 addEvent.setRepeatRuleId(insertedRule.getRuleId());
-                                calendarEventDao.update(addEvent); // REPEAT_RULE_IDをcalendar_eventに紐付け
+                                calendarEventDao.update(addEvent); // REPEAT_RULE_IDを更新
                             }
                             message = "イベントと繰り返しルールを追加しました。";
                         } else {
@@ -297,15 +307,20 @@ public class CalendarManageServlet extends HttpServlet {
                                 ruleOpSuccess = eventRepeatRuleDao.update(ruleToSave);
                             } else { // 既存ルールがなければ新規挿入
                                 ruleOpSuccess = eventRepeatRuleDao.insert(ruleToSave);
+                                if (ruleOpSuccess) {
+                                    // 新しく挿入されたルールのIDを取得してイベントに関連付ける
+                                    List<EventRepeatRuleBean> allRules = eventRepeatRuleDao.findAll();
+                                    EventRepeatRuleBean insertedRule = allRules.stream()
+                                            .max((r1, r2) -> Integer.compare(r1.getRuleId(), r2.getRuleId()))
+                                            .orElse(null);
+                                    if (insertedRule != null) {
+                                        existingEvent.setRepeatRuleId(insertedRule.getRuleId());
+                                        calendarEventDao.update(existingEvent); // REPEAT_RULE_IDを更新
+                                    }
+                                }
                             }
 
                             if (ruleOpSuccess) {
-                                // calendar_eventのREPEAT_RULE_IDを更新/紐付け
-                                EventRepeatRuleBean currentRule = eventRepeatRuleDao.findByEventDateFk(eventDate);
-                                if (currentRule != null && (existingEvent.getRepeatRuleId() == null || currentRule.getRuleId() != existingEvent.getRepeatRuleId())) {
-                                    existingEvent.setRepeatRuleId(currentRule.getRuleId());
-                                    calendarEventDao.update(existingEvent); // REPEAT_RULE_IDを更新
-                                }
                                 message = "イベントと繰り返しルールを更新しました。";
                             } else {
                                 message = "イベントは更新されましたが、繰り返しルールの操作に失敗しました。";
@@ -386,7 +401,7 @@ public class CalendarManageServlet extends HttpServlet {
      */
     private void generateRepeatingEvents(CalendarEventBean masterEvent, EventRepeatRuleBean rule, List<Map<String, Object>> fcEvents) {
         // 主イベントの日付は既にfcEventsにadd済みなので、次の繰り返し日付から開始
-        LocalDate currentDate = calculateNextRepeatDate(masterEvent.getEventDate(), rule);
+        LocalDate currentDate = calculateNextRepeatDate(masterEvent.getEventDate(), rule, masterEvent.getEventDate());
         // 繰り返し終了日がない場合、デフォルトで主イベントの5年後まで展開
         LocalDate endDate = rule.getRepeatEndDate() != null ? rule.getRepeatEndDate() : LocalDate.of(masterEvent.getEventDate().getYear() + 5, 12, 31); 
 
@@ -399,16 +414,22 @@ public class CalendarManageServlet extends HttpServlet {
             // IDはユニークにするために日付とルールID、展開日を組み合わせる
             fcEvent.put("id", "REPEATING-" + masterEvent.getEventDate().toString() + "-" + rule.getRuleId() + "-" + currentDate.toString()); 
             
+            // イベントの種類に応じて色を設定
+            String eventColor = getEventColor(masterEvent);
+            fcEvent.put("backgroundColor", eventColor);
+            fcEvent.put("borderColor", eventColor);
+            
             // extendedPropsにisWorkとrepeatRuleIdを含める
             Map<String, Object> extendedProps = new HashMap<>();
             extendedProps.put("isWork", masterEvent.isWork());
             extendedProps.put("repeatRuleId", rule.getRuleId());
+            extendedProps.put("isSystemDefined", masterEvent.isSystemDefined());
             fcEvent.put("extendedProps", extendedProps);
 
             fcEvents.add(fcEvent);
 
             // 次の繰り返し日付を計算
-            currentDate = calculateNextRepeatDate(currentDate, rule);
+            currentDate = calculateNextRepeatDate(currentDate, rule, masterEvent.getEventDate());
         }
     }
 
@@ -417,9 +438,10 @@ public class CalendarManageServlet extends HttpServlet {
      * generateRepeatingEvents メソッド内で使用。
      * @param currentBaseDate 現在の基準日付（この日付を含まない次の繰り返し日付を計算）
      * @param rule 繰り返しルール
+     * @param masterEventDate 主イベントの日付（月・年の繰り返しで使用）
      * @return 次の繰り返し日付。繰り返し終了の場合や不正なタイプの場合はnull。
      */
-    private LocalDate calculateNextRepeatDate(LocalDate currentBaseDate, EventRepeatRuleBean rule) {
+    private LocalDate calculateNextRepeatDate(LocalDate currentBaseDate, EventRepeatRuleBean rule, LocalDate masterEventDate) {
         LocalDate nextDate = null;
         
         switch (rule.getRepeatType()) {
@@ -451,29 +473,29 @@ public class CalendarManageServlet extends HttpServlet {
                 }
                 break;
             case "MONTHLY_DAY":
-                LocalDate targetDayOfMonthDate = currentBaseDate.withDayOfMonth(rule.getEventDateFk().getDayOfMonth());
+                LocalDate targetDayOfMonthDate = currentBaseDate.withDayOfMonth(masterEventDate.getDayOfMonth());
                 
                 // 次の繰り返し日付の計算。目標の日付が現在の月で過ぎていれば、次の月に移る
                 if (targetDayOfMonthDate.isAfter(currentBaseDate)) { // 次の繰り返し日が今月にある場合
                     nextDate = targetDayOfMonthDate;
                 } else { // 次の繰り返し日が翌月以降にある場合
-                    nextDate = currentBaseDate.plusMonths(rule.getRepeatInterval()).withDayOfMonth(rule.getEventDateFk().getDayOfMonth());
+                    nextDate = currentBaseDate.plusMonths(rule.getRepeatInterval()).withDayOfMonth(masterEventDate.getDayOfMonth());
                     // 月の最終日を超える場合は調整 (例: 1月31日から2月31日へは行けない)
-                    if (nextDate.getDayOfMonth() != rule.getEventDateFk().getDayOfMonth()) {
+                    if (nextDate.getDayOfMonth() != masterEventDate.getDayOfMonth()) {
                         nextDate = nextDate.withDayOfMonth(nextDate.lengthOfMonth()); // その月の最終日
                     }
                 }
                 break;
             case "YEARLY":
-                LocalDate targetDayOfYearDate = currentBaseDate.withMonth(rule.getEventDateFk().getMonthValue()).withDayOfMonth(rule.getEventDateFk().getDayOfMonth());
+                LocalDate targetDayOfYearDate = currentBaseDate.withMonth(masterEventDate.getMonthValue()).withDayOfMonth(masterEventDate.getDayOfMonth());
                 
                 // 次の繰り返し日付の計算。目標の日付が現在の年で過ぎていれば、次の年に移る
                 if (targetDayOfYearDate.isAfter(currentBaseDate)) { // 次の繰り返し日が今年にある場合
                     nextDate = targetDayOfYearDate;
                 } else { // 次の繰り返し日が翌年以降にある場合
-                    nextDate = currentBaseDate.plusYears(rule.getRepeatInterval()).withMonth(rule.getEventDateFk().getMonthValue()).withDayOfMonth(rule.getEventDateFk().getDayOfMonth());
+                    nextDate = currentBaseDate.plusYears(rule.getRepeatInterval()).withMonth(masterEventDate.getMonthValue()).withDayOfMonth(masterEventDate.getDayOfMonth());
                     // 閏年などの日付調整
-                    if (nextDate.getDayOfMonth() != rule.getEventDateFk().getDayOfMonth()) {
+                    if (nextDate.getDayOfMonth() != masterEventDate.getDayOfMonth()) {
                          nextDate = nextDate.withDayOfMonth(nextDate.lengthOfMonth());
                     }
                 }
@@ -491,7 +513,6 @@ public class CalendarManageServlet extends HttpServlet {
      */
     private EventRepeatRuleBean createEventRepeatRuleBean(LocalDate eventDateFk, String repeatType, String repeatIntervalStr, String[] repeatDaysOfWeekArr, String repeatEndDateStr) {
         EventRepeatRuleBean rule = new EventRepeatRuleBean();
-        rule.setEventDateFk(eventDateFk);
         rule.setRepeatType(repeatType);
         rule.setRepeatInterval(repeatIntervalStr != null && !repeatIntervalStr.trim().isEmpty() ? Integer.parseInt(repeatIntervalStr) : 1);
         
@@ -507,6 +528,50 @@ public class CalendarManageServlet extends HttpServlet {
             rule.setRepeatEndDate(null);
         }
         return rule;
+    }
+
+    /**
+     * イベントの種類に応じて色を決定する補助メソッド
+     * @param event カレンダーイベント
+     * @return 色コード文字列
+     */
+    private String getEventColor(CalendarEventBean event) {
+        if (event.isSystemDefined()) {
+            // システム定義のイベント（祝日・休日）
+            if (isJapaneseHoliday(event.getEventName())) {
+                return "#ff4444"; // 祝日は赤色
+            } else {
+                return "#28a745"; // 休日（土日）は緑色
+            }
+        } else {
+            // ユーザー定義のイベント
+            if (event.isWork()) {
+                return "#007bff"; // 出勤日は青色
+            } else {
+                return "#28a745"; // 休日は緑色
+            }
+        }
+    }
+
+    /**
+     * イベント名から日本の祝日かどうかを判定する補助メソッド
+     * @param eventName イベント名
+     * @return 祝日の場合true
+     */
+    private boolean isJapaneseHoliday(String eventName) {
+        // 日本の祝日名のリスト
+        String[] holidays = {
+            "元日", "成人の日", "建国記念の日", "天皇誕生日", "春分の日", "昭和の日",
+            "憲法記念日", "みどりの日", "こどもの日", "海の日", "山の日", "敬老の日",
+            "秋分の日", "スポーツの日", "文化の日", "勤労感謝の日"
+        };
+        
+        for (String holiday : holidays) {
+            if (holiday.equals(eventName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     // FullCalendarがLocalDateをJSONに変換するためのTypeAdapter

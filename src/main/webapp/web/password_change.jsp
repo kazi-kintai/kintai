@@ -23,7 +23,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>パスワード変更</title>
+    <title>パスワード再設定</title>
     <style>
         body {
             font-family: 'メイリオ', sans-serif;
@@ -169,7 +169,7 @@
             // TODO: 必要に応じてパスワードの複雑性チェックを追加
 
             errorMessageDiv.innerHTML = ""; // エラーメッセージをクリア
-            return confirm("パスワードを変更してもよろしいですか？");
+            return confirm("パスワードを再設定してもよろしいですか？");
         }
     </script>
 </head>
@@ -185,7 +185,7 @@
             </form>
         </div>
 
-        <h1>パスワード変更</h1>
+        <h1>パスワード再設定</h1>
 
         <%-- メッセージ表示 --%>
         <% if (successMessage != null) { %>
@@ -213,7 +213,7 @@
                 <input type="password" id="confirmNewPassword" name="confirmNewPassword" required>
             </div>
             <div class="button-container">
-                <button type="submit" class="btn-primary">パスワード変更</button>
+                <button type="submit" class="btn-primary">パスワード再設定</button>
             </div>
         </form>
 
