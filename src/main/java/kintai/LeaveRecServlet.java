@@ -2,6 +2,9 @@ package kintai;
 
 import java.io.IOException;
 import java.sql.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -53,7 +56,16 @@ public class LeaveRecServlet extends HttpServlet {
 
             if (empId != null && !empId.isEmpty()) {
                 request.setAttribute("balanceList", balanceDao.getLeaveBalances(empId));
-                request.setAttribute("leaveList", dao.getLeaveList(empId));
+                
+                // グループ化処理を追加
+                Map<String, List<LeaveRecBean>> grouped = new LinkedHashMap<>();
+                for (LeaveRecBean rec : dao.getLeaveList(empId)) {
+                    String monthLabel = rec.getStartDate().toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyy年MM月"));
+                    grouped.computeIfAbsent(monthLabel, k -> new java.util.ArrayList<>()).add(rec);
+                }
+
+                request.setAttribute("groupedLeaveList", grouped);
+                
             }
         } catch (Exception e) {
             request.setAttribute("message", "初期表示に失敗しました: + print" );
@@ -144,7 +156,7 @@ public class LeaveRecServlet extends HttpServlet {
                     break;
             }
         } catch (Exception e) {
-            session.setAttribute("message", "処理中にエラーが発生しました: " + e.getMessage());
+            session.setAttribute("message", e.getMessage());
             session.setAttribute("success", false);
         }
 

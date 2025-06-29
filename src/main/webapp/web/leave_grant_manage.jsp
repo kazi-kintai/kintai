@@ -148,6 +148,12 @@
     </style>
 </head>
 <body>
+<script>
+    function confirmGrant() {
+        return confirm("対象従業員に休暇を付与してもよろしいですか？");
+    }
+</script>
+
 <div class="container">
     <h1>休暇付与管理</h1>
     <p>本日：<%= LocalDate.now() %></p>
@@ -204,31 +210,35 @@
             <option value="special" <%= "special".equals(selectedType) ? "selected" : "" %>>特別休暇</option>
 	        <option value="substitute" <%= "substitute".equals(selectedType) ? "selected" : "" %>>代休</option>
         </select>
+
+<%-- 例外対応のため
         <label>付与基準日：</label>
         <input type="date" name="grantDate" value="<%= (grantDate != null) ? grantDate.toString() : "" %>" />
-        
+ --%>
+ 
         <label><input type="checkbox" name="showAll" value="true" <%= "true".equals(request.getParameter("showAll")) ? "checked" : "" %> />付与不可者も含めて表示</label>
         
+
         <input type="hidden" name="mode" value="preview" />
         <button class="btn btn-primary" type="submit">未付与者を表示</button>
     </form>
 
     <% if ("preview".equals(mode) && unissuedList != null) { %>
         <div class="section">
-            <h2>未付与者一覧（<%= unissuedList.size() %>人）</h2>
+            <h2>未付与者一覧</h2>
             <% if (unissuedList.isEmpty()) { %>
                 <p>対象者はいません</p>
             <% } else { %>
-                <form method="post" action="leaveGrantManage">
+                <form method="post" action="leaveGrantManage" onsubmit="return confirmGrant();">
                     <input type="hidden" name="mode" value="execute" />
                     <input type="hidden" name="leaveType" value="<%= selectedType %>" />
                     <input type="hidden" name="grantDate" value="<%= (grantDate != null) ? grantDate.toString() : "" %>" />
                     <table class="emp-table">
                     
 					<p>
-					    対象従業員数：<%= unissuedList.size() %> 人（
-					    付与可能：<%= unissuedList.stream().filter(EmpBean::isCanGrant).count() %>人 /
-					    対象外：<%= unissuedList.stream().filter(e -> !e.isCanGrant()).count() %>人 ）
+					    対象従業員数：<%= unissuedList.size() %> 名（
+					    付与可能：<%= unissuedList.stream().filter(EmpBean::isCanGrant).count() %>名 /
+					    対象外：<%= unissuedList.stream().filter(e -> !e.isCanGrant()).count() %>名 ）
 					</p>
                         <thead>
                         <tr><th>従業員番号</th><th>氏名</th><th>入社年月日</th><th>予定付与日数</th></tr>
