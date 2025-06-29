@@ -1,1 +1,34 @@
+# Java 编译输出
 /bin/
+/target/
+*.class
+
+# Eclipse 项目文件
+.classpath
+.project
+.settings/
+
+# Claude AI 工具文件
+.claude/
+CLAUDE.md
+
+# 开发文档和设计文件
+BUG清单.md
+ER図.txt
+Mermaid.txt
+old_class.txt
+old_mermaid.txt
+テスト仕様書.html
+テスト仕様書.png
+クラス図/
+シーケンス図/
+テーブル定義書/
+
+# 临时文件
+*.tmp
+*.log
+*~
+
+# 操作系统生成的文件
+.DS_Store
+Thumbs.db
