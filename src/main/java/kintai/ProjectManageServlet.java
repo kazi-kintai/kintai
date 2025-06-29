@@ -120,7 +120,7 @@ public class ProjectManageServlet extends HttpServlet {
                     }
                     
                     
-                    success = ProjectDao.insert(newProject);
+                    success = ProjectDao.insert(newProject, user.getEmpId(), user.getEmpId());
                     message = success ? "プロジェクトを追加しました" : "プロジェクトの追加に失敗しました";
                     break;
                     
@@ -187,14 +187,16 @@ public class ProjectManageServlet extends HttpServlet {
                     }
                     
                     
-                    success = ProjectDao.update(updateProject);
+                    success = ProjectDao.update(updateProject, user.getEmpId());
                     message = success ? "プロジェクト名を更新しました" : "プロジェクト情報の更新に失敗しました";
                     break;
                     
                 case "delete":
                     // 削除処理
-                    String deleteProjectId = request.getParameter("ProjectId");
-                    success = ProjectDao.delete(deleteProjectId);
+                    String deleteProjectIdStr = request.getParameter("ProjectId");
+                    int deleteProjectId = Integer.parseInt(deleteProjectIdStr);
+                    //success = ProjectDao.delete(deleteProjectId);
+                    success = ProjectDao.logicalDelete(deleteProjectId, user.getEmpId());
                     
                     if (success) {
                         message = "プロジェクトを削除しました";

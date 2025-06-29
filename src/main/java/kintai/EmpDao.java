@@ -31,7 +31,6 @@ public class EmpDao {
                      "LEFT JOIN dept d ON e.DEPT_ID = d.DEPT_ID " +
                      "LEFT JOIN post p ON e.POST_ID = p.POST_ID " +
                      "LEFT JOIN role r ON e.ROLE_ID = r.ROLE_ID " +
-                     "WHERE e.IS_ACTIVE = true " +
                      "ORDER BY e.EMP_ID";
         
         try (Connection conn = db.getConnection();
@@ -380,82 +379,37 @@ public class EmpDao {
         return empList;
     }
     
-    /**
-     * 削除された従業員一覧を取得する
-     * @return 削除された従業員のリスト
-     */
-    public List<EmpBean> findDeleted() {
-        List<EmpBean> empList = new ArrayList<>();
-        String sql = "SELECT e.EMP_ID, e.EMP_NAME, e.DEPT_ID, e.POST_ID, e.ROLE_ID, e.EMP_TYPE, " +
-                     "e.PASS, e.MAIL, e.EMP_DATE, e.IS_ACTIVE, e.LEAVE_DATE, " +
-                     "d.DEPT_NAME, p.POST_NAME, r.ROLE_NAME " +
-                     "FROM emp e " +
-                     "LEFT JOIN dept d ON e.DEPT_ID = d.DEPT_ID " +
-                     "LEFT JOIN post p ON e.POST_ID = p.POST_ID " +
-                     "LEFT JOIN role r ON e.ROLE_ID = r.ROLE_ID " +
-                     "WHERE e.IS_ACTIVE = false " +
-                     "ORDER BY e.LEAVE_DATE DESC";
-        
-        try (Connection conn = db.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            
-            while (rs.next()) {
-                EmpBean emp = new EmpBean();
-                emp.setEmpId(rs.getString("EMP_ID"));
-                emp.setEmpName(rs.getString("EMP_NAME"));
-                emp.setDeptId(rs.getString("DEPT_ID"));
-                emp.setPostId(rs.getString("POST_ID"));
-                emp.setRoleId(rs.getInt("ROLE_ID"));
-                emp.setEmpType(rs.getString("EMP_TYPE"));
-                emp.setPass(rs.getString("PASS"));
-                emp.setMail(rs.getString("MAIL"));
-                
-                // 日付のnullチェック
-                Date empDate = rs.getDate("EMP_DATE");
-                if (empDate != null) {
-                    emp.setEmpDate(empDate.toLocalDate());
-                }
-                
-                emp.setActive(rs.getBoolean("IS_ACTIVE"));
-                Date leaveDateSql = rs.getDate("LEAVE_DATE");
-                if (leaveDateSql != null) {
-                    emp.setLeaveDate(leaveDateSql.toLocalDate());
-                }
-                
-                emp.setDeptName(rs.getString("DEPT_NAME"));
-                emp.setPostName(rs.getString("POST_NAME"));
-                emp.setRoleName(rs.getString("ROLE_NAME"));
-                
-                empList.add(emp);
-            }
-            
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
-        return empList;
-    }
     
     /**
-     * 削除された従業員を復元する
-     * @param empId 復元する従業員ID
-     * @return 復元に成功した場合true、失敗した場合false
+     * 契約形態で社員情報を検索する
+     * @param 
+     * @return 正社員の社員情報。見つからない場合はnull
      */
-    public boolean restore(String empId) {
-        String sql = "UPDATE emp SET IS_ACTIVE = true, LEAVE_DATE = NULL WHERE EMP_ID = ? AND IS_ACTIVE = false";
-        
-        try (Connection conn = db.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            
-            ps.setString(1, empId);
-            int count = ps.executeUpdate();
-            return count > 0;
-            
-        } catch (Exception e) {
+    public List<EmpBean> findAllFullTimeEmployees() {
+        List<EmpBean> list = new ArrayList<>();
+
+        String sql = "SELECT * FROM emp WHERE emp_type = ? AND IS_ACTIVE = TRUE"; // emp_type=正社員
+        try ( Connection conn = db.getConnection();
+              PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, "正社員");
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    EmpBean emp = new EmpBean();
+                    emp.setEmpId(rs.getString("emp_id"));
+                    emp.setEmpName(rs.getString("emp_name"));
+                    emp.setDeptNo(rs.getString("dept_id"));
+                    emp.setPostNo(rs.getString("post_id"));
+                    emp.setRoleId(rs.getInt("role_id"));
+                    emp.setPass(rs.getString("pass"));
+                    emp.setMail(rs.getString("mail"));
+                    emp.setEmpDate(rs.getDate("emp_date").toLocalDate());
+                    list.add(emp);
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        
-        return false;
+
+        return list;
     }
 }

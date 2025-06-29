@@ -29,6 +29,11 @@ public class EmpBean implements Serializable {
     private String postName;    // 役職名（post.POST_NAME）
     private String roleName;    // ロール名（role.ROLE_NAME）
 
+    // --- 休暇付与のための日数表示に使用する追加フィールド ---
+    private int grantedDays;
+    private boolean canGrant;         // 付与可能か
+
+
     /**
      * デフォルトコンストラクタ
      */
@@ -213,4 +218,24 @@ public class EmpBean implements Serializable {
     public void setPostNo(String postNo) {
         this.postId = postNo;
     }
+    
+    /**
+     * 休暇付与管理画面の表示用
+     */
+    public int getGrantedDays() {
+        return grantedDays;
+    }
+
+    public void setGrantedDays(int grantedDays) {
+        this.grantedDays = grantedDays;
+    }
+    
+    public boolean isCanGrant() {
+    	return canGrant;
+    }
+    
+    public void setCanGrant(boolean canGrant) {
+    	this.canGrant = canGrant;
+    }
+    
 }
