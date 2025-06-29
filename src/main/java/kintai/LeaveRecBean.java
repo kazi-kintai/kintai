@@ -8,7 +8,7 @@ public class LeaveRecBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int leaveId;
-    private String empNo;
+    private String empId;
     private int leaveTypeId;
     private Date startDate;
     private Date endDate;
@@ -33,11 +33,11 @@ public class LeaveRecBean implements Serializable {
         this.leaveId = leaveId;
     }
 
-    public String getEmpNo() {
-        return empNo;
+    public String getEmpId() {
+        return empId;
     }
-    public void setEmpNo(String empNo) {
-        this.empNo = empNo;
+    public void setEmpId(String empId) {
+        this.empId = empId;
     }
 
     public int getLeaveTypeId() {

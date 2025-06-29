@@ -48,6 +48,11 @@ public class LeaveTypeManageServlet extends HttpServlet {
         try {
             switch (action) {
                 case "add": {
+                	String idStr = request.getParameter("leaveTypeId");
+                	if (idStr == null || idStr.isBlank()) {
+                	    message = "休日種別IDが入力されていません。";
+                	    break;
+                	}
                     int id = Integer.parseInt(request.getParameter("leaveTypeId"));
                     String name = request.getParameter("leaveTypeName");
                     boolean isPaid = "true".equals(request.getParameter("isPaid"));

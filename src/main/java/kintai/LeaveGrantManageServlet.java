@@ -48,57 +48,89 @@ public class LeaveGrantManageServlet extends HttpServlet {
         LocalDate grantDateForAnnual = LocalDate.of(grantDate.getYear(), 7, 1);
         LocalDate grantDateForSpecial = LocalDate.of(grantDate.getYear(), 7, 1);
         
+        String showAllStr = request.getParameter("showAll");
+        boolean showAll = "true".equals(showAllStr);
+        
         List<EmpBean> allEmp = empDao.findAllFullTimeEmployees();
+        
         List<EmpBean> unissuedList = new ArrayList<>();
 
         int unissuedAnnual = 0;
         int unissuedInitial = 0;
         int unissuedSpecial = 0;
+        int unissuedSubstitute = 0;
 
         for (EmpBean emp : allEmp) {
-        	// 年次有給休暇未付与判定
-        	boolean notGrantedAnnual = !grantDao.alreadyGranted(emp.getEmpId(), grantDateForAnnual, LeaveGrantDao.LEAVE_TYPE_ANNUAL);
+            boolean canGrantCurrent = false;
 
-        	// 特別休暇未付与判定
-        	boolean notGrantedSpecial = (grantDate.isEqual(grantDateForSpecial) || grantDate.isAfter(grantDateForSpecial))
-        	    && !grantDao.alreadyGranted(emp.getEmpId(), grantDateForSpecial, LeaveGrantDao.LEAVE_TYPE_SPECIAL);
+            switch (leaveType) {
+                case "annual":
+                    boolean eligibleAnnual = grantDao.isEligible(emp, grantDateForAnnual);
+                    boolean alreadyAnnual = grantDao.alreadyGranted(emp.getEmpId(), grantDateForAnnual, LeaveGrantDao.LEAVE_TYPE_ANNUAL);
+                    canGrantCurrent = eligibleAnnual && !alreadyAnnual;
+                    if (canGrantCurrent) unissuedAnnual++;
+                    break;
 
-        	// 初回付与は従来どおり対象月日で判定
-        	LocalDate date3m = emp.getEmpDate().plusMonths(3);
-        	LocalDate date6m = emp.getEmpDate().plusMonths(6);
-        	boolean need3m = !grantDao.alreadyGranted(emp.getEmpId(), date3m, LeaveGrantDao.LEAVE_TYPE_INITIAL_3M)
-        	    && !grantDate.isBefore(date3m) && grantDao.isEligible(emp, date3m);
-        	boolean need6m = !grantDao.alreadyGranted(emp.getEmpId(), date6m, LeaveGrantDao.LEAVE_TYPE_INITIAL_6M)
-        	    && !grantDate.isBefore(date6m) && grantDao.isEligible(emp, date6m);
-            if (notGrantedSpecial) unissuedSpecial++;
-            if (need3m || need6m) unissuedInitial++;
+                case "initial":
+                    LocalDate date3m = emp.getEmpDate().plusMonths(3);
+                    LocalDate date6m = emp.getEmpDate().plusMonths(6);
+                    boolean need3m = !grantDao.alreadyGranted(emp.getEmpId(), date3m, LeaveGrantDao.LEAVE_TYPE_INITIAL_3M)
+                            && !grantDate.isBefore(date3m) && grantDao.isEligible(emp, date3m);
+                    boolean need6m = !grantDao.alreadyGranted(emp.getEmpId(), date6m, LeaveGrantDao.LEAVE_TYPE_INITIAL_6M)
+                            && !grantDate.isBefore(date6m) && grantDao.isEligible(emp, date6m);
+                    canGrantCurrent = need3m || need6m;
+                    if (canGrantCurrent) unissuedInitial++;
+                    break;
 
-            if ("preview".equals(mode)) {
-                switch (leaveType) {
-                    case "annual":
-                        if (notGrantedAnnual) unissuedList.add(emp);
-                        break;
-                    case "initial":
-                        if (need3m || need6m) unissuedList.add(emp);
-                        break;
-                    case "special":
-                        if (notGrantedSpecial) unissuedList.add(emp);
-                        break;
-                }
+                case "special":
+                    boolean afterSpecialDate = (grantDate.isEqual(grantDateForSpecial) || grantDate.isAfter(grantDateForSpecial));
+                    boolean alreadySpecial = grantDao.alreadyGranted(emp.getEmpId(), grantDateForSpecial, LeaveGrantDao.LEAVE_TYPE_SPECIAL);
+                    canGrantCurrent = afterSpecialDate && !alreadySpecial;
+                    if (canGrantCurrent) unissuedSpecial++;
+                    break;
+
+                case "substitute":
+                    boolean notGrantedSubstitute = grantDao.isSubstituteLeaveNotGranted(emp, grantDate);
+                    canGrantCurrent = notGrantedSubstitute;
+                    if (canGrantCurrent) unissuedSubstitute++;
+                    break;
+
+                default:
+                    canGrantCurrent = false;
+                    break;
+            }
+
+            emp.setCanGrant(canGrantCurrent);
+
+            // showAll が trueなら付与可・不可にかかわらず含める
+            if (canGrantCurrent || showAll) {
+                emp.setCanGrant(canGrantCurrent);
+                int days = grantDao.calcGrantedDays(emp, switch (leaveType) {
+                    case "annual" -> LeaveGrantDao.LEAVE_TYPE_ANNUAL;
+                    case "initial" -> LeaveGrantDao.LEAVE_TYPE_INITIAL_3M; 
+                    case "special" -> LeaveGrantDao.LEAVE_TYPE_SPECIAL;
+                    case "substitute" -> LeaveGrantDao.LEAVE_TYPE_SUBSTITUTE;
+                    default -> 0;
+                });
+                emp.setGrantedDays(days);
+
+                unissuedList.add(emp);
             }
         }
-
+        
         request.setAttribute("unissuedAnnual", unissuedAnnual);
         request.setAttribute("unissuedInitial", unissuedInitial);
         request.setAttribute("unissuedSpecial", unissuedSpecial);
+        request.setAttribute("unissuedSubstitute", unissuedSubstitute);
         request.setAttribute("leaveType", leaveType);
-
+        request.setAttribute("showAll", showAll);
+        
         if ("preview".equals(mode)) {
             request.setAttribute("unissuedList", unissuedList);
             request.setAttribute("mode", "preview");
         }
 
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/leave_grant.jsp");
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/leave_grant_manage.jsp");
         dispatcher.forward(request, response);
     }
 
@@ -141,14 +173,26 @@ public class LeaveGrantManageServlet extends HttpServlet {
 	                    if (grantDao.grantSpecialLeave(emp, grantDateForSpecial, loginUser)) grantedCount++;
 	                }
 	                break;
+	            case "substitute":
+	                int added = grantDao.grantAllPendingCompLeaves(emp, grantDate, loginUser); // 付与すべき分すべて
+	                grantedCount += added;
+	                break;
             }
         }
 
+        String leaveTypeName = switch (leaveType) {
+        case "annual" -> "年次有給休暇";
+        case "initial" -> "初回付与休暇（3・6か月）";
+        case "special" -> "特別休暇";
+        case "substitute" -> "代休";
+        default -> leaveType;
+        };
+        
         if (grantedCount > 0) {
-            request.setAttribute("message", grantedCount + "名に「" + leaveType + "」休暇を付与しました。");
+            request.setAttribute("message", grantedCount + "名に" + leaveTypeName + "を付与しました");
             request.setAttribute("success", true);
         } else {
-            request.setAttribute("message", "該当する従業員がいなかったか、すでに付与済みです。");
+            request.setAttribute("message", "該当する従業員がいなかったか、すでに付与済みです");
             request.setAttribute("success", false);
         }
 
@@ -157,7 +201,6 @@ public class LeaveGrantManageServlet extends HttpServlet {
         request.setAttribute("leaveType", leaveType);
         request.setAttribute("grantDate", grantDate); 
 
-        RequestDispatcher dispatcher = request.getRequestDispatcher("/web/leave_grant.jsp");
-        dispatcher.forward(request, response);
+        doGet(request, response);
     }
 }

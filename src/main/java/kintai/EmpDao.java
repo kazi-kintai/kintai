@@ -388,21 +388,21 @@ public class EmpDao {
     public List<EmpBean> findAllFullTimeEmployees() {
         List<EmpBean> list = new ArrayList<>();
 
-        String sql = "SELECT * FROM emp WHERE employment_type = ? AND is_deleted = FALSE"; // employment_type=正社員
+        String sql = "SELECT * FROM emp WHERE emp_type = ? AND IS_ACTIVE = TRUE"; // emp_type=正社員
         try ( Connection conn = db.getConnection();
               PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, "正社員");
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     EmpBean emp = new EmpBean();
-                    emp.setEmpId(rs.getString("empno"));
-                    emp.setEmpName(rs.getString("empname"));
-                    emp.setDeptNo(rs.getString("deptno"));
-                    emp.setPostNo(rs.getString("postno"));
-                    emp.setRoleId(rs.getInt("roleid"));
+                    emp.setEmpId(rs.getString("emp_id"));
+                    emp.setEmpName(rs.getString("emp_name"));
+                    emp.setDeptNo(rs.getString("dept_id"));
+                    emp.setPostNo(rs.getString("post_id"));
+                    emp.setRoleId(rs.getInt("role_id"));
                     emp.setPass(rs.getString("pass"));
                     emp.setMail(rs.getString("mail"));
-                    emp.setEmpDate(rs.getDate("empdate").toLocalDate());
+                    emp.setEmpDate(rs.getDate("emp_date").toLocalDate());
                     list.add(emp);
                 }
             }

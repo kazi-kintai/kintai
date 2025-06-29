@@ -3,7 +3,7 @@ package kintai;
 import java.time.LocalDate;
 
 public class LeaveBalanceBean {
-    private String empNo;
+    private String empId;
     private int leaveTypeId;
     private String leaveTypeName;
     private LocalDate grantedDate;      // java.sql.Dateで統一
@@ -11,8 +11,8 @@ public class LeaveBalanceBean {
     private int grantedDays;       // 付与日数
     private int usedDays;
 
-    public String getEmpNo() { return empNo; }
-    public void setEmpNo(String empNo) { this.empNo = empNo; }
+    public String getEmpId() { return empId; }
+    public void setEmpId(String empId) { this.empId = empId; }
 
     public int getLeaveTypeId() { return leaveTypeId; }
     public void setLeaveTypeId(int leaveTypeId) { this.leaveTypeId = leaveTypeId; }

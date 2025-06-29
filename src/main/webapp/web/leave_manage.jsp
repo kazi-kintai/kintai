@@ -225,8 +225,8 @@
         <thead>
         <tr>
             <th>ID</th>
-            <th>名称</th>
-            <th>有給</th>
+            <th>休日種別名</th>
+            <th>有給/無給</th>
             <th>操作</th>
         </tr>
         </thead>
@@ -253,13 +253,15 @@
     </td>
 </tr>
 
-<%-- 編集フォーム（初期は非表示、1行にまとめる） --%>
+<%-- 編集フォーム（初期は非表示） --%>
 <tr id="editRow-<%= lt.getLeaveTypeId() %>" style="display:none;">
     <td colspan="4">
         <form method="post" action="<%= request.getContextPath() %>/leaveTypeManage"
+        
               onsubmit="return confirmUpdate(this, '<%= lt.getLeaveTypeId() %>')">
             <input type="hidden" name="action" value="update">
-            <input type="text" name="leaveTypeId" value="<%= lt.getLeaveTypeId() %>" readonly>
+            <input type="hidden" name="originalLeaveTypeId" value="<%= lt.getLeaveTypeId() %>">
+            <input type="number" name="leaveTypeId" value="<%= lt.getLeaveTypeId() %>" required>
             <input type="text" name="leaveTypeName" value="<%= lt.getLeaveTypeName() %>" required>
             <select name="isPaid">
                 <option value="true" <%= lt.isPaid() ? "selected" : "" %>>有給</option>

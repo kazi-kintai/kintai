@@ -56,10 +56,9 @@ public class KintaiTestDataGeneratorDB {
                         }
 
                         double prob = rand.nextDouble();
+                     // まずは出勤予定日を確定的に勤務データとして挿入
                         if (isWork) {
-                            if (prob < emp.workRate) {
-                                insertKintai(conn, emp.empNo, currentDate);
-                            }
+                            insertKintai(conn, emp.empNo, currentDate);
                         } else {
                             if (prob < emp.holidayWorkRate) {
                                 insertKintai(conn, emp.empNo, currentDate);
@@ -82,19 +81,22 @@ public class KintaiTestDataGeneratorDB {
     }
 
     // calendar_event からその日が出勤日（is_work = true）か取得
-    static Boolean isWorkingDay(LocalDate date, Connection conn) {
+    static boolean isWorkingDay(LocalDate date, Connection conn) {
+        int dow = date.getDayOfWeek().getValue();
+        boolean defaultIsWork = (dow >= 1 && dow <= 5); // 平日は勤務日、土日は休日
         String sql = "SELECT is_work FROM calendar_event WHERE event_date = ? AND is_deleted = FALSE";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setDate(1, Date.valueOf(date));
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
+                    // 例外的に設定されている勤務情報で上書き
                     return rs.getBoolean("is_work");
                 }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null; // DBに記録なし → 呼び出し元で曜日で判断
+        return defaultIsWork;
     }
 
     static void insertKintai(Connection conn, String empId, LocalDate workDate) throws SQLException {

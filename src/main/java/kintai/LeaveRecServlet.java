@@ -2,7 +2,6 @@ package kintai;
 
 import java.io.IOException;
 import java.sql.Date;
-import java.util.List;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
@@ -14,8 +13,8 @@ import jakarta.servlet.http.HttpSession;
 @WebServlet("/leaveRec")
 public class LeaveRecServlet extends HttpServlet {
 
-    private final LeaveRecDao dao = new LeaveRecDao(); // 申請処理
-    private final LeaveBalanceDao balanceDao = new LeaveBalanceDao(); // 残日数・期限一覧
+    private final LeaveRecDao dao = new LeaveRecDao();
+    private final LeaveBalanceDao balanceDao = new LeaveBalanceDao();
     private final EmpDao empDao = new EmpDao();
     private final DeptDao deptDao = new DeptDao();
     private final PostDao postDao = new PostDao();
@@ -31,52 +30,37 @@ public class LeaveRecServlet extends HttpServlet {
             return;
         }
 
+        // --- PRG対応：セッションからメッセージを取得してリクエストに渡す ---
+        if (session.getAttribute("message") != null) {
+            request.setAttribute("message", session.getAttribute("message"));
+            request.setAttribute("success", session.getAttribute("success"));
+            session.removeAttribute("message");
+            session.removeAttribute("success");
+        }
+
         try {
-            // 部署・役職パラメータを取得（検索フォームから）
             String deptId = request.getParameter("dept");
             String postId = request.getParameter("post");
+            String empId = request.getParameter("empId");
 
-            // 部署・役職でフィルターした社員リスト取得
-            List<EmpBean> empList = empDao.findByFilters(deptId, postId);
-
-            // 共通属性セット（部署一覧、役職一覧、休暇種別一覧）
-            request.setAttribute("empList", empList);
+            request.setAttribute("empList", empDao.findByFilters(deptId, postId));
             request.setAttribute("deptList", deptDao.findAll());
             request.setAttribute("postList", postDao.findAll());
             request.setAttribute("leaveTypeList", typeDao.findAll());
-
-            // 選択された部署・役職をJSPへ保持
             request.setAttribute("selectedDept", deptId);
             request.setAttribute("selectedPost", postId);
+            request.setAttribute("selectedEmpId", empId);
 
-            // 従業員選択
-            String empNo = (String) request.getAttribute("selectedEmpNo");
-            if (empNo == null) empNo = "";
-
-            if (!empNo.isEmpty()) {
-                request.setAttribute("remainingPaidLeave", dao.fetchRemainingLeave(empNo, LeaveRecDao.LEAVE_TYPE_PAID));
-                request.setAttribute("remainingSpecialLeave", dao.fetchRemainingLeave(empNo, LeaveRecDao.LEAVE_TYPE_SPECIAL));
-                request.setAttribute("remainingCompLeave", dao.fetchRemainingLeave(empNo, LeaveRecDao.LEAVE_TYPE_COMP));
-
-                List<LeaveBalanceBean> balanceList = balanceDao.getLeaveBalances(empNo);
-                request.setAttribute("balanceList", balanceList);
-
-                List<LeaveRecBean> leaveList = dao.getLeaveList(empNo);
-                request.setAttribute("leaveList", leaveList);
-            } else {
-                // 初期表示用
-                request.setAttribute("remainingPaidLeave", 0);
-                request.setAttribute("remainingSpecialLeave", 0);
-                request.setAttribute("remainingCompLeave", 0);
-                request.setAttribute("balanceList", null);
-                request.setAttribute("leaveList", null);
+            if (empId != null && !empId.isEmpty()) {
+                request.setAttribute("balanceList", balanceDao.getLeaveBalances(empId));
+                request.setAttribute("leaveList", dao.getLeaveList(empId));
             }
-
         } catch (Exception e) {
-            request.setAttribute("errorMessage", "初期表示に失敗しました: " + e.getMessage());
+            request.setAttribute("message", "初期表示に失敗しました: + print" );
+            request.setAttribute("success", false);
         }
 
-        request.getRequestDispatcher("/web/leave_rec.jsp").forward(request, response);
+        request.getRequestDispatcher("/web/leave_rec_manage.jsp").forward(request, response);
     }
 
     @Override
@@ -84,7 +68,6 @@ public class LeaveRecServlet extends HttpServlet {
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
-
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
             response.sendRedirect(request.getContextPath() + "/web/login.jsp");
@@ -92,53 +75,81 @@ public class LeaveRecServlet extends HttpServlet {
         }
 
         String mode = request.getParameter("mode");
-        String empNo = request.getParameter("empNo");
-        if (empNo == null) empNo = "";
+        String empId = request.getParameter("empId");
+        if (empId == null) empId = "";
 
         try {
+            UserBean loginUser = (UserBean) session.getAttribute("user");
+
             switch (mode) {
-                case "add":
+                case "add": {
                     LeaveRecBean addBean = buildBean(request, false);
-                    UserBean addUser = (UserBean) session.getAttribute("user");
-                    addBean.setCreatedBy(addUser.getEmpId());
-                    addBean.setUpdatedBy(addUser.getEmpId());
-                    boolean inserted = dao.insertLeave(addBean);
-                    request.setAttribute(inserted ? "message" : "errorMessage",
-                            inserted ? "休暇申請を登録しました。" : "休暇申請の登録に失敗しました。");
-                    break;
+                    int daysRequested = calcDays(addBean);
+                    int remaining = balanceDao.calculateRemainingDays(empId, addBean.getLeaveTypeId());
 
-                case "update":
+                    if (daysRequested > remaining) {
+                        session.setAttribute("message", "申請日数が残日数を超えています");
+                        session.setAttribute("success", false);
+                        break;
+                    }
+
+                    addBean.setCreatedBy(loginUser.getEmpId());
+                    addBean.setUpdatedBy(loginUser.getEmpId());
+
+                    if (dao.insertLeave(addBean)) {
+                        balanceDao.consumeLeaveDays(empId, addBean.getLeaveTypeId(), daysRequested);
+                        session.setAttribute("message", "休暇申請を登録しました");
+                        session.setAttribute("success", true);
+                    } else {
+                        session.setAttribute("message", "休暇申請の登録に失敗しました");
+                        session.setAttribute("success", false);
+                    }
+                    break;
+                }
+
+                case "update": {
                     LeaveRecBean updBean = buildBean(request, true);
-                    UserBean updUser = (UserBean) session.getAttribute("user");
-                    updBean.setUpdatedBy(updUser.getEmpId());
-                    boolean updated = dao.updateLeave(updBean);
-                    request.setAttribute(updated ? "message" : "errorMessage",
-                            updated ? "休暇申請を更新しました。" : "休暇申請の更新に失敗しました。");
+                    updBean.setUpdatedBy(loginUser.getEmpId());
+                    
+                    if (dao.updateLeave(updBean)) {
+                    	dao.recalculateUsedDays(updBean.getEmpId(), updBean.getLeaveTypeId());
+                        session.setAttribute("message", "休暇申請を更新しました");
+                        session.setAttribute("success", true);
+                    } else {
+                        session.setAttribute("message", "更新に失敗しました");
+                        session.setAttribute("success", false);
+                    }
                     break;
+                }
 
-                case "delete":
+                case "delete": {
                     int leaveId = Integer.parseInt(request.getParameter("leaveId"));
-                    UserBean delUser = (UserBean) session.getAttribute("user");
-                    boolean deleted = dao.logicalDeleteLeave(leaveId, delUser.getEmpId());
-                    request.setAttribute(deleted ? "message" : "errorMessage",
-                            deleted ? "休暇申請を削除しました。" : "休暇申請の削除に失敗しました。");
-                    break;
+                    LeaveRecBean deletedLeave = dao.findById(leaveId);
 
-                case "search":
-                    request.setAttribute("selectedEmpNo", empNo);
-                    request.setAttribute("selectedDept", request.getParameter("dept"));
+                    if (dao.logicalDeleteLeave(leaveId, loginUser.getEmpId())) {
+                        dao.recalculateUsedDays(deletedLeave.getEmpId(), deletedLeave.getLeaveTypeId());
+                        session.setAttribute("message", "休暇申請を削除しました");
+                        session.setAttribute("success", true);
+                        empId = deletedLeave.getEmpId();
+                    } else {
+                        session.setAttribute("message", "削除に失敗しました");
+                        session.setAttribute("success", false);
+                    }
                     break;
+                }
 
                 default:
-                    request.setAttribute("errorMessage", "不正な操作が指定されました。");
+                    session.setAttribute("message", "不正な操作が指定されました");
+                    session.setAttribute("success", false);
                     break;
             }
-
         } catch (Exception e) {
-            request.setAttribute("errorMessage", "処理中にエラーが発生しました: " + e.getMessage());
+            session.setAttribute("message", "処理中にエラーが発生しました: " + e.getMessage());
+            session.setAttribute("success", false);
         }
 
-        doGet(request, response); // すべての最新情報を再取得・表示
+        // --- PRG対応：リダイレクトでGETへ遷移（パラメータで状態を維持） ---
+        response.sendRedirect(request.getContextPath() + "/leaveRec?empId=" + empId);
     }
 
     private LeaveRecBean buildBean(HttpServletRequest req, boolean includeId) {
@@ -146,18 +157,16 @@ public class LeaveRecServlet extends HttpServlet {
         if (includeId) {
             leave.setLeaveId(Integer.parseInt(req.getParameter("leaveId")));
         }
-        leave.setEmpNo(req.getParameter("empNo"));
+        leave.setEmpId(req.getParameter("empId"));
         leave.setLeaveTypeId(Integer.parseInt(req.getParameter("leaveTypeId")));
         leave.setStartDate(Date.valueOf(req.getParameter("startDate")));
         leave.setEndDate(Date.valueOf(req.getParameter("endDate")));
         leave.setReason(req.getParameter("reason"));
-        leave.setApprovedBy(null); // 承認処理は未実装
+        leave.setApprovedBy(null); // 現時点では未使用
         return leave;
     }
 
-    private void setCommonAttributes(HttpServletRequest request) throws Exception {
-        request.setAttribute("empList", empDao.findAll());
-        request.setAttribute("deptList", deptDao.findAll());
-        request.setAttribute("leaveTypeList", typeDao.findAll());
+    private int calcDays(LeaveRecBean bean) {
+        return (int) (bean.getEndDate().toLocalDate().toEpochDay() - bean.getStartDate().toLocalDate().toEpochDay() + 1);
     }
 }
