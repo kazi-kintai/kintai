@@ -92,8 +92,8 @@ public class ProjectDao {
      * @param projectBean 追加するプロジェクト情報
      * @return 追加に成功した場合true、失敗した場合false
      */
-    public boolean insert(ProjectBean projectBean) {
-        String sql = "INSERT INTO project (PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE) VALUES (?, ?, ?, ?)";
+    public boolean insert(ProjectBean projectBean, String createdBy, String updatedBy) {
+    	String sql = "INSERT INTO project (PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE, CREATED_BY, UPDATED_BY) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -118,6 +118,10 @@ public class ProjectDao {
                 ps.setNull(4, java.sql.Types.DATE);
             }
             
+            // 追加
+            ps.setString(5, createdBy);
+            ps.setString(6, updatedBy);
+            
             int count = ps.executeUpdate();
             return count > 0;
             
@@ -139,8 +143,8 @@ public class ProjectDao {
      * @param updateProject 更新するプロジェクト情報
      * @return 更新に成功した場合true、失敗した場合false
      */
-    public boolean update(ProjectBean updateProject) {
-        String sql = "UPDATE project SET PROJECT_NAME=?, BUDGET_AMOUNT=?, START_DATE=?, END_DATE=? WHERE PROJECT_ID = ?";
+    public boolean update(ProjectBean updateProject, String updatedBy) {
+        String sql = "UPDATE project SET PROJECT_NAME=?, BUDGET_AMOUNT=?, START_DATE=?, END_DATE=?, UPDATED_BY=? WHERE PROJECT_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -165,7 +169,9 @@ public class ProjectDao {
                 ps.setNull(4, java.sql.Types.DATE);
             }
             
-            ps.setInt(5, updateProject.getProjectId());
+            ps.setString(5, updatedBy);
+
+            ps.setInt(6, updateProject.getProjectId());
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -178,17 +184,18 @@ public class ProjectDao {
     }
     
     /**
-     * プロジェクトを削除する
+     * プロジェクトを論理削除する
      * @param projectId 削除するプロジェクトID
      * @return 削除に成功した場合true、失敗した場合false
      */
-    public boolean delete(String projectId) {
-        String sql = "DELETE FROM project WHERE PROJECT_ID = ?";
+    public boolean logicalDelete(int projectId, String updatedBy) {
+        String sql = "UPDATE project SET DELETED_FLAG = 1, UPDATED_BY = ? WHERE PROJECT_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, projectId);
+        	ps.setString(1, updatedBy);
+            ps.setInt(2, projectId);
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -211,12 +218,7 @@ public class ProjectDao {
      * @param projectId チェックするプロジェクトID
      * @return 既に存在する場合true、存在しない場合false
      */
-    public boolean exists(String projectId) {
-        try {
-            int id = Integer.parseInt(projectId);
-            return findByProjectId(id) != null;
-        } catch (NumberFormatException e) {
-            return false;
-        }
+    public boolean exists(int projectId) {
+        return findByProjectId(projectId) != null;
     }
 }

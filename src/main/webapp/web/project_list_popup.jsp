@@ -131,7 +131,7 @@
                             <td><%= (project.getProjectName() != null) ? project.getProjectName() : "情報なし" %></td>
                             <td style="text-align: right;">
                                 <%
-                                    int budget = project.getProjectBudget();
+                                    int budget = project.getBudgetAmount();
                                     out.print(budget != 0 ? nf.format(budget) + "円" : "情報なし");
                                 %>
                             </td>
