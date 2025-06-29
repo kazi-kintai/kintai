@@ -618,7 +618,7 @@
 
         <!-- 今日の打刻ウィジェット -->
         <div class="widget punch-widget">
-          <h2>今日の打刻</h2>
+          <h2>本日分の打刻</h2>
           <div class="current-time" id="currentTime"></div>
           <div class="punch-buttons">
             <a
@@ -640,10 +640,7 @@
         <!-- パスワード変更ウィジェット -->
         <div class="widget password-widget">
           <h2>アカウント設定</h2>
-          <p style="color: #666; margin-bottom: 15px; font-size: 0.9em">
-            パスワードの変更や<br />
-            アカウント設定を行えます
-          </p>
+
           <a
             href="<%= request.getContextPath() %>/PasswordChangeServlet"
             class="btn"

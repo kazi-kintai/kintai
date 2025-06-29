@@ -13,6 +13,9 @@ public class BreakBean implements Serializable {
     private int kintaiRecId;     // breakテーブルの「KINTAI_REC_ID」列に対応
     private Time breakStart;     // breakテーブルの「BREAK_START」列に対応
     private Time breakEnd;       // breakテーブルの「BREAK_END」列に対応
+    
+    private String createdBy;
+    private String updatedBy;
 
     // --- 以下、各フィールドのアクセサメソッド (getter/setter) ---
 
@@ -56,6 +59,14 @@ public class BreakBean implements Serializable {
     public void setBreakEnd(Time breakEnd) {
         this.breakEnd = breakEnd;
     }
+    
+    
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+    
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+
 
     // JSPとの互換性のための追加メソッド
     /**

@@ -249,7 +249,7 @@
                 <label for="reason">理由：</label>
                 <textarea id="reason" name="reason" placeholder="理由を入力してください" required></textarea>
             </div>
-            <button type="submit" class="btn btn-primary">登録する</button>
+            <button type="submit" class="btn btn-primary" onclick="return confirm('この内容で登録しますか？');">登録する</button>
         </form>
     <% } %>
 

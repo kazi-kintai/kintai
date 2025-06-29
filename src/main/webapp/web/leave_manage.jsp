@@ -203,7 +203,7 @@
             <input type="hidden" name="action" value="add">
             <div class="form-group">
                 <label>種別ID：</label>
-                <input type="text" name="leaveTypeId" maxlength="5" required>
+                <input type="number" name="leaveTypeId" maxlength="5" required>
             </div>
             <div class="form-group">
                 <label>種別名：</label>
