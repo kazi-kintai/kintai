@@ -256,6 +256,29 @@ public class EmpDao {
     }
     
     /**
+     * 削除された社員を復旧する
+     * @param empId 復旧する社員番号
+     * @return 復旧に成功した場合true、失敗した場合false
+     */
+    public boolean restore(String empId) {
+        String sql = "UPDATE emp SET IS_ACTIVE = true, LEAVE_DATE = NULL, UPDATED_AT = NOW(), UPDATED_BY = 'admin' WHERE EMP_ID = ? AND IS_ACTIVE = false";
+        
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setString(1, empId);
+            
+            int count = ps.executeUpdate();
+            return count > 0;
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        
+        return false;
+    }
+    
+    /**
      * 社員番号の重複をチェックする
      * @param empId チェックする社員番号
      * @return 既に存在する場合true、存在しない場合false
@@ -379,6 +402,63 @@ public class EmpDao {
         return empList;
     }
     
+    
+    /**
+     * 削除された社員情報を取得する（部署名、役職名、ロール名も含む）
+     * @return 削除された社員情報のリスト
+     */
+    public List<EmpBean> findDeleted() {
+        List<EmpBean> empList = new ArrayList<>();
+        String sql = "SELECT e.EMP_ID, e.EMP_NAME, e.DEPT_ID, e.POST_ID, e.ROLE_ID, e.EMP_TYPE, " +
+                     "e.PASS, e.MAIL, e.EMP_DATE, e.IS_ACTIVE, e.LEAVE_DATE, " +
+                     "d.DEPT_NAME, p.POST_NAME, r.ROLE_NAME " +
+                     "FROM emp e " +
+                     "LEFT JOIN dept d ON e.DEPT_ID = d.DEPT_ID " +
+                     "LEFT JOIN post p ON e.POST_ID = p.POST_ID " +
+                     "LEFT JOIN role r ON e.ROLE_ID = r.ROLE_ID " +
+                     "WHERE e.IS_ACTIVE = false " +
+                     "ORDER BY e.LEAVE_DATE DESC, e.EMP_ID";
+        
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            
+            while (rs.next()) {
+                EmpBean emp = new EmpBean();
+                emp.setEmpId(rs.getString("EMP_ID"));
+                emp.setEmpName(rs.getString("EMP_NAME"));
+                emp.setDeptId(rs.getString("DEPT_ID"));
+                emp.setPostId(rs.getString("POST_ID"));
+                emp.setRoleId(rs.getInt("ROLE_ID"));
+                emp.setEmpType(rs.getString("EMP_TYPE"));
+                emp.setPass(rs.getString("PASS"));
+                emp.setMail(rs.getString("MAIL"));
+                
+                // EMP_DATEはNULLの場合もあるので、nullチェック
+                Date empDateSql = rs.getDate("EMP_DATE");
+                if (empDateSql != null) {
+                    emp.setEmpDate(empDateSql.toLocalDate());
+                } else {
+                    emp.setEmpDate(null);
+                }
+                
+                emp.setActive(rs.getBoolean("IS_ACTIVE"));
+                Date leaveDateSql = rs.getDate("LEAVE_DATE");
+                if (leaveDateSql != null) {
+                    emp.setLeaveDate(leaveDateSql.toLocalDate());
+                }
+                
+                emp.setDeptName(rs.getString("DEPT_NAME"));
+                emp.setPostName(rs.getString("POST_NAME"));
+                emp.setRoleName(rs.getString("ROLE_NAME"));
+                empList.add(emp);
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return empList;
+    }
     
     /**
      * 契約形態で社員情報を検索する

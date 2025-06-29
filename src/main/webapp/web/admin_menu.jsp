@@ -938,7 +938,7 @@
         
         <div class="dashboard">
             <h1>
-                <span class="dashboard-title">管理者メニュー</span>
+                <span class="dashboard-title">管理職メニュー</span>
                 <span class="system-trigger" onclick="toggleSlidingSidebar()">
                     <span class="system-label">システム概要</span>
                     <span class="system-arrow">▶</span>

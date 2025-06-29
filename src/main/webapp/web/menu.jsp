@@ -174,8 +174,25 @@
       }
 
       /* パスワード変更ウィジェット */
+      .password-widget {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        min-height: 140px;
+      }
+
+      .password-widget h2 {
+        text-align: center;
+        margin: 0 0 20px 0;
+        border-bottom: none;
+        padding-bottom: 0;
+      }
+
       .password-widget .btn {
-        width: 100%;
+        width: 80%;
+        max-width: 200px;
         padding: 12px;
         background: #007bff;
         color: white;
@@ -187,10 +204,18 @@
         display: block;
         text-align: center;
         transition: background-color 0.3s;
+        margin-bottom: 10px;
       }
 
       .password-widget .btn:hover {
         background: #0056b3;
+      }
+
+      .password-widget .account-info {
+        color: #666;
+        font-size: 0.85em;
+        margin-top: 10px;
+        line-height: 1.4;
       }
 
       /* 記録表示ウィジェット */
@@ -618,7 +643,7 @@
 
         <!-- 今日の打刻ウィジェット -->
         <div class="widget punch-widget">
-          <h2>今日の打刻</h2>
+          <h2>本日分の打刻</h2>
           <div class="current-time" id="currentTime"></div>
           <div class="punch-buttons">
             <a
@@ -640,15 +665,16 @@
         <!-- パスワード変更ウィジェット -->
         <div class="widget password-widget">
           <h2>アカウント設定</h2>
-          <p style="color: #666; margin-bottom: 15px; font-size: 0.9em">
-            パスワードの変更や<br />
-            アカウント設定を行えます
-          </p>
           <a
             href="<%= request.getContextPath() %>/PasswordChangeServlet"
             class="btn"
             >パスワード変更</a
           >
+          <div class="account-info">
+            セキュリティ向上のため<br />
+            定期的なパスワード変更を<br />
+            推奨しています
+          </div>
         </div>
 
         <!-- 勤怠記録概要ウィジェット -->
@@ -657,7 +683,7 @@
             <a
               href="<%= request.getContextPath() %>/KintaiRecServlet"
               class="view-all-btn"
-              ><% if (user.getRoleId() == 1) { %>従業員別勤怠記録表示<% } else if (user.getRoleId() == 2) { %>部下の勤怠記録表示<% } else { %>勤怠記録表示<% } %></a
+              ><% if (user.getRoleId() == 1) { %>従業員別勤怠記録表示<% } else if (user.getRoleId() == 2) { %>勤怠記録表示(自分/部下)<% } else { %>勤怠記録表示<% } %></a
             >
             <a
               href="<%= request.getContextPath() %>/KinmuManageServlet"
