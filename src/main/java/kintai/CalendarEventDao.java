@@ -24,8 +24,8 @@ public class CalendarEventDao {
      */
     public List<CalendarEventBean> findAll() {
         List<CalendarEventBean> eventList = new ArrayList<>();
-        // SELECT文にREPEAT_RULE_IDを追加
-        String sql = "SELECT EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID FROM calendar_event ORDER BY EVENT_DATE DESC";
+        // SELECT文にREPEAT_RULE_IDとIS_SYSTEM_DEFINEDを追加
+        String sql = "SELECT EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID, IS_SYSTEM_DEFINED FROM calendar_event WHERE IS_DELETED = FALSE ORDER BY EVENT_DATE DESC";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -39,6 +39,8 @@ public class CalendarEventDao {
                 // REPEAT_RULE_IDを取得し、Beanにセット
                 Integer repeatRuleId = rs.getObject("REPEAT_RULE_ID", Integer.class); // nullの場合も対応
                 event.setRepeatRuleId(repeatRuleId);
+                // IS_SYSTEM_DEFINEDを取得し、Beanにセット
+                event.setSystemDefined(rs.getBoolean("IS_SYSTEM_DEFINED"));
                 eventList.add(event);
             }
 
@@ -55,8 +57,8 @@ public class CalendarEventDao {
      */
     public CalendarEventBean findByEventDate(LocalDate eventDate) {
         CalendarEventBean event = null;
-        // SELECT文にREPEAT_RULE_IDを追加
-        String sql = "SELECT EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID FROM calendar_event WHERE EVENT_DATE = ?";
+        // SELECT文にREPEAT_RULE_IDとIS_SYSTEM_DEFINEDを追加
+        String sql = "SELECT EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID, IS_SYSTEM_DEFINED FROM calendar_event WHERE EVENT_DATE = ? AND IS_DELETED = FALSE";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -72,6 +74,8 @@ public class CalendarEventDao {
                     // REPEAT_RULE_IDを取得し、Beanにセット
                     Integer repeatRuleId = rs.getObject("REPEAT_RULE_ID", Integer.class); // nullの場合も対応
                     event.setRepeatRuleId(repeatRuleId);
+                    // IS_SYSTEM_DEFINEDを取得し、Beanにセット
+                    event.setSystemDefined(rs.getBoolean("IS_SYSTEM_DEFINED"));
                 }
             }
 

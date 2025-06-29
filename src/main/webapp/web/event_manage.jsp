@@ -409,9 +409,9 @@
                     errorMessageDiv.innerHTML = "繰り返し間隔は1以上の半角数字で入力してください。";
                     return false;
                 }
-                if (repeatType === 'WEEKLY' || repeatType === 'MONTHLY_WEEKDAY') {
+                if (repeatType === 'WEEKLY') {
                     if (repeatDaysOfWeek.length === 0) {
-                        errorMessageDiv.innerHTML = "毎週または毎月（曜日指定）の場合、繰り返し曜日を1つ以上選択してください。";
+                        errorMessageDiv.innerHTML = "毎週の場合、繰り返し曜日を1つ以上選択してください。";
                         return false;
                     }
                 }
@@ -444,9 +444,9 @@
                     errorMessageDiv.innerHTML = "繰り返し間隔は1以上の半角数字で入力してください。";
                     return false;
                 }
-                if (repeatType === 'WEEKLY' || repeatType === 'MONTHLY_WEEKDAY') {
+                if (repeatType === 'WEEKLY') {
                     if (repeatDaysOfWeek.length === 0) {
-                        errorMessageDiv.innerHTML = "毎週または毎月（曜日指定）の場合、繰り返し曜日を1つ以上選択してください。";
+                        errorMessageDiv.innerHTML = "毎週の場合、繰り返し曜日を1つ以上選択してください。";
                         return false;
                     }
                 }

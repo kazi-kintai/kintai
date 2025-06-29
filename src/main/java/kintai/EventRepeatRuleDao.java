@@ -24,7 +24,7 @@ public class EventRepeatRuleDao {
      */
     public List<EventRepeatRuleBean> findAll() {
         List<EventRepeatRuleBean> ruleList = new ArrayList<>();
-        String sql = "SELECT RULE_ID, EVENT_DATE_FK, REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE, CREATED_AT, UPDATED_AT FROM event_repeat_rule ORDER BY RULE_ID";
+        String sql = "SELECT REPEAT_RULE_ID, REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE, CREATED_AT, UPDATED_AT FROM event_repeat_rule ORDER BY REPEAT_RULE_ID";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -32,8 +32,7 @@ public class EventRepeatRuleDao {
 
             while (rs.next()) {
                 EventRepeatRuleBean rule = new EventRepeatRuleBean();
-                rule.setRuleId(rs.getInt("RULE_ID"));
-                rule.setEventDateFk(rs.getDate("EVENT_DATE_FK").toLocalDate());
+                rule.setRuleId(rs.getInt("REPEAT_RULE_ID"));
                 rule.setRepeatType(rs.getString("REPEAT_TYPE"));
                 rule.setRepeatInterval(rs.getInt("REPEAT_INTERVAL"));
                 rule.setRepeatDaysOfWeek(rs.getString("REPEAT_DAYS_OF_WEEK"));
@@ -63,7 +62,7 @@ public class EventRepeatRuleDao {
      */
     public EventRepeatRuleBean findByRuleId(int ruleId) {
         EventRepeatRuleBean rule = null;
-        String sql = "SELECT RULE_ID, EVENT_DATE_FK, REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE, CREATED_AT, UPDATED_AT FROM event_repeat_rule WHERE RULE_ID = ?";
+        String sql = "SELECT REPEAT_RULE_ID, REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE, CREATED_AT, UPDATED_AT FROM event_repeat_rule WHERE REPEAT_RULE_ID = ?";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -73,8 +72,7 @@ public class EventRepeatRuleDao {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     rule = new EventRepeatRuleBean();
-                    rule.setRuleId(rs.getInt("RULE_ID"));
-                    rule.setEventDateFk(rs.getDate("EVENT_DATE_FK").toLocalDate());
+                    rule.setRuleId(rs.getInt("REPEAT_RULE_ID"));
                     rule.setRepeatType(rs.getString("REPEAT_TYPE"));
                     rule.setRepeatInterval(rs.getInt("REPEAT_INTERVAL"));
                     rule.setRepeatDaysOfWeek(rs.getString("REPEAT_DAYS_OF_WEEK"));
@@ -103,20 +101,19 @@ public class EventRepeatRuleDao {
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(EventRepeatRuleBean rule) {
-        String sql = "INSERT INTO event_repeat_rule (EVENT_DATE_FK, REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, ?, ?, ?, NOW(), 'admin', NOW(), 'admin')";
+        String sql = "INSERT INTO event_repeat_rule (REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, ?, ?, NOW(), 'admin', NOW(), 'admin')";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setDate(1, Date.valueOf(rule.getEventDateFk()));
-            ps.setString(2, rule.getRepeatType());
-            ps.setInt(3, rule.getRepeatInterval());
-            ps.setString(4, rule.getRepeatDaysOfWeek());
+            ps.setString(1, rule.getRepeatType());
+            ps.setInt(2, rule.getRepeatInterval());
+            ps.setString(3, rule.getRepeatDaysOfWeek());
             
             if (rule.getRepeatEndDate() != null) {
-                ps.setDate(5, Date.valueOf(rule.getRepeatEndDate()));
+                ps.setDate(4, Date.valueOf(rule.getRepeatEndDate()));
             } else {
-                ps.setNull(5, java.sql.Types.DATE);
+                ps.setNull(4, java.sql.Types.DATE);
             }
 
             int count = ps.executeUpdate();
@@ -141,22 +138,21 @@ public class EventRepeatRuleDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(EventRepeatRuleBean rule) {
-        String sql = "UPDATE event_repeat_rule SET EVENT_DATE_FK = ?, REPEAT_TYPE = ?, REPEAT_INTERVAL = ?, REPEAT_DAYS_OF_WEEK = ?, REPEAT_END_DATE = ?, UPDATED_AT = NOW(), UPDATED_BY = 'admin' WHERE RULE_ID = ?";
+        String sql = "UPDATE event_repeat_rule SET REPEAT_TYPE = ?, REPEAT_INTERVAL = ?, REPEAT_DAYS_OF_WEEK = ?, REPEAT_END_DATE = ?, UPDATED_AT = NOW(), UPDATED_BY = 'admin' WHERE REPEAT_RULE_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setDate(1, Date.valueOf(rule.getEventDateFk()));
-            ps.setString(2, rule.getRepeatType());
-            ps.setInt(3, rule.getRepeatInterval());
-            ps.setString(4, rule.getRepeatDaysOfWeek());
+            ps.setString(1, rule.getRepeatType());
+            ps.setInt(2, rule.getRepeatInterval());
+            ps.setString(3, rule.getRepeatDaysOfWeek());
             
             if (rule.getRepeatEndDate() != null) {
-                ps.setDate(5, Date.valueOf(rule.getRepeatEndDate()));
+                ps.setDate(4, Date.valueOf(rule.getRepeatEndDate()));
             } else {
-                ps.setNull(5, java.sql.Types.DATE);
+                ps.setNull(4, java.sql.Types.DATE);
             }
-            ps.setInt(6, rule.getRuleId());
+            ps.setInt(5, rule.getRuleId());
 
             int count = ps.executeUpdate();
             return count > 0;
@@ -173,7 +169,7 @@ public class EventRepeatRuleDao {
      * @return 削除に成功した場合true、失敗した場合false
      */
     public boolean delete(int ruleId) {
-        String sql = "DELETE FROM event_repeat_rule WHERE RULE_ID = ?";
+        String sql = "DELETE FROM event_repeat_rule WHERE REPEAT_RULE_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -196,42 +192,4 @@ public class EventRepeatRuleDao {
         return false;
     }
 
-    /**
-     * 指定された主イベント日付に紐づく繰り返しルールを検索します。
-     * @param eventDateFk 主イベント日付
-     * @return 繰り返しルール。見つからない場合はnull
-     */
-    public EventRepeatRuleBean findByEventDateFk(LocalDate eventDateFk) {
-        EventRepeatRuleBean rule = null;
-        String sql = "SELECT RULE_ID, EVENT_DATE_FK, REPEAT_TYPE, REPEAT_INTERVAL, REPEAT_DAYS_OF_WEEK, REPEAT_END_DATE, CREATED_AT, UPDATED_AT FROM event_repeat_rule WHERE EVENT_DATE_FK = ?";
-
-        try (Connection conn = db.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setDate(1, Date.valueOf(eventDateFk));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    rule = new EventRepeatRuleBean();
-                    rule.setRuleId(rs.getInt("RULE_ID"));
-                    rule.setEventDateFk(rs.getDate("EVENT_DATE_FK").toLocalDate());
-                    rule.setRepeatType(rs.getString("REPEAT_TYPE"));
-                    rule.setRepeatInterval(rs.getInt("REPEAT_INTERVAL"));
-                    rule.setRepeatDaysOfWeek(rs.getString("REPEAT_DAYS_OF_WEEK"));
-                    
-                    Date repeatEndDateSql = rs.getDate("REPEAT_END_DATE");
-                    if (repeatEndDateSql != null) {
-                        rule.setRepeatEndDate(repeatEndDateSql.toLocalDate());
-                    } else {
-                        rule.setRepeatEndDate(null);
-                    }
-                    rule.setCreatedAt(rs.getTimestamp("CREATED_AT") != null ? rs.getTimestamp("CREATED_AT").toLocalDateTime() : null);
-                    rule.setUpdatedAt(rs.getTimestamp("UPDATED_AT") != null ? rs.getTimestamp("UPDATED_AT").toLocalDateTime() : null);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return rule;
-    }
 }

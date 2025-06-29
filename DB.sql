@@ -105,8 +105,7 @@ CREATE TABLE project (
 
 -- イベント繰り返しルール
 CREATE TABLE event_repeat_rule (
-    RULE_ID INT PRIMARY KEY AUTO_INCREMENT,
-    EVENT_DATE_FK DATE NOT NULL,
+    REPEAT_RULE_ID INT PRIMARY KEY AUTO_INCREMENT,
     REPEAT_TYPE VARCHAR(20) NOT NULL,
     REPEAT_INTERVAL INT NOT NULL DEFAULT 1,
     REPEAT_DAYS_OF_WEEK VARCHAR(20),
@@ -134,7 +133,7 @@ CREATE TABLE calendar_event (
     CREATED_BY VARCHAR(10) NOT NULL,
     UPDATED_AT DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     UPDATED_BY VARCHAR(10) NOT NULL,
-    FOREIGN KEY (REPEAT_RULE_ID) REFERENCES event_repeat_rule(RULE_ID) ON DELETE SET NULL ON UPDATE CASCADE
+    FOREIGN KEY (REPEAT_RULE_ID) REFERENCES event_repeat_rule(REPEAT_RULE_ID) ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- 勤怠
@@ -279,7 +278,7 @@ INSERT INTO dept (DEPT_ID, DEPT_NAME, IS_DELETED, DELETED_AT, DELETED_BY, CREATE
 ('D01', '管理部', FALSE, NULL, NULL, NOW(), 'admin', NOW(), 'admin'),
 ('D02', '営業部', FALSE, NULL, NULL, NOW(), 'admin', NOW(), 'admin');
 
-INSERT INTO post (POST_ID, POST_NAME, IS_DELETED, DELETED_AT, DELETsleED_BY, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES
+INSERT INTO post (POST_ID, POST_NAME, IS_DELETED, DELETED_AT, DELETED_BY, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES
 ('P01', '一般社員', FALSE, NULL, NULL, NOW(), 'admin', NOW(), 'admin'),
 ('P02', '主任', FALSE, NULL, NULL, NOW(), 'admin', NOW(), 'admin'),
 ('P03', '部長', FALSE, NULL, NULL, NOW(), 'admin', NOW(), 'admin');
@@ -326,3 +325,37 @@ INSERT INTO work_alloc (EMP_ID, PROJECT_ID, WORK_DATE, WORK_HOURS, IS_FINALIZED,
 ('E003', 7, '2025-01-08', 6.00, FALSE, FALSE, NULL, NULL, NOW(), 'E003', NOW(), 'E003'),
 ('E001', 8, '2025-02-20', 7.50, FALSE, FALSE, NULL, NULL, NOW(), 'E001', NOW(), 'E001'),
 ('E002', 9, '2025-01-30', 8.00, FALSE, FALSE, NULL, NULL, NOW(), 'E002', NOW(), 'E002');
+
+-- 2025年日本祝日データ
+INSERT INTO calendar_event (EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID, IS_SYSTEM_DEFINED, IS_DELETED, DELETED_AT, DELETED_BY, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES
+('2025-01-01', '元日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-01-13', '成人の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-02-11', '建国記念の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-02-23', '天皇誕生日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-03-20', '春分の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-04-29', '昭和の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-05-03', '憲法記念日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-05-04', 'みどりの日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-05-05', 'こどもの日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-07-21', '海の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-08-11', '山の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-09-15', '敬老の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-09-23', '秋分の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-10-13', 'スポーツの日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-11-03', '文化の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-11-23', '勤労感謝の日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system');
+
+-- 基本的な休日設定（土日）
+-- 土曜日
+INSERT INTO calendar_event (EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID, IS_SYSTEM_DEFINED, IS_DELETED, DELETED_AT, DELETED_BY, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES
+('2025-01-04', '土曜日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-01-11', '土曜日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-01-18', '土曜日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-01-25', '土曜日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system');
+
+-- 日曜日
+INSERT INTO calendar_event (EVENT_DATE, EVENT_NAME, IS_WORK, REPEAT_RULE_ID, IS_SYSTEM_DEFINED, IS_DELETED, DELETED_AT, DELETED_BY, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES
+('2025-01-05', '日曜日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-01-12', '日曜日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-01-19', '日曜日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system'),
+('2025-01-26', '日曜日', FALSE, NULL, TRUE, FALSE, NULL, NULL, NOW(), 'system', NOW(), 'system');

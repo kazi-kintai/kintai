@@ -80,7 +80,7 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            padding: 10px 20px;
+            padding: 8px 20px;
             background: #fff;
             border-bottom: 1px solid #ccc;
             margin: -20px -20px 0px -20px;
@@ -90,9 +90,9 @@
         .user-info {
             display: flex;
             flex-direction: column;
-            line-height: 1.5;
+            line-height: 1.4;
             text-align: left;
-            font-size: 13px;
+            font-size: 12px;
         }
         .logout-button {
             background-color: #dc3545;
@@ -115,6 +115,7 @@
             padding-bottom: 10px;
             margin: 0 0 15px 0;
             font-size: 1.5em;
+            text-align: center;
         }
         /* メッセージ表示エリア */
         .message {
@@ -141,7 +142,7 @@
             flex-grow: 1;
             gap: 20px;
             align-items: flex-start;
-            height: calc(95vh - 200px);
+            height: calc(95vh - 250px);
             position: relative;
         }
 
@@ -153,12 +154,13 @@
             transition: margin-left 0.3s ease, margin-right 0.3s ease;
         }
 
+        /* 侧边栏展开时不再移动主布局 */
         #calendar-container.list-panel-expanded {
-            margin-left: 420px; /* 左侧パネルの幅分マージンを追加 */
+            /* margin-left: 420px; */ /* 削除マージン移動 */
         }
         
         #calendar-container.add-panel-expanded {
-            margin-right: 420px; /* 右侧パネルの幅分マージンを追加 */
+            /* margin-right: 420px; */ /* 削除マージン移動 */
         }
 
         /* FullCalendarコンテナのスタイル */
@@ -195,27 +197,119 @@
             text-overflow: ellipsis; /* はみ出した場合に...表示 */
             margin-bottom: 1px; /* イベント間の隙間 */
         }
-        /* 休日イベントの背景色 */
-        .fc-event[data-is-work="false"] { /* isWork=falseのイベント用 */
-            background-color: #f8d7da; /* 赤系の薄い色 */
-            color: #721c24;
-            border-color: #f5c6cb;
+        /* カレンダー凡例 - title与日历中间横向排列 */
+        .legend-container {
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
         }
-        /* 出勤日イベントの背景色 */
-        .fc-event[data-is-work="true"] { /* isWork=trueのイベント用 */
-            background-color: #d4edda; /* 緑系の薄い色 */
-            color: #155724;
-            border-color: #c3e6cb;
+        .calendar-legend {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: rgba(248, 249, 250, 0.95);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .legend-title {
+            font-weight: bold;
+            font-size: 0.9em;
+            color: #495057;
+            margin-right: 10px;
+        }
+        .legend-items {
+            display: flex;
+            gap: 15px;
+        }
+        .legend-title {
+            font-weight: bold;
+            font-size: 0.85em;
+            margin-bottom: 6px;
+            color: #495057;
+            text-align: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        .legend-label {
+            font-size: 0.8em;
+            color: #495057;
+            white-space: nowrap;
+        }
+        .holiday-color { background-color: #ff4444; }
+        .weekend-color { background-color: #28a745; }
+        .work-color { background-color: #007bff; }
+
+        /* カレンダーコンテナに相対位置を設定 */
+        #calendar-container {
+            position: relative;
+        }
+
+        /* 侧边栏打开时的背景遮罩 */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.3);
+            z-index: 998;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .sidebar-overlay.active {
+            opacity: 1;
+            visibility: visible;
         }
 
         /* 収縮ボタンのスタイル */
-        /* ボタンコンテナのスタイル */
+        /* 按钮和凡例的容器样式 */
         .button-container {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 10px;
             position: relative;
-            z-index: 1001; /* 侧边栏的z-index是999，所以设置更高 */
+            z-index: 900; /* 低于侧边栏的层级，让侧边栏浮现在凡例上面 */
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* 侧边栏关闭按钮样式 */
+        .panel-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1001;
+        }
+        .panel-close-btn:hover {
+            background: #c82333;
         }
 
         .panel-toggle-btn {
@@ -260,7 +354,7 @@
             border-right: 1px solid #dee2e6;
             box-shadow: 5px 0 15px rgba(0,0,0,0.1);
             transition: left 0.3s ease;
-            z-index: 999;
+            z-index: 1000; /* 提高层级，让其浮现在凡例上面 */
             padding: 20px;
             overflow-y: auto;
             display: flex;
@@ -282,7 +376,7 @@
             border-left: 1px solid #dee2e6;
             box-shadow: -5px 0 15px rgba(0,0,0,0.1);
             transition: right 0.3s ease;
-            z-index: 999;
+            z-index: 1000; /* 提高层级 */
             padding: 20px;
             overflow-y: auto;
             display: flex;
@@ -550,15 +644,41 @@
             </div>
         <% } %>
 
-        <!-- サイドパネル切り替えボタン -->
+        <!-- 按钮和凡例同一行 -->
         <div class="button-container">
-            <button class="panel-toggle-btn" id="addToggleBtn" onclick="toggleAddPanel()" style="margin-right: 10px;">新規追加</button>
-            <button class="panel-toggle-btn" id="listToggleBtn" onclick="toggleListPanel()">一覧</button>
+            <!-- 左侧凡例 -->
+            <div class="calendar-legend">
+                <div class="legend-title">凡例:</div>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <span class="legend-color holiday-color"></span>
+                        <span class="legend-label">祝日</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color weekend-color"></span>
+                        <span class="legend-label">休日</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-color work-color"></span>
+                        <span class="legend-label">出勤日</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 右侧按钮组 -->
+            <div class="button-group">
+                <button class="panel-toggle-btn" id="addToggleBtn" onclick="toggleAddPanel()">新規追加</button>
+                <button class="panel-toggle-btn" id="listToggleBtn" onclick="toggleListPanel()">一覧</button>
+            </div>
         </div>
+
+        <!-- 背景遮罩 -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
         <div class="main-content-wrapper">
             <!-- 左侧边栏（イベント一覧） -->
             <div id="event-list-panel">
+                <button class="panel-close-btn" onclick="toggleListPanel()" title="關閉">×</button>
                 <h2>イベント一覧</h2>
                 <div style="max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;"> <%-- リスト表示エリアのスクロール --%>
                     <table class="event-list-table">
@@ -604,6 +724,7 @@
 
         <!-- 右侧边栏（新規イベント追加） -->
         <div id="event-add-panel">
+                <button class="panel-close-btn" onclick="toggleAddPanel()" title="關閉">×</button>
                 <h2>新規イベント追加</h2>
                 <form id="addEventForm" method="post" action="<%= request.getContextPath() %>/CalendarManageServlet" onsubmit="return confirmAdd(this)">
                     <input type="hidden" name="action" value="add">
@@ -751,8 +872,7 @@
         // 左侧边栏（イベント一覧）の切り替え機能
         function toggleListPanel() {
             var listPanel = document.getElementById('event-list-panel');
-            var calendarContainer = document.getElementById('calendar-container');
-            var buttonContainer = document.querySelector('.button-container');
+            var overlay = document.getElementById('sidebarOverlay');
             var listToggleBtn = document.getElementById('listToggleBtn');
             
             // 左侧パネルを開く前に右侧パネルを閉じる
@@ -762,26 +882,19 @@
             }
             
             listPanel.classList.toggle('panel-open');
-            calendarContainer.classList.toggle('list-panel-expanded');
-            buttonContainer.classList.toggle('list-panel-expanded');
+            overlay.classList.toggle('active');
             
             if (listPanel.classList.contains('panel-open')) {
                 listToggleBtn.textContent = '閉じる';
             } else {
                 listToggleBtn.textContent = '一覧';
             }
-            
-            // カレンダーのリサイズを通知
-            setTimeout(function() {
-                calendar.updateSize();
-            }, 300);
         }
         
         // 右侧边栏（新規イベント追加）の切り替え機能
         function toggleAddPanel() {
             var addPanel = document.getElementById('event-add-panel');
-            var calendarContainer = document.getElementById('calendar-container');
-            var buttonContainer = document.querySelector('.button-container');
+            var overlay = document.getElementById('sidebarOverlay');
             var addToggleBtn = document.getElementById('addToggleBtn');
             
             // 右侧パネルを開く前に左侧パネルを閉じる
@@ -791,19 +904,13 @@
             }
             
             addPanel.classList.toggle('panel-open');
-            calendarContainer.classList.toggle('add-panel-expanded');
-            buttonContainer.classList.toggle('add-panel-expanded');
+            overlay.classList.toggle('active');
             
             if (addPanel.classList.contains('panel-open')) {
                 addToggleBtn.textContent = '閉じる';
             } else {
                 addToggleBtn.textContent = '新規追加';
             }
-            
-            // カレンダーのリサイズを通知
-            setTimeout(function() {
-                calendar.updateSize();
-            }, 300);
         }
 
         var calendar; // グローバル変数として定義
@@ -1153,9 +1260,9 @@
                     alert("繰り返し間隔は1以上の半角数字で入力してください。");
                     return false;
                 }
-                if (repeatType === 'WEEKLY' || repeatType === 'MONTHLY_WEEKDAY') {
+                if (repeatType === 'WEEKLY') {
                     if (repeatDaysOfWeek.length === 0) {
-                        alert("毎週または毎月（曜日指定）の場合、繰り返し曜日を1つ以上選択してください。");
+                        alert("毎週の場合、繰り返し曜日を1つ以上選択してください。");
                         return false;
                     }
                 }
@@ -1184,9 +1291,9 @@
                     alert("繰り返し間隔は1以上の半角数字で入力してください。");
                     return false;
                 }
-                if (repeatType === 'WEEKLY' || repeatType === 'MONTHLY_WEEKDAY') {
+                if (repeatType === 'WEEKLY') {
                     if (repeatDaysOfWeek.length === 0) {
-                        alert("毎週または毎月（曜日指定）の場合、繰り返し曜日を1つ以上選択してください。");
+                        alert("毎週の場合、繰り返し曜日を1つ以上選択してください。");
                         return false;
                     }
                 }

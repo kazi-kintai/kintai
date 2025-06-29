@@ -14,7 +14,6 @@ public class EventRepeatRuleBean implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private int ruleId;             // 繰り返しルールID (RULE_ID)
-    private LocalDate eventDateFk;  // 主イベント日付 (EVENT_DATE_FK) - calendar_eventへの外部キー
     private String repeatType;      // 繰り返しタイプ (REPEAT_TYPE)
     private int repeatInterval;     // 繰り返し間隔 (REPEAT_INTERVAL)
     private String repeatDaysOfWeek; // 繰り返し曜日 (REPEAT_DAYS_OF_WEEK)
@@ -36,14 +35,6 @@ public class EventRepeatRuleBean implements Serializable {
 
     public void setRuleId(int ruleId) {
         this.ruleId = ruleId;
-    }
-
-    public LocalDate getEventDateFk() {
-        return eventDateFk;
-    }
-
-    public void setEventDateFk(LocalDate eventDateFk) {
-        this.eventDateFk = eventDateFk;
     }
 
     public String getRepeatType() {
