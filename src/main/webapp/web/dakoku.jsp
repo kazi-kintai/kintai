@@ -29,9 +29,13 @@
 %>
 <html>
 <head>
+	<%-- レスポンシブ対応 --%>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+    
     <title>勤怠打刻・登録</title>
     <style>
         body { font-family: 'メイリオ', sans-serif; background-color: #f0f0f0; margin: 0; padding: 20px; }
+        .overflow-x=hidden; 
         .container { max-width: 1200px; margin: 0 auto; background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: #fff; border-bottom: 1px solid #ccc; margin: -20px -20px 20px -20px; border-top-left-radius: 8px; border-top-right-radius: 8px; }
         .user-info { font-size: 13px; }
@@ -63,6 +67,19 @@
         .status-display { text-align: center; margin-bottom: 12px; font-size: 13px; background-color: #f8f9fa; padding: 8px; border-radius: 4px; }
         .back-link { display: inline-block; margin-top: 20px; padding: 8px 16px; background-color: #6c757d; color: white; text-decoration: none; border-radius: 4px; text-align: center; font-size: 14px; }
         .back-link:hover { background-color: #545b62; }
+        
+        @media (max-width: 767px) {
+		    .main-layout {
+		        flex-direction: column;
+		    }
+		    .left-section,
+		    .right-section {
+		        width: 100%;
+		    }
+		    h1 {
+		        font-size: 15px;
+		    }
+		}
     </style>
 </head>
 <body>

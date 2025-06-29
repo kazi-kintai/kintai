@@ -106,25 +106,27 @@ public class WorkTimeDao {
         String sql;
         if (existingWorkTime == null) {
             // INSERT処理 (WORKING_HOURSなども初期値として含める)
-            sql = "INSERT INTO kintai (KINTAI_DATE, EMP_ID, CLOCK_IN, CLOCK_OUT, WORKING_HOURS, OVERTIME_HOURS, NIGHT_HOURS, IS_DELETED, IS_FINALIZED, CREATED_AT, UPDATED_AT) VALUES (?, ?, ?, ?, ?, ?, ?, FALSE, FALSE, NOW(), NOW())";
+        	sql = "INSERT INTO kintai (KINTAI_DATE, EMP_ID, CLOCK_IN, CLOCK_OUT, WORKING_HOURS, OVERTIME_HOURS, NIGHT_HOURS, IS_DELETED, IS_FINALIZED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) " +
+        		      "VALUES (?, ?, ?, ?, ?, ?, ?, FALSE, FALSE, NOW(), ?, NOW(), ?)";
         } else {
             // UPDATE処理
             workTime.setKintaiRecId(existingWorkTime.getKintaiRecId()); // 既存のIDをセット
-            sql = "UPDATE kintai SET CLOCK_IN = ?, CLOCK_OUT = ?, WORKING_HOURS = ?, OVERTIME_HOURS = ?, NIGHT_HOURS = ?, UPDATED_AT = NOW() WHERE KINTAI_REC_ID = ?";
+            sql = "UPDATE kintai SET CLOCK_IN = ?, CLOCK_OUT = ?, WORKING_HOURS = ?, OVERTIME_HOURS = ?, NIGHT_HOURS = ?, UPDATED_AT = NOW(), UPDATED_BY = ? WHERE KINTAI_REC_ID = ?";
         }
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS)) {
 
             if (existingWorkTime == null) { // INSERTの場合
-                ps.setDate(1, Date.valueOf(workTime.getKintaiDate()));
-                ps.setString(2, workTime.getEmpId());
-                ps.setTime(3, workTime.getClockIn());
-                ps.setTime(4, workTime.getClockOut());
-                // 出勤時は工数は0または計算値を設定
-                ps.setBigDecimal(5, workTime.getWorkingHours() != null ? workTime.getWorkingHours() : BigDecimal.ZERO);
-                ps.setBigDecimal(6, workTime.getOvertimeHours() != null ? workTime.getOvertimeHours() : BigDecimal.ZERO);
-                ps.setBigDecimal(7, workTime.getNightHours() != null ? workTime.getNightHours() : BigDecimal.ZERO);
+            	ps.setDate(1, Date.valueOf(workTime.getKintaiDate()));
+            	ps.setString(2, workTime.getEmpId());
+            	ps.setTime(3, workTime.getClockIn());
+            	ps.setTime(4, workTime.getClockOut());
+            	ps.setBigDecimal(5, workTime.getWorkingHours() != null ? workTime.getWorkingHours() : BigDecimal.ZERO);
+            	ps.setBigDecimal(6, workTime.getOvertimeHours() != null ? workTime.getOvertimeHours() : BigDecimal.ZERO);
+            	ps.setBigDecimal(7, workTime.getNightHours() != null ? workTime.getNightHours() : BigDecimal.ZERO);
+            	ps.setString(8, workTime.getCreatedBy());
+            	ps.setString(9, workTime.getUpdatedBy());
                 ps.executeUpdate();
                 // 新しく生成されたKINTAI_REC_IDを取得
                 try (ResultSet generatedKeys = ps.getGeneratedKeys()) {
@@ -133,12 +135,13 @@ public class WorkTimeDao {
                     }
                 }
             } else { // UPDATEの場合
-                ps.setTime(1, workTime.getClockIn());
-                ps.setTime(2, workTime.getClockOut());
-                ps.setBigDecimal(3, workTime.getWorkingHours());
-                ps.setBigDecimal(4, workTime.getOvertimeHours());
-                ps.setBigDecimal(5, workTime.getNightHours());
-                ps.setInt(6, workTime.getKintaiRecId());
+            	ps.setTime(1, workTime.getClockIn());
+            	ps.setTime(2, workTime.getClockOut());
+            	ps.setBigDecimal(3, workTime.getWorkingHours());
+            	ps.setBigDecimal(4, workTime.getOvertimeHours());
+            	ps.setBigDecimal(5, workTime.getNightHours());
+            	ps.setString(6, workTime.getUpdatedBy());
+            	ps.setInt(7, workTime.getKintaiRecId());
                 ps.executeUpdate();
             }
 
@@ -154,7 +157,7 @@ public class WorkTimeDao {
      */
     public void addBreak(BreakBean breakBean) {
         // breakテーブルにEMP_IDとKINTAI_DATE列が追加されたため、SQLを修正
-        String sql = "INSERT INTO break (KINTAI_REC_ID, EMP_ID, BREAK_START, BREAK_END, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, ?, ?, false, NOW(), 'system', NOW(), 'system')";
+    	String sql = "INSERT INTO break (KINTAI_REC_ID, EMP_ID, BREAK_START, BREAK_END, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, ?, ?, false, NOW(), ?, NOW(), ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
@@ -169,6 +172,8 @@ public class WorkTimeDao {
             ps.setString(2, workTime.getEmpId());
             ps.setTime(3, breakBean.getBreakStart());
             ps.setTime(4, breakBean.getBreakEnd());
+            ps.setString(5, breakBean.getCreatedBy());
+            ps.setString(6, breakBean.getUpdatedBy());
 
             ps.executeUpdate();
 
@@ -205,11 +210,11 @@ public class WorkTimeDao {
         List<KinmuManageBean.WorkAlloc> workAllocList = new ArrayList<>();
         // SQLを修正: work_allocテーブルとprojectテーブルをJOIN
         String sql = "SELECT wa.ALLOCATION_ID, wa.EMP_ID, wa.PROJECT_ID, wa.WORK_DATE, wa.WORK_HOURS, " +
-                     "p.PROJECT_NAME " + // プロジェクト名も取得
-                     "FROM work_alloc wa " +
-                     "LEFT JOIN project p ON wa.PROJECT_ID = p.PROJECT_ID " +
-                     "WHERE wa.EMP_ID = ? AND wa.WORK_DATE = ? " +
-                     "ORDER BY wa.ALLOCATION_ID"; // 割り当てIDでソート
+                "p.PROJECT_NAME " +
+                "FROM work_alloc wa " +
+                "LEFT JOIN project p ON wa.PROJECT_ID = p.PROJECT_ID " +
+                "WHERE wa.EMP_ID = ? AND wa.WORK_DATE = ? AND wa.IS_DELETED IS NULL " + // 追加
+                "ORDER BY wa.ALLOCATION_ID"; // 割り当てIDでソート
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -242,15 +247,17 @@ public class WorkTimeDao {
      */
     public void addWorkAlloc(KinmuManageBean.WorkAlloc workAlloc) {
         // SQLを修正: work_allocテーブルの列に合わせてINSERT文を作成
-        String sql = "INSERT INTO work_alloc (EMP_ID, PROJECT_ID, WORK_DATE, WORK_HOURS) " +
-                     "VALUES (?, ?, ?, ?)";
+    	String sql = "INSERT INTO work_alloc (EMP_ID, PROJECT_ID, WORK_DATE, WORK_HOURS, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) " +
+                "VALUES (?, ?, ?, ?, NOW(), ?, NOW(), ?)";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setString(1, workAlloc.getEmpId());
-            ps.setInt(2, workAlloc.getProjectId());
-            ps.setDate(3, Date.valueOf(workAlloc.getWorkDate()));
-            ps.setDouble(4, workAlloc.getWorkHours()); // doubleでセット
+        	ps.setString(1, workAlloc.getEmpId());
+        	ps.setInt(2, workAlloc.getProjectId());
+        	ps.setDate(3, Date.valueOf(workAlloc.getWorkDate()));
+        	ps.setDouble(4, workAlloc.getWorkHours());
+        	ps.setString(5, workAlloc.getCreatedBy());
+        	ps.setString(6, workAlloc.getUpdatedBy());
 
             ps.executeUpdate();
 

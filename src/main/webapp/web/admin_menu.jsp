@@ -30,6 +30,9 @@
 %>
 <html>
 <head>
+	<!-- レスポンシブ対応 -->
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	
     <title>勤怠管理システムメニュー（管理部）</title>
     
     <style>

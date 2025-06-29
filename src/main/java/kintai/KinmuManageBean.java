@@ -30,6 +30,9 @@ public class KinmuManageBean implements Serializable {
         // 表示用の追加フィールド（JOINで取得）
         private String empName;     // 従業員名
         private String projectName; // プロジェクト名
+        
+        private String createdBy;
+        private String updatedBy;
 
         /**
          * デフォルトコンストラクタ
@@ -102,6 +105,12 @@ public class KinmuManageBean implements Serializable {
         public void setProjectName(String projectName) {
             this.projectName = projectName;
         }
+        
+        public String getCreatedBy() { return createdBy; }
+        public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+        
+        public String getUpdatedBy() { return updatedBy; }
+        public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
 
         /**
          * 作業時間をHH.HH形式の文字列で取得します。

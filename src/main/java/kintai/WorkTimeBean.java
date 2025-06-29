@@ -24,6 +24,9 @@ public class WorkTimeBean implements Serializable {
     private boolean isFinalized; // kintaiテーブルの「IS_FINALIZED」列に対応
     private java.sql.Timestamp createdAt;
     private java.sql.Timestamp updatedAt;
+    private String createdBy;
+    private String updatedBy;
+
 
     // --- 以下、各フィールドのアクセサメソッド (getter/setter) ---
 
@@ -108,6 +111,12 @@ public class WorkTimeBean implements Serializable {
         this.isDeleted = isDeleted;
     }
 
+    public String getCreatedBy() { return createdBy; }
+    public void setCreatedBy(String createdBy) { this.createdBy = createdBy; }
+    
+    public String getUpdatedBy() { return updatedBy; }
+    public void setUpdatedBy(String updatedBy) { this.updatedBy = updatedBy; }
+    
     /**
      * isDeletedのゲッターメソッド（getIsDeleted形式）
      * JSPでの使用を考慮した互換性メソッド
