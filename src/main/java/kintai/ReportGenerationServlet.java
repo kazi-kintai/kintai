@@ -101,11 +101,11 @@ public class ReportGenerationServlet extends HttpServlet {
             switch (reportType) {
                 case "individual":
                     reportData = generateIndividualReport(empnoParam, startDate, endDate, format);
-                    filename = "個人別月次報告_" + empnoParam + "_" + getCurrentDateString();
+                    filename = "個人別月次勤怠報告書_" + empnoParam + "_" + getCurrentDateString();
                     break;
                 case "department":
                     reportData = generateDepartmentReport(deptNoFilter, startDate, endDate, format);
-                    filename = "部署別集計報告_" + getCurrentDateString();
+                    filename = "部署別集計勤怠報告書_" + getCurrentDateString();
                     break;
                 case "overtime":
                     reportData = generateOvertimeReport(empNoFilter, deptNoFilter, startDate, endDate, format);
@@ -522,7 +522,7 @@ public class ReportGenerationServlet extends HttpServlet {
             byte[] reportData = generateIndividualReport(empNoFilter, startDate, endDate, format);
             
             // ファイル名生成
-            String filename = "個人別月次報告_" + empNoFilter + "_" + getCurrentDateString();
+            String filename = "個人別月次勤怠報告書_" + empNoFilter + "_" + getCurrentDateString();
             String contentType;
             
             // Content-Typeとファイル拡張子の設定
@@ -588,7 +588,7 @@ public class ReportGenerationServlet extends HttpServlet {
             byte[] reportData = generateDepartmentReport(deptNoFilter, startDate, endDate, format);
             
             // ファイル名生成
-            String filename = "部署別集計報告_" + getCurrentDateString();
+            String filename = "部署別集計勤怠報告書_" + getCurrentDateString();
             String contentType;
             
             // Content-Typeとファイル拡張子の設定

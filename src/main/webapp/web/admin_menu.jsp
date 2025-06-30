@@ -47,6 +47,8 @@
             margin: 0 auto;
             background-color: white;
             min-height: 100vh;
+            max-height: 100vh;
+            overflow: hidden;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
         .header {
@@ -90,23 +92,29 @@
             grid-template-rows: auto auto auto;
             gap: 20px;
             height: calc(100vh - 100px);
+            overflow: hidden;
         }
         
         .dashboard h1 {
             grid-column: 1 / -1;
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
             color: #333;
             margin: 0 0 20px 0;
             font-size: 1.8em;
             border-bottom: 2px solid #dc3545; /* 管理者用は赤色 */
             padding-bottom: 10px;
+            position: relative;
         }
         
         .dashboard-title {
-            flex: 1;
             text-align: center;
+        }
+        
+        .system-trigger {
+            position: absolute;
+            right: 0;
         }
         
         /* ウィジェットの共通スタイル */
@@ -334,7 +342,6 @@
             align-items: center;
             cursor: pointer;
             transition: all 0.3s;
-            margin-left: auto;
             background: #28a745;
             color: white;
             padding: 6px 12px;

@@ -878,7 +878,7 @@ public class ReportGenerationService {
             xml.append("</Styles>\n");
             
             // ワークシート開始
-            xml.append("<Worksheet ss:Name=\"個人別月次報告\">\n");
+            xml.append("<Worksheet ss:Name=\"個人別月次勤怠報告書\">\n");
             xml.append("<Table>\n");
             
             // タイトル行
@@ -1097,7 +1097,7 @@ public class ReportGenerationService {
             xml.append("</Styles>\n");
             
             // ワークシート開始
-            xml.append("<Worksheet ss:Name=\"部署別集計報告\">\n");
+            xml.append("<Worksheet ss:Name=\"部署別集計勤怠報告書\">\n");
             xml.append("<Table>\n");
             
             // タイトル行
@@ -1119,52 +1119,6 @@ public class ReportGenerationService {
             xml.append("<Cell><Data ss:Type=\"String\">対象従業員数</Data></Cell>\n");
             xml.append("<Cell><Data ss:Type=\"String\">").append(records.stream().map(KintaiRecBean::getEmpno).distinct().count()).append("名</Data></Cell>\n");
             xml.append("</Row>\n");
-            
-            // 空行
-            xml.append("<Row></Row>\n");
-            
-            // 部署別集計サマリー
-            Map<String, List<KintaiRecBean>> deptGroups = records.stream()
-                .collect(Collectors.groupingBy(r -> r.getDeptName() != null ? r.getDeptName() : "未設定"));
-            
-            xml.append("<Row>\n");
-            xml.append("<Cell ss:MergeAcross=\"8\" ss:StyleID=\"Summary\"><Data ss:Type=\"String\">部署別統計サマリー</Data></Cell>\n");
-            xml.append("</Row>\n");
-            
-            // サマリーヘッダー
-            xml.append("<Row>\n");
-            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">部署名</Data></Cell>\n");
-            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">従業員数</Data></Cell>\n");
-            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">記録数</Data></Cell>\n");
-            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">総労働時間</Data></Cell>\n");
-            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">総残業時間</Data></Cell>\n");
-            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">平均残業時間</Data></Cell>\n");
-            xml.append("</Row>\n");
-            
-            // サマリーデータ
-            for (Map.Entry<String, List<KintaiRecBean>> entry : deptGroups.entrySet()) {
-                String deptName = entry.getKey();
-                List<KintaiRecBean> deptRecords = entry.getValue();
-                
-                long totalOvertimeMinutes = deptRecords.stream()
-                    .mapToLong(KintaiRecBean::getOvertimeMinutes)
-                    .sum();
-                    
-                long totalWorkMinutes = deptRecords.stream()
-                    .mapToLong(KintaiRecBean::getActualWorkMinutes)
-                    .sum();
-                    
-                long empCount = deptRecords.stream().map(KintaiRecBean::getEmpno).distinct().count();
-                
-                xml.append("<Row>\n");
-                xml.append("<Cell><Data ss:Type=\"String\">").append(deptName).append("</Data></Cell>\n");
-                xml.append("<Cell><Data ss:Type=\"Number\">").append(empCount).append("</Data></Cell>\n");
-                xml.append("<Cell><Data ss:Type=\"Number\">").append(deptRecords.size()).append("</Data></Cell>\n");
-                xml.append("<Cell><Data ss:Type=\"String\">").append(String.format("%.1f時間", totalWorkMinutes / 60.0)).append("</Data></Cell>\n");
-                xml.append("<Cell><Data ss:Type=\"String\">").append(String.format("%.1f時間", totalOvertimeMinutes / 60.0)).append("</Data></Cell>\n");
-                xml.append("<Cell><Data ss:Type=\"String\">").append(String.format("%.1f時間", empCount > 0 ? (totalOvertimeMinutes / 60.0) / empCount : 0)).append("</Data></Cell>\n");
-                xml.append("</Row>\n");
-            }
             
             // 空行
             xml.append("<Row></Row>\n");
@@ -1231,6 +1185,52 @@ public class ReportGenerationService {
             xml.append("<Cell ss:StyleID=\"Summary\"><Data ss:Type=\"String\">").append(String.format("%.1f時間", grandTotalWorkMinutes / 60.0)).append("</Data></Cell>\n");
             xml.append("<Cell ss:StyleID=\"Summary\"><Data ss:Type=\"String\">").append(String.format("%.1f時間", grandTotalOvertimeMinutes / 60.0)).append("</Data></Cell>\n");
             xml.append("</Row>\n");
+            
+            // 空行
+            xml.append("<Row></Row>\n");
+            
+            // 部署別集計サマリー
+            Map<String, List<KintaiRecBean>> deptGroups = records.stream()
+                .collect(Collectors.groupingBy(r -> r.getDeptName() != null ? r.getDeptName() : "未設定"));
+            
+            xml.append("<Row>\n");
+            xml.append("<Cell ss:MergeAcross=\"8\" ss:StyleID=\"Summary\"><Data ss:Type=\"String\">部署別統計サマリー</Data></Cell>\n");
+            xml.append("</Row>\n");
+            
+            // サマリーヘッダー
+            xml.append("<Row>\n");
+            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">部署名</Data></Cell>\n");
+            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">従業員数</Data></Cell>\n");
+            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">記録数</Data></Cell>\n");
+            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">総労働時間</Data></Cell>\n");
+            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">総残業時間</Data></Cell>\n");
+            xml.append("<Cell ss:StyleID=\"Header\"><Data ss:Type=\"String\">平均残業時間</Data></Cell>\n");
+            xml.append("</Row>\n");
+            
+            // サマリーデータ
+            for (Map.Entry<String, List<KintaiRecBean>> entry : deptGroups.entrySet()) {
+                String deptName = entry.getKey();
+                List<KintaiRecBean> deptRecords = entry.getValue();
+                
+                long totalOvertimeMinutes = deptRecords.stream()
+                    .mapToLong(KintaiRecBean::getOvertimeMinutes)
+                    .sum();
+                    
+                long totalWorkMinutes = deptRecords.stream()
+                    .mapToLong(KintaiRecBean::getActualWorkMinutes)
+                    .sum();
+                    
+                long empCount = deptRecords.stream().map(KintaiRecBean::getEmpno).distinct().count();
+                
+                xml.append("<Row>\n");
+                xml.append("<Cell><Data ss:Type=\"String\">").append(deptName).append("</Data></Cell>\n");
+                xml.append("<Cell><Data ss:Type=\"Number\">").append(empCount).append("</Data></Cell>\n");
+                xml.append("<Cell><Data ss:Type=\"Number\">").append(deptRecords.size()).append("</Data></Cell>\n");
+                xml.append("<Cell><Data ss:Type=\"String\">").append(String.format("%.1f時間", totalWorkMinutes / 60.0)).append("</Data></Cell>\n");
+                xml.append("<Cell><Data ss:Type=\"String\">").append(String.format("%.1f時間", totalOvertimeMinutes / 60.0)).append("</Data></Cell>\n");
+                xml.append("<Cell><Data ss:Type=\"String\">").append(String.format("%.1f時間", empCount > 0 ? (totalOvertimeMinutes / 60.0) / empCount : 0)).append("</Data></Cell>\n");
+                xml.append("</Row>\n");
+            }
             
             // ワークシート終了
             xml.append("</Table>\n");

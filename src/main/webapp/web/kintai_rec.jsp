@@ -845,7 +845,7 @@
                                 <div style="text-align: center;">
                                     <button onclick="showAllViolationEmployees()" 
                                             style="background-color: #fd7e14; color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-size: 12px; transition: background-color 0.2s;">
-                                        More 詳細表示
+                                        詳細表示
                                     </button>
                                 </div>
                             <% } else { %>
@@ -877,12 +877,8 @@
                                 <button class="report-btn" onclick="generateReport('individual')">📋 個人別月次報告</button>
                                 <button class="report-btn" onclick="generateReport('department')">📊 部署別集計報告</button>
                             </div>
-                            <div class="compliance-check-buttons">
-                                <button class="compliance-btn" onclick="performComplianceCheck('legal')">📋 会社規則や法令遵守チェック</button>
-                            </div>
                             <div class="format-options">
-                                <span>出力形式:</span>
-                                <button class="format-btn" onclick="setFormat('excel')">📊 Excel</button>
+                                <span>出力形式: 📊 Excel</span>
                             </div>
                         </div>
                     </div>
@@ -1109,7 +1105,7 @@
                         <tr>
                             <%-- 自分モードかどうかでcolspan数を調整（残業時間列追加により+1）--%>
                             <td colspan="<%= ((userRoleId == 1 || userRoleId == 2) && !isSelfMode) ? 11 : 7 %>" style="text-align: center;">
-                                勤怠記録がありません。
+                                勤怠記録がありません
                             </td>
                         </tr>
                     <% } %>
@@ -1545,7 +1541,7 @@
                     if (table) {
                         showKintaiTable('勤務時間一覧 - ' + empname, table.outerHTML);
                     } else {
-                        showKintaiTable('勤務時間一覧 - ' + empname, '<p style="text-align: center; padding: 50px;">この従業員の勤怠記録がありません。</p>');
+                        showKintaiTable('勤務時間一覧 - ' + empname, '<p style="text-align: center; padding: 50px;">この従業員の勤怠記録がありません</p>');
                     }
                 })
                 .catch(error => {
@@ -1586,10 +1582,10 @@
         // チェック項目を表示するモーダル
         function showCheckItems() {
             let checkItemsHtml = '<div style="padding: 15px;">';
-            checkItemsHtml += '<h3 style="margin-bottom: 12px; color: #495057; font-size: 14px;">📋 法令遵守チェック項目</h3>';
+            checkItemsHtml += '<h3 style="margin-bottom: 12px; color: #495057; font-size: 14px;">📋 チェック項目一覧</h3>';
             checkItemsHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px;">';
             checkItemsHtml += '<div style="font-size: 11px; color: #495057; line-height: 1.6;">';
-            checkItemsHtml += '<strong>以下の項目について法令遵守をチェックしています：</strong><br><br>';
+            checkItemsHtml += '<strong>以下の項目について法令や会社規則遵守をチェックしています：</strong><br><br>';
             checkItemsHtml += '• <strong>休憩時間の適切性</strong> - 6-8時間勤務時に45分以上、8時間超勤務時に60分以上の休憩を取得しているか<br>';
             checkItemsHtml += '• <strong>深夜勤務の確認</strong> - 22:00～翌5:00の深夜時間帯での勤務状況<br>';
             checkItemsHtml += '• <strong>連続勤務日数の確認</strong> - 10日以内の連続勤務制限を遵守しているか<br>';
@@ -1599,7 +1595,7 @@
             checkItemsHtml += '</div>';
             checkItemsHtml += '</div>';
             
-            showKintaiTable('法令遵守チェック項目一覧', checkItemsHtml);
+            showKintaiTable('チェック項目一覧', checkItemsHtml);
         }
 
         // 法令遵守違反者の詳細表示
@@ -1718,7 +1714,7 @@
             
             // チェック項目の説明
             html += '<div style="background-color: #e9ecef; border: 1px solid #dee2e6; border-radius: 6px; padding: 12px;">';
-            html += '<h4 style="margin: 0 0 8px 0;">法令遵守チェック項目:</h4>';
+            html += '<h4 style="margin: 0 0 8px 0;">チェック項目:</h4>';
             html += '<div style="font-size: 12px; color: #495057; line-height: 1.6;">';
             html += '• 休憩時間の適切性（6-8時間勤務で45分以上、8時間超で60分以上）<br>';
             html += '• 深夜勤務の確認（22:00～翌5:00）<br>';

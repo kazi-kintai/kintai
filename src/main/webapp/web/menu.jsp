@@ -45,6 +45,8 @@
         margin: 0 auto;
         background-color: white;
         min-height: 100vh;
+        max-height: 100vh;
+        overflow: hidden;
         box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
       .header {
@@ -88,16 +90,21 @@
         grid-template-rows: auto auto auto;
         gap: 15px;
         height: calc(100vh - 100px);
+        overflow: hidden;
       }
 
       .dashboard h1 {
         grid-column: 1 / -1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         text-align: center;
         color: #333;
-        margin: 0 0 12px 0;
+        margin: 0 0 5px 0;
         font-size: 1.6em;
         border-bottom: 2px solid #007bff;
-        padding-bottom: 6px;
+        padding-bottom: 2px;
+        min-height: 45px;
       }
 
       /* ウィジェットの共通スタイル */
@@ -105,7 +112,7 @@
         background: white;
         border: 1px solid #ddd;
         border-radius: 8px;
-        padding: 15px;
+        padding: 12px;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         transition: box-shadow 0.3s;
       }
@@ -138,10 +145,10 @@
       }
 
       .punch-btn {
-        padding: 15px;
+        padding: 10px;
         border: none;
         border-radius: 5px;
-        font-size: 1.1em;
+        font-size: 1.0em;
         font-weight: bold;
         cursor: pointer;
         transition: all 0.3s;
@@ -167,10 +174,10 @@
       }
 
       .current-time {
-        font-size: 1.2em;
+        font-size: 1.0em;
         font-weight: bold;
         color: #333;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
       }
 
       /* パスワード変更ウィジェット */
@@ -180,31 +187,32 @@
         align-items: center;
         justify-content: center;
         text-align: center;
-        min-height: 140px;
+        min-height: 120px;
       }
 
       .password-widget h2 {
         text-align: center;
-        margin: 0 0 20px 0;
+        margin: 0 0 12px 0;
         border-bottom: none;
         padding-bottom: 0;
+        font-size: 1.1em;
       }
 
       .password-widget .btn {
         width: 80%;
-        max-width: 200px;
-        padding: 12px;
+        max-width: 180px;
+        padding: 8px;
         background: #007bff;
         color: white;
         border: none;
         border-radius: 5px;
-        font-size: 1.1em;
+        font-size: 1.0em;
         cursor: pointer;
         text-decoration: none;
         display: block;
         text-align: center;
         transition: background-color 0.3s;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
       }
 
       .password-widget .btn:hover {
@@ -213,9 +221,9 @@
 
       .password-widget .account-info {
         color: #666;
-        font-size: 0.85em;
-        margin-top: 10px;
-        line-height: 1.4;
+        font-size: 0.8em;
+        margin-top: 8px;
+        line-height: 1.3;
       }
 
       /* 記録表示ウィジェット */
@@ -625,7 +633,7 @@
         <div class="user-info">
           <%-- 部署名と氏名を表示 --%>
           <p>部署：営業部<%-- <%= deptname %> --%></p>
-          <p>氏名：<%= user.getName() %></p>
+          <p>氏名：<%= user.getName() %><% if (user.getRoleId() == 2) { %> <span style="color: #dc3545; font-weight: bold;">[部長]</span><% } %></p>
         </div>
         
         <%-- ログアウトボタン --%>
@@ -639,7 +647,7 @@
       </div>
 
       <div class="dashboard">
-        <h1>基本メニュー</h1>
+        <h1><% if (user.getRoleId() == 2) { %>管理職メニュー<% } else { %>基本メニュー<% } %></h1>
 
         <!-- 今日の打刻ウィジェット -->
         <div class="widget punch-widget">
