@@ -484,89 +484,107 @@
             infoArea.style.display = 'block';
         }
 
-        // プロジェクト編集フォーム表示切り替え
-        function toggleProjectEdit() {
-            var editForm = document.getElementById('projectEditForm');
-            if (editForm.style.display === 'none' || editForm.style.display === '') {
-                editForm.style.display = 'block';
-            } else {
-                editForm.style.display = 'none';
-            }
-        }
-
-        // プロジェクト編集キャンセル
-        function cancelProjectEdit() {
-            document.getElementById('projectEditForm').style.display = 'none';
-        }
-
-        // プロジェクト更新確認
-        function confirmProjectUpdate() {
-            var projectName = document.getElementById('editProjectName').value;
-            return confirm('プロジェクト「' + projectName + '」の情報を変更してもよろしいですか？');
-        }
-
-        // プロジェクト削除確認
-        function confirmProjectDelete() {
-            var projectName = document.getElementById('selectedProjectName').textContent;
-            if (confirm('プロジェクト「' + projectName + '」を削除してもよろしいですか？')) {
-                document.getElementById('projectDeleteForm').submit();
-            }
-        }
 
         // 年選択に応じて月のオプションを更新
         function updateMonthOptions() {
+            console.log('updateMonthOptions関数が呼び出されました');
+            
             var yearSelect = document.getElementById('yearSelect');
             var monthSelect = document.getElementById('monthSelect');
+            
+            console.log('yearSelect要素:', yearSelect);
+            console.log('monthSelect要素:', monthSelect);
+            
+            if (!yearSelect || !monthSelect) {
+                console.log('年選択または月選択の要素が見つかりません');
+                return;
+            }
+            
+            console.log('yearSelect.value:', yearSelect.value);
             var selectedYear = parseInt(yearSelect.value);
+            console.log('解析された年:', selectedYear);
             
             // 月のオプションをクリア
             monthSelect.innerHTML = '';
+            console.log('月のオプションをクリアしました');
             
-            if (!selectedYear) {
-                monthSelect.innerHTML = '<option value="">選択</option>';
-                return;
+            // 年が選択されていない場合、デフォルトで現在年を使用
+            if (!selectedYear || isNaN(selectedYear)) {
+                console.log('年が無効です。現在年をデフォルトとして使用します');
+                var now = new Date();
+                selectedYear = now.getFullYear();
+                console.log('デフォルト年:', selectedYear);
+                // 年選択ボックスも現在年に設定
+                yearSelect.value = selectedYear;
+                console.log('年選択ボックスを現在年に設定しました');
             }
             
             // 現在の年月を取得
             var now = new Date();
             var currentYear = now.getFullYear();
             var currentMonth = now.getMonth() + 1;
+            console.log('現在年:', currentYear, '現在月:', currentMonth);
             
             // デフォルトオプションを追加
             monthSelect.innerHTML = '<option value="">選択</option>';
+            console.log('デフォルト選択肢を追加しました');
             
             // 12ヶ月のオプションを追加
+            console.log('12ヶ月のオプションを追加開始');
             for (var month = 1; month <= 12; month++) {
                 var option = document.createElement('option');
                 var monthStr = String(month).padStart(2, '0');
                 option.value = selectedYear + '-' + monthStr;
                 option.textContent = month + '月';
                 
+                console.log('月オプション作成:', month + '月', 'value:', option.value);
+                
                 // 現在の年月の場合はselectedにする
                 if (selectedYear === currentYear && month === currentMonth) {
                     option.selected = true;
+                    console.log('現在月を選択状態にしました:', month + '月');
                 }
                 
                 monthSelect.appendChild(option);
             }
+            console.log('すべての月オプションを追加完了。最終的な月選択肢数:', monthSelect.options.length);
         }
 
         // ページ読み込み時の初期化
-        window.onload = function() {
+        function initializePage() {
+            console.log('ページ初期化関数実行');
+            
             var projectSelect = document.getElementById('projectSelect');
+            console.log('projectSelect要素:', projectSelect);
             
             // 第一個項目を選択
-            if (projectSelect.options.length > 1) {
+            if (projectSelect && projectSelect.options.length > 1) {
                 projectSelect.selectedIndex = 1; // 最初の項目（選択してくださいを除く）
                 showProjectInfo(); // プロジェクト情報を表示
+                console.log('最初のプロジェクトを選択しました');
             }
             
-            // 年が選択されている場合は月のオプションを初期化
-            var yearSelect = document.getElementById('yearSelect');
-            if (yearSelect.value) {
-                updateMonthOptions();
-            }
+            // 月のオプションを初期化
+            console.log('updateMonthOptionsを呼び出します');
+            updateMonthOptions();
         }
+
+        // 複数の方法で初期化を試行
+        window.onload = function() {
+            console.log('window.onload実行');
+            initializePage();
+        };
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOMContentLoaded実行');
+            initializePage();
+        });
+        
+        // 追加の安全策として、少し遅延して実行
+        setTimeout(function() {
+            console.log('setTimeout遅延実行');
+            initializePage();
+        }, 500);
     </script>
 </head>
 <body>
@@ -683,44 +701,7 @@
                         <div><strong>期間:</strong> <span id="selectedProjectPeriod">-</span></div>
                     </div>
                     
-                    <%-- プロジェクト変更・削除ボタン --%>
-                    <div style="margin-top: 15px; text-align: center;">
-                        <button type="button" class="btn btn-success" onclick="toggleProjectEdit()">変更</button>
-                        <button type="button" class="btn btn-danger" onclick="confirmProjectDelete()">削除</button>
-                    </div>
                     
-                    <%-- プロジェクト編集フォーム --%>
-                    <div id="projectEditForm" style="display: none; margin-top: 15px; padding: 15px; background-color: white; border-radius: 4px; border: 1px solid #dee2e6;">
-                        <form method="post" action="<%= request.getContextPath() %>/projectManage" onsubmit="return confirmProjectUpdate();">
-                            <input type="hidden" name="action" value="update">
-                            <input type="hidden" id="editProjectId" name="ProjectId" value="">
-                            
-                            <div class="form-group">
-                                <label for="editProjectName">プロジェクト名：</label>
-                                <input type="text" id="editProjectName" name="ProjectName" maxlength="10" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="editBudgetAmount">予算：</label>
-                                <input type="number" id="editBudgetAmount" name="BudgetAmount">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="editStartDate">期間(開始日)：</label>
-                                <input type="date" id="editStartDate" name="StartDate">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="editEndDate">期間(終了日)：</label>
-                                <input type="date" id="editEndDate" name="EndDate">
-                            </div>
-                            
-                            <div style="text-align: center; margin-top: 15px;">
-                                <button type="submit" class="btn btn-primary">更新</button>
-                                <button type="button" class="btn btn-secondary" onclick="cancelProjectEdit()">キャンセル</button>
-                            </div>
-                        </form>
-                    </div>
                     
                     <%-- 削除用フォーム（非表示） --%>
                     <form id="projectDeleteForm" method="post" action="<%= request.getContextPath() %>/projectManage" style="display: none;">
@@ -734,6 +715,23 @@
         
         <a href="<%= request.getContextPath() %>/AdminMenuServlet" class="back-link">メニューへ戻る</a>
     </div>
+
+    <script>
+        // ページの最後で直接実行
+        console.log('ページ最下部スクリプト実行');
+        
+        // 少し遅延してから実行
+        setTimeout(function() {
+            console.log('最下部setTimeout実行');
+            var monthSelect = document.getElementById('monthSelect');
+            if (monthSelect) {
+                console.log('monthSelect見つかりました、初期オプション数:', monthSelect.options.length);
+                updateMonthOptions();
+            } else {
+                console.log('monthSelectが見つかりませんでした');
+            }
+        }, 100);
+    </script>
 </body>
 </html>
 
