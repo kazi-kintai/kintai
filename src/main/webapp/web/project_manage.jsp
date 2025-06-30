@@ -623,7 +623,7 @@
                     
                     <div class="form-group">
                         <label for="newPrjName">予算：</label>
-                        <input type="number" id="BudgetAmount" name="BudgetAmount" maxlength="10">
+                        <input type="number" id="BudgetAmount" name="BudgetAmount" maxlength="100">
                     </div>
 
                     <div class="form-group">
