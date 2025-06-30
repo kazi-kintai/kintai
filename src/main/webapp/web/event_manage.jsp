@@ -559,7 +559,7 @@
                         // 日付をYYYY-MM-DD形式の文字列に変換し、HTML IDの一部として使用
                         String formattedEventDateId = event.getEventDate().toString().replace("-", "_");
                         // このイベントに紐づく繰り返しルールを取得
-                        EventRepeatRuleBean eventRule = rulesByEventDateFk.get(event.getEventDate());
+                        EventRepeatRuleBean eventRule = (event.getRepeatRuleId() != null) ? rulesByRuleId.get(event.getRepeatRuleId()) : null;
                     %>
                         <tr>
                             <td>
@@ -568,7 +568,7 @@
                                     <%= event.getEventDate() %>
                                 </span>
                                 
-                                <%-- 編集表单（初始隐藏） --%>
+                                <%-- 編集フォーム --%>
                                 <form id="edit-<%= formattedEventDateId %>" method="post" 
                                       action="<%= request.getContextPath() %>/EventManageServlet" 
                                       class="edit-form" style="display: none;"
