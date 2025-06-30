@@ -372,6 +372,36 @@
             }
         }
         
+        // その他経費入力値検証関数
+        function validateOtherExpenses(input) {
+            var value = parseFloat(input.value);
+            var maxValue = 999999999999; // 12タケ（12桁）
+            
+            if (value > maxValue) {
+                alert('その他経費は12桁以内で入力してください（最大値：¥' + maxValue.toLocaleString() + '）');
+                input.value = maxValue;
+                input.style.borderColor = '#dc3545';
+                setTimeout(function() {
+                    input.style.borderColor = '#ced4da';
+                }, 2000);
+            }
+        }
+        
+        // 時給入力値検証関数
+        function validateHourlyRate(input) {
+            var value = parseFloat(input.value);
+            var maxValue = 99999.99; // DECIMAL(7,2)の最大値
+            
+            if (value > maxValue) {
+                alert('時給は99999.99以内で入力してください（最大値：¥' + maxValue.toLocaleString() + '）');
+                input.value = maxValue;
+                input.style.borderColor = '#dc3545';
+                setTimeout(function() {
+                    input.style.borderColor = '#ced4da';
+                }, 2000);
+            }
+        }
+        
         function closeWindow() {
             window.close();
         }
@@ -430,9 +460,11 @@
                                            value="<%= (member.getHourlyRate() != null && member.getHourlyRate().compareTo(BigDecimal.ZERO) > 0) ? member.getHourlyRate().intValue() : "" %>"
                                            data-empno="<%= member.getEmpNo() %>"
                                            min="0" 
+                                           max="99999.99"
                                            step="100"
                                            placeholder="--"
-                                           style="width: 80px; text-align: right; padding: 4px; border: 1px solid #ced4da; border-radius: 4px;">
+                                           style="width: 80px; text-align: right; padding: 4px; border: 1px solid #ced4da; border-radius: 4px;"
+                                           oninput="validateHourlyRate(this)">
                                 </td>
                                 <td class="text-right">
                                     <% if (hasCalculatedData && member.getActualAmount() != null) { %>
@@ -465,7 +497,7 @@
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">その他経費：</span>
-                            <span>¥<input type="number" id="otherExpenses" placeholder="0" min="0" style="width: 80px; text-align: right; padding: 4px; border: 1px solid #ced4da; border-radius: 4px;" onchange="updateBudgetVariance()"></span>
+                            <span>¥<input type="number" id="otherExpenses" placeholder="0" min="0" max="999999999999" style="width: 80px; text-align: right; padding: 4px; border: 1px solid #ced4da; border-radius: 4px;" onchange="updateBudgetVariance()" oninput="validateOtherExpenses(this)"></span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">予算実績差異：</span>
@@ -486,7 +518,7 @@
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">その他経費：</span>
-                            <span>¥<input type="number" id="otherExpenses" placeholder="0" min="0" style="width: 80px; text-align: right; padding: 4px; border: 1px solid #ced4da; border-radius: 4px;" onchange="updateBudgetVariance()"></span>
+                            <span>¥<input type="number" id="otherExpenses" placeholder="0" min="0" max="999999999999" style="width: 80px; text-align: right; padding: 4px; border: 1px solid #ced4da; border-radius: 4px;" onchange="updateBudgetVariance()" oninput="validateOtherExpenses(this)"></span>
                         </div>
                         <div class="summary-row">
                             <span class="summary-label">予算実績差異：</span>
