@@ -168,7 +168,7 @@
                 alert('IDと名称を入力してください。');
                 return false;
             }
-            return confirm('休暇種別「' + name + '」を追加してもよろしいですか？');
+            return confirm('休日種別「' + name + '」を追加してもよろしいですか？');
         }
 
         function confirmUpdate(form, id) {
@@ -181,7 +181,7 @@
         }
 
         function confirmDelete(id, name) {
-            if (confirm('休暇種別「' + name + '」を削除してもよろしいですか？')) {
+            if (confirm('休日種別「' + name + '」を削除してもよろしいですか？')) {
                 document.getElementById('deleteForm-' + id).submit();
             }
         }
