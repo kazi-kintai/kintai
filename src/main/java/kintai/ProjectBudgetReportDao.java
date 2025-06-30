@@ -14,36 +14,40 @@ public class ProjectBudgetReportDao {
     
     /**
      * 指定されたプロジェクトと月の参加メンバーの実績レポートを取得
-     * 個人予算実績差異も計算して含める
+     * 新規入力時は前月の時給を初期値として表示（前月データがない場合は空白）
      */
     public List<ProjectMemberReportBean> getProjectMemberReports(int projectId, String month) {
         List<ProjectMemberReportBean> reports = new ArrayList<>();
         
-        // 当月の工数のみを取得するSQL（初期表示では実績額を計算しない）
+        // 当月の工数を取得し、時給は当月優先、なければ前月のデータを取得するSQL
         String sql = "SELECT " +
                     "    e.EMP_ID, " +
                     "    e.EMP_NAME, " +
                     "    SUM(CASE WHEN DATE_FORMAT(wa.WORK_DATE, '%Y-%m') = ? THEN wa.WORK_HOURS ELSE 0 END) as MONTHLY_HOURS, " +
                     "    SUM(wa.WORK_HOURS) as TOTAL_PROJECT_HOURS, " +
-                    "    COALESCE(hrm.HOURLY_RATE, 0) as HOURLY_RATE, " +
+                    "    COALESCE(current_month.HOURLY_RATE, prev_month.HOURLY_RATE, 0) as HOURLY_RATE, " +
                     "    NULL as ACTUAL_AMOUNT " +  // 初期表示では実績額を計算しない
                     "FROM work_alloc wa " +
                     "INNER JOIN emp e ON wa.EMP_ID = e.EMP_ID " +
-                    "LEFT JOIN hourly_rate_monthly hrm ON e.EMP_ID = hrm.EMP_ID " +
-                    "    AND wa.PROJECT_ID = hrm.PROJECT_ID " +
-                    "    AND DATE_FORMAT(hrm.TARGET_MONTH, '%Y-%m') = ? " +
+                    "LEFT JOIN hourly_rate_monthly current_month ON e.EMP_ID = current_month.EMP_ID " +
+                    "    AND wa.PROJECT_ID = current_month.PROJECT_ID " +
+                    "    AND DATE_FORMAT(current_month.TARGET_MONTH, '%Y-%m') = ? " +
+                    "LEFT JOIN hourly_rate_monthly prev_month ON e.EMP_ID = prev_month.EMP_ID " +
+                    "    AND wa.PROJECT_ID = prev_month.PROJECT_ID " +
+                    "    AND DATE_FORMAT(prev_month.TARGET_MONTH, '%Y-%m') = DATE_FORMAT(DATE_SUB(STR_TO_DATE(CONCAT(?, '-01'), '%Y-%m-%d'), INTERVAL 1 MONTH), '%Y-%m') " +
                     "WHERE wa.PROJECT_ID = ? " +
-                    "GROUP BY e.EMP_ID, e.EMP_NAME, hrm.HOURLY_RATE " +
+                    "GROUP BY e.EMP_ID, e.EMP_NAME, current_month.HOURLY_RATE, prev_month.HOURLY_RATE " +
                     "HAVING SUM(CASE WHEN DATE_FORMAT(wa.WORK_DATE, '%Y-%m') = ? THEN wa.WORK_HOURS ELSE 0 END) > 0 " +
                     "ORDER BY e.EMP_ID";
         
         try (Connection conn = db.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
             
-            stmt.setString(1, month);
-            stmt.setString(2, month);
-            stmt.setInt(3, projectId);
-            stmt.setString(4, month);
+            stmt.setString(1, month);    // 当月の工数計算用
+            stmt.setString(2, month);    // 当月の時給取得用
+            stmt.setString(3, month);    // 前月の時給取得用（前月計算に使用）
+            stmt.setInt(4, projectId);   // プロジェクトID
+            stmt.setString(5, month);    // 当月の工数フィルタ用
             
             try (ResultSet rs = stmt.executeQuery()) {
                 while (rs.next()) {
@@ -52,7 +56,15 @@ public class ProjectBudgetReportDao {
                     report.setEmpName(rs.getString("EMP_NAME"));
                     report.setTotalHours(rs.getBigDecimal("MONTHLY_HOURS"));
                     report.setTotalProjectHours(rs.getBigDecimal("TOTAL_PROJECT_HOURS"));
-                    report.setHourlyRate(rs.getBigDecimal("HOURLY_RATE"));
+                    
+                    // 時給：当月データがあれば当月、なければ前月、どちらもなければ0
+                    BigDecimal hourlyRate = rs.getBigDecimal("HOURLY_RATE");
+                    if (hourlyRate != null && hourlyRate.compareTo(BigDecimal.ZERO) > 0) {
+                        report.setHourlyRate(hourlyRate);
+                    } else {
+                        report.setHourlyRate(null); // 0の場合は空白表示
+                    }
+                    
                     report.setActualAmount(null); // 初期表示では null
                     report.setPersonalBudget(null); // 初期表示では null
                     report.setPersonalBudgetVariance(null); // 初期表示では null

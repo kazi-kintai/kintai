@@ -427,7 +427,7 @@
                                 <td class="text-right">
                                     <input type="number" 
                                            class="hourly-rate-input" 
-                                           value="<%= (hasCalculatedData && member.getHourlyRate() != null && member.getHourlyRate().compareTo(BigDecimal.ZERO) > 0) ? member.getHourlyRate().intValue() : "" %>"
+                                           value="<%= (member.getHourlyRate() != null && member.getHourlyRate().compareTo(BigDecimal.ZERO) > 0) ? member.getHourlyRate().intValue() : "" %>"
                                            data-empno="<%= member.getEmpNo() %>"
                                            min="0" 
                                            step="100"
