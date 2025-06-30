@@ -31,7 +31,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>項目人員詳細</title>
+    <title>プロジェクト予実績管理</title>
     <style>
         body {
             font-family: 'メイリオ', sans-serif;
@@ -144,17 +144,22 @@
         }
         
         .summary-section {
-            background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+            background-color: transparent;
             padding: 15px;
             margin-top: 20px;
             border-radius: 8px;
-            border: 1px solid #bbdefb;
-            box-shadow: 0 2px 4px rgba(0,123,255,0.1);
+            border: none;
+            box-shadow: none;
+            display: inline-block;
+            float: right;
+            width: auto;
+            min-width: 280px;
         }
         
         .summary-row {
             margin-bottom: 10px;
             font-size: 14px;
+            text-align: left;
         }
         
         .summary-label {
@@ -215,6 +220,7 @@
         .calculation-section {
             margin-top: 20px;
             text-align: center;
+            clear: both;
         }
         
         .no-data {
@@ -327,12 +333,11 @@
                     summaryValues[0].textContent = '¥' + Number(data.totalActual).toLocaleString();
                 }
                 
-                // 予算実績差異（二番目の要素）
-                if (summaryValues[1]) {
-                    var variance = data.budgetVariance;
-                    summaryValues[1].textContent = '¥' + Number(variance).toLocaleString();
-                    summaryValues[1].className = 'summary-value ' + (variance >= 0 ? 'variance-positive' : 'variance-negative');
-                }
+                // データを保存してupdateBudgetVariance関数で使用
+                window.currentProjectData = data;
+                
+                // 初期の予算実績差異を更新
+                updateBudgetVariance();
                 
                 var summarySection = document.getElementById('summarySection');
                 summarySection.style.display = 'block';
@@ -345,6 +350,26 @@
                     summarySection.style.transform = 'translateY(0)';
                 }, 100);
             }, actualAmountTotals.length * 80 + 300);
+        }
+        
+        // 予算実績差異を更新する関数（その他経費を考慮）
+        function updateBudgetVariance() {
+            if (!window.currentProjectData) {
+                return;
+            }
+            
+            var data = window.currentProjectData;
+            var otherExpenses = parseFloat(document.getElementById('otherExpenses').value) || 0;
+            var budget = <%= project != null && project.getBudget() != null ? project.getBudget() : 0 %>;
+            
+            // 新しい計算式：予算 - 人件費合計(実績額) - その他経費 = 予算実績差異
+            var newVariance = budget - data.totalActual - otherExpenses;
+            
+            var varianceDisplay = document.getElementById('budgetVarianceDisplay');
+            if (varianceDisplay) {
+                varianceDisplay.textContent = '¥' + Number(newVariance).toLocaleString();
+                varianceDisplay.className = 'summary-value ' + (newVariance >= 0 ? 'variance-positive' : 'variance-negative');
+            }
         }
         
         function closeWindow() {
@@ -361,7 +386,7 @@
             </div>
         </div>
         
-        <h1>項目人員詳細</h1>
+        <h1>プロジェクト予実績管理</h1>
         
         <% if (project != null) { %>
             <div class="project-info">
@@ -439,13 +464,17 @@
                             <span class="summary-value">¥<%= totalActual != null ? String.format("%,.0f", totalActual) : "0" %></span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-label">その他経費：</span>
+                            <span>¥<input type="number" id="otherExpenses" placeholder="0" min="0" style="width: 80px; text-align: right; padding: 4px; border: 1px solid #ced4da; border-radius: 4px;" onchange="updateBudgetVariance()"></span>
+                        </div>
+                        <div class="summary-row">
                             <span class="summary-label">予算実績差異：</span>
                             <% if (budgetVariance != null) { %>
-                                <span class="summary-value <%= budgetVariance.compareTo(BigDecimal.ZERO) >= 0 ? "variance-positive" : "variance-negative" %>">
+                                <span id="budgetVarianceDisplay" class="summary-value <%= budgetVariance.compareTo(BigDecimal.ZERO) >= 0 ? "variance-positive" : "variance-negative" %>">
                                     ¥<%= String.format("%,.0f", budgetVariance) %>
                                 </span>
                             <% } else { %>
-                                <span class="summary-value">計算不可</span>
+                                <span id="budgetVarianceDisplay" class="summary-value">計算不可</span>
                             <% } %>
                         </div>
                     </div>
@@ -456,8 +485,12 @@
                             <span class="summary-value">--</span>
                         </div>
                         <div class="summary-row">
+                            <span class="summary-label">その他経費：</span>
+                            <span>¥<input type="number" id="otherExpenses" placeholder="0" min="0" style="width: 80px; text-align: right; padding: 4px; border: 1px solid #ced4da; border-radius: 4px;" onchange="updateBudgetVariance()"></span>
+                        </div>
+                        <div class="summary-row">
                             <span class="summary-label">予算実績差異：</span>
-                            <span class="summary-value">--</span>
+                            <span id="budgetVarianceDisplay" class="summary-value">--</span>
                         </div>
                     </div>
                 <% } %>

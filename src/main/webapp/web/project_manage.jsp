@@ -513,6 +513,44 @@
             }
         }
 
+        // 年選択に応じて月のオプションを更新
+        function updateMonthOptions() {
+            var yearSelect = document.getElementById('yearSelect');
+            var monthSelect = document.getElementById('monthSelect');
+            var selectedYear = parseInt(yearSelect.value);
+            
+            // 月のオプションをクリア
+            monthSelect.innerHTML = '';
+            
+            if (!selectedYear) {
+                monthSelect.innerHTML = '<option value="">選択</option>';
+                return;
+            }
+            
+            // 現在の年月を取得
+            var now = new Date();
+            var currentYear = now.getFullYear();
+            var currentMonth = now.getMonth() + 1;
+            
+            // デフォルトオプションを追加
+            monthSelect.innerHTML = '<option value="">選択</option>';
+            
+            // 12ヶ月のオプションを追加
+            for (var month = 1; month <= 12; month++) {
+                var option = document.createElement('option');
+                var monthStr = String(month).padStart(2, '0');
+                option.value = selectedYear + '-' + monthStr;
+                option.textContent = month + '月';
+                
+                // 現在の年月の場合はselectedにする
+                if (selectedYear === currentYear && month === currentMonth) {
+                    option.selected = true;
+                }
+                
+                monthSelect.appendChild(option);
+            }
+        }
+
         // ページ読み込み時の初期化
         window.onload = function() {
             var projectSelect = document.getElementById('projectSelect');
@@ -521,6 +559,12 @@
             if (projectSelect.options.length > 1) {
                 projectSelect.selectedIndex = 1; // 最初の項目（選択してくださいを除く）
                 showProjectInfo(); // プロジェクト情報を表示
+            }
+            
+            // 年が選択されている場合は月のオプションを初期化
+            var yearSelect = document.getElementById('yearSelect');
+            if (yearSelect.value) {
+                updateMonthOptions();
             }
         }
     </script>
@@ -580,9 +624,9 @@
                 </form>
             </div>
             
-            <%-- プロジェクト予算実績表示セクション --%>
+            <%-- プロジェクト予実績管理セクション --%>
             <div class="add-form form-container">
-                <h2>プロジェクト予算実績表示</h2>
+                <h2>プロジェクト予実績管理</h2>
                 <div class="form-inline">
                     <div class="form-group">
                         <label for="projectSelect">プロジェクト：</label>
@@ -602,21 +646,25 @@
                         </select>
                     </div>
                     
-                    <div class="form-group">
-                        <label for="monthSelect">月：</label>
-                        <select id="monthSelect" required>
-                            <option value="">選択してください</option>
+                    <div class="form-group" style="flex-direction: row; align-items: center; gap: 10px;">
+                        <label for="yearSelect" style="margin-bottom: 0; margin-right: 5px;">年：</label>
+                        <select id="yearSelect" onchange="updateMonthOptions()" required style="width: 90px;">
+                            <option value="">選択</option>
                             <% 
                                 java.util.Calendar cal = java.util.Calendar.getInstance();
                                 int currentYear = cal.get(java.util.Calendar.YEAR);
                                 int currentMonth = cal.get(java.util.Calendar.MONTH) + 1;
+                                
+                                // 過去3年から未来2年まで表示
+                                for (int year = currentYear - 3; year <= currentYear + 2; year++) {
                             %>
-                            <% for (int month = 1; month <= 12; month++) { %>
-                                <option value="<%= currentYear %>-<%= String.format("%02d", month) %>" 
-                                        <%= (month == currentMonth) ? "selected" : "" %>>
-                                    <%= month %>月
-                                </option>
+                                <option value="<%= year %>" <%= (year == currentYear) ? "selected" : "" %>><%= year %>年</option>
                             <% } %>
+                        </select>
+                        
+                        <label for="monthSelect" style="margin-bottom: 0; margin-right: 5px; margin-left: 10px;">月：</label>
+                        <select id="monthSelect" required style="width: 80px;">
+                            <option value="">選択</option>
                         </select>
                     </div>
                     

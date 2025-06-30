@@ -914,28 +914,6 @@ public class ReportGenerationService {
             // 空行
             xml.append("<Row></Row>\n");
             
-            // 月次統計サマリー
-            xml.append("<Row>\n");
-            xml.append("<Cell ss:MergeAcross=\"7\" ss:StyleID=\"Summary\"><Data ss:Type=\"String\">月次統計サマリー</Data></Cell>\n");
-            xml.append("</Row>\n");
-            
-            xml.append("<Row>\n");
-            xml.append("<Cell><Data ss:Type=\"String\">出勤日数/出社日</Data></Cell>\n");
-            xml.append("<Cell><Data ss:Type=\"String\">").append(summary.getAttendanceRateString()).append("</Data></Cell>\n");
-            xml.append("<Cell><Data ss:Type=\"String\">総実働時間</Data></Cell>\n");
-            xml.append("<Cell><Data ss:Type=\"String\">").append(summary.getTotalWorkingHoursString()).append("</Data></Cell>\n");
-            xml.append("</Row>\n");
-            
-            xml.append("<Row>\n");
-            xml.append("<Cell><Data ss:Type=\"String\">総残業時間</Data></Cell>\n");
-            xml.append("<Cell><Data ss:Type=\"String\">").append(summary.getTotalOvertimeHoursString()).append("</Data></Cell>\n");
-            xml.append("<Cell><Data ss:Type=\"String\">総休憩時間</Data></Cell>\n");
-            xml.append("<Cell><Data ss:Type=\"String\">").append(summary.getTotalBreakHoursString()).append("</Data></Cell>\n");
-            xml.append("</Row>\n");
-            
-            // 空行
-            xml.append("<Row></Row>\n");
-            
             // 詳細記録セクション
             xml.append("<Row>\n");
             xml.append("<Cell ss:MergeAcross=\"7\" ss:StyleID=\"Summary\"><Data ss:Type=\"String\">詳細勤怠記録</Data></Cell>\n");
@@ -995,6 +973,28 @@ public class ReportGenerationService {
             xml.append("<Cell></Cell>\n");
             xml.append("</Row>\n");
             
+            // 空行
+            xml.append("<Row></Row>\n");
+            
+            // 月次統計サマリー（詳細記録と合計の後に移動）
+            xml.append("<Row>\n");
+            xml.append("<Cell ss:MergeAcross=\"7\" ss:StyleID=\"Summary\"><Data ss:Type=\"String\">月次統計サマリー</Data></Cell>\n");
+            xml.append("</Row>\n");
+            
+            xml.append("<Row>\n");
+            xml.append("<Cell><Data ss:Type=\"String\">出勤日数/出社日</Data></Cell>\n");
+            xml.append("<Cell><Data ss:Type=\"String\">").append(summary.getAttendanceRateString()).append("</Data></Cell>\n");
+            xml.append("<Cell><Data ss:Type=\"String\">総稼働時間</Data></Cell>\n");
+            xml.append("<Cell><Data ss:Type=\"String\">").append(summary.getTotalWorkingHoursString()).append("</Data></Cell>\n");
+            xml.append("</Row>\n");
+            
+            xml.append("<Row>\n");
+            xml.append("<Cell><Data ss:Type=\"String\">総残業時間</Data></Cell>\n");
+            xml.append("<Cell><Data ss:Type=\"String\">").append(summary.getTotalOvertimeHoursString()).append("</Data></Cell>\n");
+            xml.append("<Cell><Data ss:Type=\"String\">総休憩時間</Data></Cell>\n");
+            xml.append("<Cell><Data ss:Type=\"String\">").append(summary.getTotalBreakHoursString()).append("</Data></Cell>\n");
+            xml.append("</Row>\n");
+            
             // ワークシート終了
             xml.append("</Table>\n");
             xml.append("</Worksheet>\n");
@@ -1018,12 +1018,6 @@ public class ReportGenerationService {
         csv.append("個人別月次勤怠報告書\n");
         csv.append("対象月,").append(summary.getTargetMonth()).append("\n");
         csv.append("生成日,").append(LocalDate.now().format(DATE_FORMATTER)).append("\n\n");
-        
-        // 統計情報
-        csv.append("出勤日数/出社日,").append(summary.getAttendanceRateString()).append("\n");
-        csv.append("総実働時間,").append(summary.getTotalWorkingHoursString()).append("\n");
-        csv.append("総残業時間,").append(summary.getTotalOvertimeHoursString()).append("\n");
-        csv.append("総休憩時間,").append(summary.getTotalBreakHoursString()).append("\n\n");
         
         // 詳細記録ヘッダー
         csv.append("日付,曜日,出勤時刻,退勤時刻,休憩時間,実働時間,残業時間,備考\n");
@@ -1051,6 +1045,13 @@ public class ReportGenerationService {
             csv.append("\"").append(record.getOvertimeFormatted()).append("\",");
             csv.append("\"").append(remarks).append("\"\n");
         }
+        
+        // 月次統計サマリー（詳細記録の後に移動）
+        csv.append("\n月次統計サマリー\n");
+        csv.append("出勤日数/出社日,").append(summary.getAttendanceRateString()).append("\n");
+        csv.append("総稼働時間,").append(summary.getTotalWorkingHoursString()).append("\n");
+        csv.append("総残業時間,").append(summary.getTotalOvertimeHoursString()).append("\n");
+        csv.append("総休憩時間,").append(summary.getTotalBreakHoursString()).append("\n");
         
         try {
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

@@ -697,7 +697,7 @@
               <div class="value" id="workDays">-</div>
             </div>
             <div class="summary-item">
-              <div class="label">今月の総労働時間</div>
+              <div class="label">今月の総稼働時間</div>
               <div class="value" id="totalHours">-</div>
             </div>
             <div class="summary-item">

@@ -1876,7 +1876,7 @@
             reportHtml += '</div>';
             reportHtml += '</div>';
             
-            // 真実の月次統計データ
+            // 月次統計サマリー（弹跳窗口用）
             reportHtml += '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px;">';
             
             reportHtml += '<div style="background-color: #e8f5e8; border: 1px solid #c3e6cb; border-radius: 8px; padding: 15px; text-align: center;">';
@@ -1886,7 +1886,7 @@
             reportHtml += '</div>';
             
             reportHtml += '<div style="background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 8px; padding: 15px; text-align: center;">';
-            reportHtml += '<h5 style="margin: 0 0 10px 0; color: #856404;">総労働時間</h5>';
+            reportHtml += '<h5 style="margin: 0 0 10px 0; color: #856404;">総稼働時間</h5>';
             reportHtml += '<div style="font-size: 24px; font-weight: bold; color: #856404;">' + data.totalWorkingHours + '</div>';
             reportHtml += '<div style="font-size: 12px; color: #666;">実際の労働時間</div>';
             reportHtml += '</div>';
