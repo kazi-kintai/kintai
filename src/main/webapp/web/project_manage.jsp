@@ -450,6 +450,7 @@
             }
             
             var selectedOption = select.options[select.selectedIndex];
+            var projectId = selectedOption.value;
             var projectName = selectedOption.getAttribute('data-name');
             var budget = selectedOption.getAttribute('data-budget');
             var startDate = selectedOption.getAttribute('data-start');
@@ -470,7 +471,46 @@
             }
             document.getElementById('selectedProjectPeriod').textContent = period;
             
+            // 編集フォームに値を設定
+            document.getElementById('editProjectId').value = projectId;
+            document.getElementById('editProjectName').value = projectName;
+            document.getElementById('editBudgetAmount').value = budget ? budget : '';
+            document.getElementById('editStartDate').value = startDate ? startDate : '';
+            document.getElementById('editEndDate').value = endDate ? endDate : '';
+            
+            // 削除フォームに値を設定
+            document.getElementById('deleteProjectId').value = projectId;
+            
             infoArea.style.display = 'block';
+        }
+
+        // プロジェクト編集フォーム表示切り替え
+        function toggleProjectEdit() {
+            var editForm = document.getElementById('projectEditForm');
+            if (editForm.style.display === 'none' || editForm.style.display === '') {
+                editForm.style.display = 'block';
+            } else {
+                editForm.style.display = 'none';
+            }
+        }
+
+        // プロジェクト編集キャンセル
+        function cancelProjectEdit() {
+            document.getElementById('projectEditForm').style.display = 'none';
+        }
+
+        // プロジェクト更新確認
+        function confirmProjectUpdate() {
+            var projectName = document.getElementById('editProjectName').value;
+            return confirm('プロジェクト「' + projectName + '」の情報を変更してもよろしいですか？');
+        }
+
+        // プロジェクト削除確認
+        function confirmProjectDelete() {
+            var projectName = document.getElementById('selectedProjectName').textContent;
+            if (confirm('プロジェクト「' + projectName + '」を削除してもよろしいですか？')) {
+                document.getElementById('projectDeleteForm').submit();
+            }
         }
 
         // ページ読み込み時の初期化
@@ -594,6 +634,51 @@
                         <div><strong>予算:</strong> <span id="selectedProjectBudget">-</span></div>
                         <div><strong>期間:</strong> <span id="selectedProjectPeriod">-</span></div>
                     </div>
+                    
+                    <%-- プロジェクト変更・削除ボタン --%>
+                    <div style="margin-top: 15px; text-align: center;">
+                        <button type="button" class="btn btn-success" onclick="toggleProjectEdit()">変更</button>
+                        <button type="button" class="btn btn-danger" onclick="confirmProjectDelete()">削除</button>
+                    </div>
+                    
+                    <%-- プロジェクト編集フォーム --%>
+                    <div id="projectEditForm" style="display: none; margin-top: 15px; padding: 15px; background-color: white; border-radius: 4px; border: 1px solid #dee2e6;">
+                        <form method="post" action="<%= request.getContextPath() %>/projectManage" onsubmit="return confirmProjectUpdate();">
+                            <input type="hidden" name="action" value="update">
+                            <input type="hidden" id="editProjectId" name="ProjectId" value="">
+                            
+                            <div class="form-group">
+                                <label for="editProjectName">プロジェクト名：</label>
+                                <input type="text" id="editProjectName" name="ProjectName" maxlength="10" required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editBudgetAmount">予算：</label>
+                                <input type="number" id="editBudgetAmount" name="BudgetAmount">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editStartDate">期間(開始日)：</label>
+                                <input type="date" id="editStartDate" name="StartDate">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="editEndDate">期間(終了日)：</label>
+                                <input type="date" id="editEndDate" name="EndDate">
+                            </div>
+                            
+                            <div style="text-align: center; margin-top: 15px;">
+                                <button type="submit" class="btn btn-primary">更新</button>
+                                <button type="button" class="btn btn-secondary" onclick="cancelProjectEdit()">キャンセル</button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <%-- 削除用フォーム（非表示） --%>
+                    <form id="projectDeleteForm" method="post" action="<%= request.getContextPath() %>/projectManage" style="display: none;">
+                        <input type="hidden" name="action" value="delete">
+                        <input type="hidden" id="deleteProjectId" name="ProjectId" value="">
+                    </form>
                 </div>
             </div>
         </div >

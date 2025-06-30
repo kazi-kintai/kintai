@@ -320,13 +320,19 @@
             
             // 総集計セクション更新・表示
             setTimeout(function() {
-                document.querySelector('.summary-section .summary-value').textContent = 
-                    '¥' + Number(data.totalActual).toLocaleString();
+                var summaryValues = document.querySelectorAll('.summary-section .summary-value');
                 
-                var varianceElement = document.querySelector('.summary-section .summary-value:last-child');
-                var variance = data.budgetVariance;
-                varianceElement.textContent = '¥' + Number(variance).toLocaleString();
-                varianceElement.className = 'summary-value ' + (variance >= 0 ? 'variance-positive' : 'variance-negative');
+                // 実績額合計（最初の要素）
+                if (summaryValues[0]) {
+                    summaryValues[0].textContent = '¥' + Number(data.totalActual).toLocaleString();
+                }
+                
+                // 予算実績差異（二番目の要素）
+                if (summaryValues[1]) {
+                    var variance = data.budgetVariance;
+                    summaryValues[1].textContent = '¥' + Number(variance).toLocaleString();
+                    summaryValues[1].className = 'summary-value ' + (variance >= 0 ? 'variance-positive' : 'variance-negative');
+                }
                 
                 var summarySection = document.getElementById('summarySection');
                 summarySection.style.display = 'block';

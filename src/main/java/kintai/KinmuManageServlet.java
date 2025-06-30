@@ -296,6 +296,31 @@ public class KinmuManageServlet extends HttpServlet {
                     int projectId = Integer.parseInt(projectIdStr);
                     double workHours = Double.parseDouble(workHoursStr);
 
+                    // 稼働時間チェック：追加しようとする工数が稼働時間を超えないかチェック
+                    WorkTimeBean workTimeForAlloc = workTimeDao.findWorkTimeByDate(empno, targetDate);
+                    if (workTimeForAlloc != null && workTimeForAlloc.getClockIn() != null && workTimeForAlloc.getClockOut() != null) {
+                        // 実稼働時間を計算（退勤時刻 - 出勤時刻 - 休憩時間）
+                        double availableHours = calculateAvailableWorkHours(empno, targetDate, workTimeForAlloc);
+                        
+                        // 既存の工数割り当て合計を取得
+                        List<KinmuManageBean.WorkAlloc> existingWorkAllocs = workTimeDao.findWorkAllocsByEmpNoAndDate(empno, targetDate);
+                        double totalExistingHours = existingWorkAllocs.stream()
+                            .mapToDouble(alloc -> alloc.getWorkHours())
+                            .sum();
+                        
+                        // 新しい工数を追加した場合の合計時間をチェック
+                        double totalHoursAfterAdd = totalExistingHours + workHours;
+                        
+                        if (totalHoursAfterAdd > availableHours) {
+                            errorMessage = String.format("工数割り当て時間が稼働時間を超えています。稼働時間: %.2f時間、割り当て済み: %.2f時間、利用可能: %.2f時間", 
+                                availableHours, totalExistingHours, (availableHours - totalExistingHours));
+                            break;
+                        }
+                    } else {
+                        errorMessage = "出退勤時間が登録されていないため、工数を割り当てできません。先に出退勤時間を登録してください。";
+                        break;
+                    }
+
                     KinmuManageBean.WorkAlloc newWorkAlloc = new KinmuManageBean.WorkAlloc(); // WorkDetailからWorkAllocに変更
                     newWorkAlloc.setEmpno(empno);
                     newWorkAlloc.setProjectId(projectId);
@@ -367,5 +392,37 @@ public class KinmuManageServlet extends HttpServlet {
             // パースに失敗した場合はnullを返す（エラーメッセージは呼び出し元で処理）
             return null;
         }
+    }
+
+    /**
+     * 稼働時間を計算する補助メソッド
+     * 稼働時間 = 退勤時刻 - 出勤時刻 - 休憩時間
+     * @param empno 従業員番号
+     * @param targetDate 対象日
+     * @param workTime 勤怠記録
+     * @return 稼働時間（時間単位）
+     */
+    private double calculateAvailableWorkHours(String empno, LocalDate targetDate, WorkTimeBean workTime) {
+        if (workTime == null || workTime.getClockIn() == null || workTime.getClockOut() == null) {
+            return 0.0;
+        }
+        
+        // 出退勤時間の差を計算（ミリ秒）
+        long workDurationMs = workTime.getClockOut().getTime() - workTime.getClockIn().getTime();
+        
+        // 休憩時間の合計を計算
+        List<BreakBean> breakList = workTimeDao.findBreaksByDate(empno, targetDate);
+        long totalBreakMs = 0;
+        for (BreakBean breakBean : breakList) {
+            if (breakBean.getBreakStart() != null && breakBean.getBreakEnd() != null) {
+                totalBreakMs += breakBean.getBreakEnd().getTime() - breakBean.getBreakStart().getTime();
+            }
+        }
+        
+        // 実稼働時間を計算（ミリ秒から時間に変換）
+        long actualWorkMs = workDurationMs - totalBreakMs;
+        double actualWorkHours = actualWorkMs / (1000.0 * 60.0 * 60.0); // ミリ秒を時間に変換
+        
+        return Math.max(0.0, actualWorkHours); // 負の値になる場合は0を返す
     }
 }
