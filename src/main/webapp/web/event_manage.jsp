@@ -29,10 +29,10 @@
     if (eventList == null) eventList = new java.util.ArrayList<>();
     if (ruleList == null) ruleList = new java.util.ArrayList<>(); // 新規追加: nullチェック
 
-    // 繰り返しルールをEventDateFkで検索しやすいようにMapに変換 (JSP内での検索効率化のため)
-    Map<LocalDate, EventRepeatRuleBean> rulesByEventDateFk = new HashMap<>();
+    // 繰り返しルールをRuleIdで検索しやすいようにMapに変換 (JSP内での検索効率化のため)
+    Map<Integer, EventRepeatRuleBean> rulesByRuleId = new HashMap<>();
     for (EventRepeatRuleBean rule : ruleList) {
-        rulesByEventDateFk.put(rule.getEventDateFk(), rule);
+        rulesByRuleId.put(rule.getRuleId(), rule);
     }
 
     // メニューへ戻るリンクのURLを権限に応じて設定
