@@ -142,7 +142,7 @@
             flex-grow: 1;
             gap: 20px;
             align-items: flex-start;
-            height: calc(95vh - 250px);
+            height: calc(95vh - 180px);
             position: relative;
         }
 
@@ -680,7 +680,7 @@
             <div id="event-list-panel">
                 <button class="panel-close-btn" onclick="toggleListPanel()" title="關閉">×</button>
                 <h2>イベント一覧</h2>
-                <div style="max-height: 600px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;"> <%-- リスト表示エリアのスクロール --%>
+                <div style="max-height: 700px; overflow-y: auto; border: 1px solid #eee; border-radius: 5px;"> <%-- リスト表示エリアのスクロール --%>
                     <table class="event-list-table">
                         <thead>
                         <tr>
@@ -747,7 +747,6 @@
                     </div>
 
                     <%-- 繰り返しイベント設定 --%>
-                    <div class="form-group repeat-h3">繰り返し設定</div>
                     <div class="form-group">
                         <label for="newRepeatType">繰り返しタイプ：</label>
                         <select id="newRepeatType" name="repeatType" required>
@@ -762,18 +761,24 @@
                     
                     <div class="form-group" id="newRepeatIntervalGroup">
                         <label for="newRepeatInterval">繰り返し間隔（週/月/年ごと）：</label>
-                        <input type="number" id="newRepeatInterval" name="repeatInterval" min="1" value="1">
+                        <input type="number" id="newRepeatInterval" name="repeatInterval" min="1" value="1" style="width: 60px; flex-grow: 0;">
                     </div>
 
-                    <div class="form-group checkbox-group" id="newRepeatDaysOfWeekGroup">
+                    <div class="form-group" id="newRepeatDaysOfWeekGroup">
                         <label>繰り返し曜日：</label>
-                        <input type="checkbox" id="newDayMon" name="repeatDaysOfWeek" value="1"><label for="newDayMon">月</label>
-                        <input type="checkbox" id="newDayTue" name="repeatDaysOfWeek" value="2"><label for="newDayTue">火</label>
-                        <input type="checkbox" id="newDayWed" name="repeatDaysOfWeek" value="3"><label for="newDayWed">水</label>
-                        <input type="checkbox" id="newDayThu" name="repeatDaysOfWeek" value="4"><label for="newDayThu">木</label>
-                        <input type="checkbox" id="newDayFri" name="repeatDaysOfWeek" value="5"><label for="newDayFri">金</label>
-                        <input type="checkbox" id="newDaySat" name="repeatDaysOfWeek" value="6"><label for="newDaySat">土</label>
-                        <input type="checkbox" id="newDaySun" name="repeatDaysOfWeek" value="7"><label for="newDaySun">日</label>
+                        <div style="display: grid; grid-template-columns: repeat(3, auto); gap: 10px; margin-top: 5px; justify-content: start;">
+                            <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="newDayMon" name="repeatDaysOfWeek" value="1" style="margin-right: 3px;">月</label>
+                            <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="newDayTue" name="repeatDaysOfWeek" value="2" style="margin-right: 3px;">火</label>
+                            <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="newDayWed" name="repeatDaysOfWeek" value="3" style="margin-right: 3px;">水</label>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(3, auto); gap: 10px; margin-top: 5px; justify-content: start;">
+                            <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="newDayThu" name="repeatDaysOfWeek" value="4" style="margin-right: 3px;">木</label>
+                            <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="newDayFri" name="repeatDaysOfWeek" value="5" style="margin-right: 3px;">金</label>
+                            <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="newDaySat" name="repeatDaysOfWeek" value="6" style="margin-right: 3px;">土</label>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(1, auto); gap: 10px; margin-top: 5px; justify-content: start;">
+                            <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="newDaySun" name="repeatDaysOfWeek" value="7" style="margin-right: 3px;">日</label>
+                        </div>
                     </div>
 
                     <div class="form-group" id="newRepeatEndDateGroup">
@@ -822,7 +827,6 @@
                 </div>
 
                 <%-- 繰り返しイベント設定 --%>
-                <h3 style="margin-top: 10px; margin-bottom: 10px; border-bottom: 1px dotted #eee; padding-bottom: 5px;">繰り返し設定</h3>
                 <input type="hidden" id="modalRepeatRuleId" name="repeatRuleId"> <%-- 繰り返しルールIDを保持 --%>
                 <div class="modal-form-group">
                     <label for="modalRepeatType">繰り返しタイプ：</label>
@@ -838,18 +842,24 @@
                 
                 <div class="modal-form-group" id="modalRepeatIntervalGroup">
                     <label for="modalRepeatInterval">繰り返し間隔（週/月/年ごと）：</label>
-                    <input type="number" id="modalRepeatInterval" name="repeatInterval" min="1" value="1">
+                    <input type="number" id="modalRepeatInterval" name="repeatInterval" min="1" value="1" style="width: 60px; flex-grow: 0;">
                 </div>
 
-                <div class="modal-form-group checkbox-group" id="modalRepeatDaysOfWeekGroup">
+                <div class="modal-form-group" id="modalRepeatDaysOfWeekGroup">
                     <label>繰り返し曜日：</label>
-                    <input type="checkbox" id="modalDayMon" name="repeatDaysOfWeek" value="1"><label for="modalDayMon">月</label>
-                    <input type="checkbox" id="modalDayTue" name="repeatDaysOfWeek" value="2"><label for="modalDayTue">火</label>
-                    <input type="checkbox" id="modalDayWed" name="repeatDaysOfWeek" value="3"><label for="modalDayWed">水</label>
-                    <input type="checkbox" id="modalDayThu" name="repeatDaysOfWeek" value="4"><label for="modalDayThu">木</label>
-                    <input type="checkbox" id="modalDayFri" name="repeatDaysOfWeek" value="5"><label for="modalDayFri">金</label>
-                    <input type="checkbox" id="modalDaySat" name="repeatDaysOfWeek" value="6"><label for="modalDaySat">土</label>
-                    <input type="checkbox" id="modalDaySun" name="repeatDaysOfWeek" value="7"><label for="modalDaySun">日</label>
+                    <div style="display: grid; grid-template-columns: repeat(3, auto); gap: 10px; margin-top: 5px; justify-content: start;">
+                        <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="modalDayMon" name="repeatDaysOfWeek" value="1" style="margin-right: 3px;">月</label>
+                        <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="modalDayTue" name="repeatDaysOfWeek" value="2" style="margin-right: 3px;">火</label>
+                        <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="modalDayWed" name="repeatDaysOfWeek" value="3" style="margin-right: 3px;">水</label>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(3, auto); gap: 10px; margin-top: 5px; justify-content: start;">
+                        <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="modalDayThu" name="repeatDaysOfWeek" value="4" style="margin-right: 3px;">木</label>
+                        <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="modalDayFri" name="repeatDaysOfWeek" value="5" style="margin-right: 3px;">金</label>
+                        <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="modalDaySat" name="repeatDaysOfWeek" value="6" style="margin-right: 3px;">土</label>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(1, auto); gap: 10px; margin-top: 5px; justify-content: start;">
+                        <label style="white-space: nowrap; margin-right: 0 !important;"><input type="checkbox" id="modalDaySun" name="repeatDaysOfWeek" value="7" style="margin-right: 3px;">日</label>
+                    </div>
                 </div>
 
                 <div class="modal-form-group" id="modalRepeatEndDateGroup">
