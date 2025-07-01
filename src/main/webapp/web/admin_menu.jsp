@@ -832,6 +832,9 @@
         .modal-body {
             line-height: 1.6;
             color: #333;
+            word-wrap: break-word;
+            word-break: break-all;
+            overflow-wrap: break-word;
         }
         
         .modal-date {
@@ -883,8 +886,8 @@
                         <div class="char-count" id="titleCharCount">0/30文字</div>
                     </div>
                     <div style="position: relative;">
-                        <textarea name="content" placeholder="内容" id="announcementContent" required maxlength="5000" oninput="updateCharCount('announcementContent', 'contentCharCount', 5000)"></textarea>
-                        <div class="char-count" id="contentCharCount">0/5000文字</div>
+                        <textarea name="content" placeholder="内容" id="announcementContent" required maxlength="300" oninput="updateCharCount('announcementContent', 'contentCharCount', 300)"></textarea>
+                        <div class="char-count" id="contentCharCount">0/300文字</div>
                     </div>
                     <input type="hidden" name="isActive" value="true">
                     <div class="form-buttons" style="justify-content: center;">
@@ -1125,7 +1128,7 @@
             document.getElementById('announcementContent').value = '';
             // 文字数をリセット
             updateCharCount('announcementTitle', 'titleCharCount', 30);
-            updateCharCount('announcementContent', 'contentCharCount', 5000);
+            updateCharCount('announcementContent', 'contentCharCount', 300);
             document.getElementById('announcementForm').style.display = 'block';
             document.getElementById('announcementDisplay').style.display = 'none';
         }
@@ -1137,7 +1140,7 @@
             document.getElementById('announcementContent').value = content;
             // 文字数を更新
             updateCharCount('announcementTitle', 'titleCharCount', 30);
-            updateCharCount('announcementContent', 'contentCharCount', 5000);
+            updateCharCount('announcementContent', 'contentCharCount', 300);
             document.getElementById('announcementForm').style.display = 'block';
             document.getElementById('announcementDisplay').style.display = 'none';
         }

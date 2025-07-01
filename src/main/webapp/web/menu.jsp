@@ -593,6 +593,9 @@
       .modal-body {
         line-height: 1.6;
         color: #333;
+        word-wrap: break-word;
+        word-break: break-all;
+        overflow-wrap: break-word;
       }
       
       .modal-date {
