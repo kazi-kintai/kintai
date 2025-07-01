@@ -92,7 +92,8 @@
         grid-template-rows: auto auto auto;
         gap: 15px;
         height: calc(100vh - 100px);
-        overflow: hidden;
+        overflow-y: auto;
+        overflow-x: hidden;
       }
 
       .dashboard h1 {
@@ -187,17 +188,17 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         text-align: center;
-        min-height: 120px;
       }
 
       .password-widget h2 {
-        text-align: center;
+        text-align: left;
         margin: 0 0 12px 0;
-        border-bottom: none;
-        padding-bottom: 0;
-        font-size: 1.1em;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 6px;
+        font-size: 1.2em;
+        color: #007bff;
       }
 
       .password-widget .btn {
@@ -282,6 +283,9 @@
         @media (max-width: 1024px) {
             .dashboard {
                 grid-template-columns: 1fr 1fr;
+                height: calc(100vh - 120px);
+                overflow-y: auto;
+                overflow-x: hidden;
             }
             
             .main-content {
@@ -304,11 +308,46 @@
         @media (max-width: 768px) {
             .dashboard {
                 grid-template-columns: 1fr;
-                padding: 15px;
+                padding: 12px;
+                height: calc(100vh - 140px);
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            
+            .container {
+                max-height: 100vh;
+                overflow: hidden;
             }
             
             .sidebar {
                 padding: 15px;
+            }
+            
+            .widget {
+                padding: 10px;
+            }
+        }
+        
+        /* 極小画面対応 */
+        @media (max-width: 480px) {
+            .dashboard {
+                height: calc(100vh - 160px);
+                padding: 8px;
+                gap: 10px;
+            }
+            
+            .widget {
+                padding: 8px;
+            }
+            
+            .punch-btn {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+            
+            .view-all-btn {
+                padding: 8px;
+                font-size: 0.9em;
             }
         }
       
