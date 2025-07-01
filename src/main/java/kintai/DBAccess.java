@@ -13,7 +13,7 @@ public class DBAccess {
     private static final String DB_DRIVER = "com.mysql.cj.jdbc.Driver";
     private static final String DB_URL = "jdbc:mysql://localhost/kintai?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Tokyo";
     private static final String DB_USER = "root";
-    private static final String DB_PWD = ""; // MySQLに設定したパスワード
+    private static final String DB_PWD = "ABCroot123!"; // 本番環境用パスワード
 
     public Connection getConnection() throws SQLException, ClassNotFoundException {
         // 1. JDBCドライバをロード
