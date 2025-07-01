@@ -79,7 +79,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title><% if (userRoleId == 1) { %>従業員別勤怠記録表示<% } else if (userRoleId == 2) { %>部下の勤怠記録表示<% } else { %>勤怠記録表示<% } %></title>
+    <title><% if (userRoleId == 1) { %>従業員別勤怠記録表示<% } else if (userRoleId == 2) { %>勤怠記録表示（自分/部下）<% } else { %>勤怠記録表示<% } %></title>
     <style>
         body {
             font-family: 'メイリオ', sans-serif;
@@ -685,7 +685,7 @@
                 <% if (isSelfMode) { %>
                     勤怠記録表示
                 <% } else { %>
-                    部下の勤怠記録表示
+                    勤怠記録表示（自分/部下）
                 <% } %>
             <% } else { %>
                 勤怠記録表示
