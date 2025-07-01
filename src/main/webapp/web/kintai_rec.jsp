@@ -1967,14 +1967,15 @@
             
             reportHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 15px;">';
             reportHtml += '<h4 style="margin: 0 0 8px 0; color: #495057; font-size: 13px;">対象部署情報</h4>';
-            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 8px;">';
+            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 8px;">';
             reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象部署:</strong> ' + deptName + '</p>';
-            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象期間:</strong> ' + data.targetPeriod + '</p>';
             reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>総記録数:</strong> ' + data.totalRecords + '件</p>';
             reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象従業員数:</strong> ' + data.totalEmployees + '名</p>';
             reportHtml += '</div>';
-            reportHtml += '<div style="display: grid; grid-template-columns: 1fr; gap: 15px;">';
+            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象期間:</strong> ' + data.targetPeriod + '</p>';
             reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>生成日時:</strong> ' + new Date().toLocaleString('ja-JP') + '</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"></p>'; // 空の要素で3列目を埋める
             reportHtml += '</div>';
             reportHtml += '</div>';
             
