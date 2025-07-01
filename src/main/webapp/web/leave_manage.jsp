@@ -12,7 +12,7 @@
     List<LeaveTypeBean> leaveTypeList = (List<LeaveTypeBean>) request.getAttribute("leaveTypeList");
     String message = (String) request.getAttribute("message");
     Boolean success = (Boolean) request.getAttribute("success");
-    List<Integer> protectedIds = java.util.Arrays.asList(1, 2, 3, 11, 12);
+    List<Integer> protectedIds = java.util.Arrays.asList(1, 2, 3, 11, 12, 20, 30, 40, 41);
 %>
 <!DOCTYPE html>
 <html>
