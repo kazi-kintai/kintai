@@ -941,7 +941,7 @@
                                     <div style="background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%); border: 1px solid #bee5eb; border-radius: 8px; padding: 12px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                             <div style="font-weight: bold; color: #0c5460; font-size: 12px;">
-                                                📋 法令及び会社規則遵守チェック結果
+                                                📋 法令及び会社規則遵守チェック結果（今月）
                                             </div>
                                             <button onclick="showCheckItems()" style="background-color: #17a2b8; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">
                                                 チェック内容
@@ -995,7 +995,7 @@
                         <div style="width: 100%;">
                             <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px;">
                                 <h3 style="margin: 0 0 15px 0; font-size: 14px; color: #495057; border-bottom: 1px solid #dee2e6; padding-bottom: 8px;">
-                                    📊 自分の勤務時間一覧
+                                    📊 自分の勤務時間一覧（今月）
                                 </h3>
                                 <div style="max-height: 300px; overflow-y: auto;">
                                     <% if (kintaiRecords != null && !kintaiRecords.isEmpty()) { %>
