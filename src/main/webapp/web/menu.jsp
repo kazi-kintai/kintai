@@ -31,6 +31,8 @@
 %>
 <html>
   <head>
+  	<meta name="viewport" content="width=device-width, initial-scale=1">
+  
     <title>勤怠管理システムメニュー</title>
 
     <style>
@@ -277,16 +279,38 @@
       }
 
       /* レスポンシブ対応 */
-      @media (max-width: 768px) {
-        .dashboard {
-          grid-template-columns: 1fr;
-          padding: 15px;
+        @media (max-width: 1024px) {
+            .dashboard {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                border-left: none;
+                border-top: 1px solid #dee2e6;
+                position: static;
+                max-height: none;
+            }
+            
+            .content-area {
+                padding-right: 0;
+            }
         }
-
-        .records-widget {
-          grid-column: 1;
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+                padding: 15px;
+            }
+            
+            .sidebar {
+                padding: 15px;
+            }
         }
-      }
       
       /* アナウンス横幅バナーのスタイル */
       .announcement-banner {
