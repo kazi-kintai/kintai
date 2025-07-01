@@ -17,7 +17,7 @@ public class ProjectDao {
      */
     public List<ProjectBean> findAll() {
         List<ProjectBean> projectmanageList = new ArrayList<>();
-        String sql = "SELECT PROJECT_ID, PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE FROM project ORDER BY PROJECT_ID";
+        String sql = "SELECT PROJECT_ID, PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE FROM project WHERE (IS_DELETED IS NULL OR IS_DELETED = FALSE) ORDER BY PROJECT_ID";
 
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -188,14 +188,15 @@ public class ProjectDao {
      * @param projectId 削除するプロジェクトID
      * @return 削除に成功した場合true、失敗した場合false
      */
-    public boolean logicalDelete(int projectId, String updatedBy) {
-        String sql = "UPDATE project SET DELETED_FLAG = 1, UPDATED_BY = ? WHERE PROJECT_ID = ?";
+    public boolean logicalDelete(int projectId, String deletedBy) {
+        String sql = "UPDATE project SET IS_DELETED = TRUE, DELETED_AT = NOW(), DELETED_BY = ?, UPDATED_AT = NOW(), UPDATED_BY = ? WHERE PROJECT_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-        	ps.setString(1, updatedBy);
-            ps.setInt(2, projectId);
+        	ps.setString(1, deletedBy);
+        	ps.setString(2, deletedBy);
+            ps.setInt(3, projectId);
             
             int count = ps.executeUpdate();
             return count > 0;
