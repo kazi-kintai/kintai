@@ -169,14 +169,14 @@ public class DeptManageServlet extends HttpServlet {
                     break;
                     
                 case "restore":
-                    // 恢復処理
+                    // 復元処理
                     String restoreDeptId = request.getParameter("deptId");
                     success = deptDao.restore(restoreDeptId, user.getEmpId());
                     
                     if (success) {
-                        message = "部署を恢復しました";
+                        message = "部署を復元しました";
                     } else {
-                        message = "部署の恢復に失敗しました";
+                        message = "部署の復元に失敗しました";
                     }
                     break;
                     

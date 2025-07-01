@@ -214,9 +214,9 @@ public class PostDao {
     }
     
     /**
-     * 削除された役職を恢復する
-     * @param postId 恢復する役職番号
-     * @return 恢復に成功した場合true、失敗した場合false
+     * 削除された役職を復元する
+     * @param postId 復元する役職番号
+     * @return 復元に成功した場合true、失敗した場合false
      */
     public boolean restore(String postId) {
         return restore(postId, "system");

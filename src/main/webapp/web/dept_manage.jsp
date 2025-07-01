@@ -242,9 +242,9 @@
             return confirm('部署番号「' + deptId + '」の部署名を「' + deptName + '」に更新してもよろしいですか？');
         }
         
-        // 恢復確認
+        // 復元確認
         function confirmRestore(deptId, deptName) {
-            if (confirm('部署「' + deptName + '」を恢復してもよろしいですか？')) {
+            if (confirm('部署「' + deptName + '」を復元してもよろしいですか？')) {
                 document.getElementById('restoreForm-' + deptId).submit();
             }
         }
@@ -363,7 +363,7 @@
                             <td><%= deletedDept.getDeptId() %></td>
                             <td><%= deletedDept.getDeptName() %></td>
                             <td>
-                                <button class="btn btn-success" onclick="confirmRestore('<%= deletedDept.getDeptId() %>', '<%= deletedDept.getDeptName() %>')">恢復</button>
+                                <button class="btn btn-success" onclick="confirmRestore('<%= deletedDept.getDeptId() %>', '<%= deletedDept.getDeptName() %>')">復元</button>
                                 
                                 <%-- 復元用フォーム（非表示） --%>
                                 <form id="restoreForm-<%= deletedDept.getDeptId() %>" method="post" 

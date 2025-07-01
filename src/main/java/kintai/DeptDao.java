@@ -239,9 +239,9 @@ public class DeptDao {
     }
     
     /**
-     * 削除された部署を恢復する
-     * @param deptId 恢復する部署番号
-     * @return 恢復に成功した場合true、失敗した場合false
+     * 削除された部署を復元する
+     * @param deptId 復元する部署番号
+     * @return 復元に成功した場合true、失敗した場合false
      */
     public boolean restore(String deptId) {
         return restore(deptId, "system");

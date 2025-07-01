@@ -166,14 +166,14 @@ public class PostManageServlet extends HttpServlet {
                     break;
                     
                 case "restore":
-                    // 恢復処理
+                    // 復元処理
                     String restorePostId = request.getParameter("postId");
                     success = postDao.restore(restorePostId, user.getEmpId());
                     
                     if (success) {
-                        message = "役職を恢復しました";
+                        message = "役職を復元しました";
                     } else {
-                        message = "役職の恢復に失敗しました";
+                        message = "役職の復元に失敗しました";
                     }
                     break;
                     

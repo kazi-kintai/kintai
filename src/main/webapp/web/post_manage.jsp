@@ -242,9 +242,9 @@
             return confirm('役職番号「' + postId + '」の役職名を「' + postName + '」に更新してもよろしいですか？');
         }
         
-        // 恢復確認
+        // 復元確認
         function confirmRestore(postId, postName) {
-            if (confirm('役職「' + postName + '」を恢復してもよろしいですか？')) {
+            if (confirm('役職「' + postName + '」を復元してもよろしいですか？')) {
                 document.getElementById('restoreForm-' + postId).submit();
             }
         }
@@ -363,7 +363,7 @@
                             <td><%= deletedPost.getPostId() %></td>
                             <td><%= deletedPost.getPostName() %></td>
                             <td>
-                                <button class="btn btn-success" onclick="confirmRestore('<%= deletedPost.getPostId() %>', '<%= deletedPost.getPostName() %>')">恢復</button>
+                                <button class="btn btn-success" onclick="confirmRestore('<%= deletedPost.getPostId() %>', '<%= deletedPost.getPostName() %>')">復元</button>
                                 
                                 <%-- 復元用フォーム（非表示） --%>
                                 <form id="restoreForm-<%= deletedPost.getPostId() %>" method="post" 
