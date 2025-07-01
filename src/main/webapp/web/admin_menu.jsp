@@ -92,7 +92,8 @@
             grid-template-rows: auto auto auto;
             gap: 20px;
             height: calc(100vh - 100px);
-            overflow: hidden;
+            overflow-y: auto;
+            overflow-x: hidden;
         }
         
         .dashboard h1 {
@@ -396,6 +397,9 @@
         @media (max-width: 1024px) {
             .dashboard {
                 grid-template-columns: 1fr 1fr;
+                height: calc(100vh - 120px);
+                overflow-y: auto;
+                overflow-x: hidden;
             }
             
             .main-content {
@@ -419,10 +423,37 @@
             .dashboard {
                 grid-template-columns: 1fr;
                 padding: 15px;
+                height: calc(100vh - 140px);
+                overflow-y: auto;
+                overflow-x: hidden;
+            }
+            
+            .container {
+                max-height: 100vh;
+                overflow: hidden;
             }
             
             .sidebar {
                 padding: 15px;
+            }
+        }
+        
+        /* 極小画面対応 */
+        @media (max-width: 480px) {
+            .dashboard {
+                height: calc(100vh - 160px);
+                padding: 10px;
+                gap: 15px;
+            }
+            
+            .widget {
+                padding: 15px;
+            }
+            
+            .function-btn {
+                padding: 8px;
+                font-size: 0.85em;
+                margin-bottom: 6px;
             }
         }
         
