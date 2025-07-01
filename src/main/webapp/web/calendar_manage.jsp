@@ -72,8 +72,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            height: 90vh;
+            gap: 5px;
+            height: 85vh;
             overflow: hidden;
         }
         .header {
