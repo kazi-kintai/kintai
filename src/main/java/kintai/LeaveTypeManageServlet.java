@@ -21,7 +21,7 @@ public class LeaveTypeManageServlet extends HttpServlet {
     private LeaveTypeDao leaveTypeDao = new LeaveTypeDao();
 
     // 編集・削除不可ID
-    private static final List<Integer> FIXED_IDS = Arrays.asList(1, 2, 3, 11, 12);
+    private static final List<Integer> FIXED_IDS = Arrays.asList(1, 2, 3, 11, 12, 20, 30, 40, 41);
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
