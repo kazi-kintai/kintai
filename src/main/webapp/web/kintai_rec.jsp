@@ -79,7 +79,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title><% if (userRoleId == 1) { %>従業員別勤怠記録表示<% } else if (userRoleId == 2) { %>部下の勤怠記録表示<% } else { %>勤怠記録表示<% } %></title>
+    <title><% if (userRoleId == 1) { %>従業員別勤怠記録表示<% } else if (userRoleId == 2) { %>勤怠記録表示（自分/部下）<% } else { %>勤怠記録表示<% } %></title>
     <style>
         body {
             font-family: 'メイリオ', sans-serif;
@@ -685,7 +685,7 @@
                 <% if (isSelfMode) { %>
                     勤怠記録表示
                 <% } else { %>
-                    部下の勤怠記録表示
+                    勤怠記録表示（自分/部下）
                 <% } %>
             <% } else { %>
                 勤怠記録表示
@@ -941,7 +941,7 @@
                                     <div style="background: linear-gradient(135deg, #e8f4fd 0%, #f0f8ff 100%); border: 1px solid #bee5eb; border-radius: 8px; padding: 12px;">
                                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                             <div style="font-weight: bold; color: #0c5460; font-size: 12px;">
-                                                📋 法令及び会社規則遵守チェック結果
+                                                📋 法令及び会社規則遵守チェック結果（今月）
                                             </div>
                                             <button onclick="showCheckItems()" style="background-color: #17a2b8; color: white; border: none; padding: 3px 6px; border-radius: 3px; cursor: pointer; font-size: 10px;">
                                                 チェック内容
@@ -995,7 +995,7 @@
                         <div style="width: 100%;">
                             <div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 16px;">
                                 <h3 style="margin: 0 0 15px 0; font-size: 14px; color: #495057; border-bottom: 1px solid #dee2e6; padding-bottom: 8px;">
-                                    📊 自分の勤務時間一覧
+                                    📊 自分の勤務時間一覧（今月）
                                 </h3>
                                 <div style="max-height: 300px; overflow-y: auto;">
                                     <% if (kintaiRecords != null && !kintaiRecords.isEmpty()) { %>
@@ -1967,14 +1967,15 @@
             
             reportHtml += '<div style="background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; margin-bottom: 15px;">';
             reportHtml += '<h4 style="margin: 0 0 8px 0; color: #495057; font-size: 13px;">対象部署情報</h4>';
-            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 15px; margin-bottom: 8px;">';
+            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 8px;">';
             reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象部署:</strong> ' + deptName + '</p>';
-            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象期間:</strong> ' + data.targetPeriod + '</p>';
             reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>総記録数:</strong> ' + data.totalRecords + '件</p>';
             reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象従業員数:</strong> ' + data.totalEmployees + '名</p>';
             reportHtml += '</div>';
-            reportHtml += '<div style="display: grid; grid-template-columns: 1fr; gap: 15px;">';
+            reportHtml += '<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>対象期間:</strong> ' + data.targetPeriod + '</p>';
             reportHtml += '<p style="margin: 0; font-size: 11px;"><strong>生成日時:</strong> ' + new Date().toLocaleString('ja-JP') + '</p>';
+            reportHtml += '<p style="margin: 0; font-size: 11px;"></p>'; // 空の要素で3列目を埋める
             reportHtml += '</div>';
             reportHtml += '</div>';
             
