@@ -1,5 +1,4 @@
 package kintai;
-
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -7,22 +6,18 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 public class ProjectDao {
     private DBAccess db = new DBAccess();
-
     /**
      * すべてのプロジェクト情報を取得する
      * @return プロジェクト情報のリスト
      */
     public List<ProjectBean> findAll() {
         List<ProjectBean> projectmanageList = new ArrayList<>();
-        String sql = "SELECT PROJECT_ID, PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE FROM project ORDER BY PROJECT_ID";
-
+        String sql = "SELECT PROJECT_ID, PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE FROM project WHERE (IS_DELETED IS NULL OR IS_DELETED = FALSE) ORDER BY PROJECT_ID";
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
             while (rs.next()) {
                 ProjectBean project = new ProjectBean();
                 project.setProjectId(rs.getInt("PROJECT_ID"));
@@ -36,13 +31,11 @@ public class ProjectDao {
                 
                 projectmanageList.add(project);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
         return projectmanageList;
     }
-
     /**
      * プロジェクトIDでプロジェクト情報を検索する
      * @param projectId プロジェクトID
@@ -51,12 +44,9 @@ public class ProjectDao {
     public ProjectBean findByProjectId(int projectId) {
         ProjectBean project = null;
         String sql = "SELECT PROJECT_ID, PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE FROM project WHERE PROJECT_ID = ?";
-
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, projectId);
-
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     project = new ProjectBean();
@@ -70,14 +60,11 @@ public class ProjectDao {
                     project.setEndDate(end != null ? end.toLocalDate() : null);
                 }
             }
-
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         return project;
     }
-
     /**
      * プロジェクトIDでプロジェクト情報を検索する (findById用)
      * @param projectId プロジェクトID
@@ -86,14 +73,13 @@ public class ProjectDao {
     public ProjectBean findById(int projectId) {
         return findByProjectId(projectId);
     }
-
     /**
      * 新しいプロジェクトを追加する
      * @param projectBean 追加するプロジェクト情報
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(ProjectBean projectBean, String createdBy, String updatedBy) {
-    	String sql = "INSERT INTO project (PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE, CREATED_BY, UPDATED_BY) VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO project (PROJECT_NAME, BUDGET_AMOUNT, START_DATE, END_DATE, CREATED_BY, UPDATED_BY) VALUES (?, ?, ?, ?, ?, ?)";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -111,7 +97,6 @@ public class ProjectDao {
             } else {
                 ps.setNull(3, java.sql.Types.DATE);
             }
-
             if (projectBean.getEndDate() != null) {
                 ps.setDate(4, java.sql.Date.valueOf(projectBean.getEndDate()));
             } else {
@@ -162,7 +147,6 @@ public class ProjectDao {
             } else {
                 ps.setNull(3, java.sql.Types.DATE);
             }
-
             if (updateProject.getEndDate() != null) {
                 ps.setDate(4, java.sql.Date.valueOf(updateProject.getEndDate()));
             } else {
@@ -170,7 +154,6 @@ public class ProjectDao {
             }
             
             ps.setString(5, updatedBy);
-
             ps.setInt(6, updateProject.getProjectId());
             
             int count = ps.executeUpdate();
@@ -188,14 +171,15 @@ public class ProjectDao {
      * @param projectId 削除するプロジェクトID
      * @return 削除に成功した場合true、失敗した場合false
      */
-    public boolean logicalDelete(int projectId, String updatedBy) {
-        String sql = "UPDATE project SET DELETED_FLAG = 1, UPDATED_BY = ? WHERE PROJECT_ID = ?";
+    public boolean logicalDelete(int projectId, String deletedBy) {
+        String sql = "UPDATE project SET IS_DELETED = TRUE, DELETED_AT = NOW(), DELETED_BY = ?, UPDATED_AT = NOW(), UPDATED_BY = ? WHERE PROJECT_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-        	ps.setString(1, updatedBy);
-            ps.setInt(2, projectId);
+            ps.setString(1, deletedBy);
+            ps.setString(2, deletedBy);
+            ps.setInt(3, projectId);
             
             int count = ps.executeUpdate();
             return count > 0;
