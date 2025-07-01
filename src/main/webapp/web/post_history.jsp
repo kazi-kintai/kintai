@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="kintai.PostBean" %>
 <%@ page import="kintai.UserBean" %>
 <%
@@ -14,6 +15,9 @@
     List<PostBean> deletedPostList = (List<PostBean>) request.getAttribute("deletedPostList");
     String message = (String) request.getAttribute("message");
     Boolean success = (Boolean) request.getAttribute("success");
+    
+    // 日時フォーマット用
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 %>
 <!DOCTYPE html>
 <html>
@@ -188,7 +192,7 @@
                         <tr>
                             <td><%= deletedPost.getPostId() %></td>
                             <td><%= deletedPost.getPostName() %></td>
-                            <td><%= deletedPost.getDeletedAt() != null ? deletedPost.getDeletedAt().toString() : "-" %></td>
+                            <td><%= deletedPost.getDeletedAt() != null ? sdf.format(deletedPost.getDeletedAt()) : "-" %></td>
                             <td><%= deletedPost.getDeletedBy() != null ? deletedPost.getDeletedBy() : "-" %></td>
                             <td>
                                 <button class="btn btn-success" onclick="confirmRestore('<%= deletedPost.getPostId() %>', '<%= deletedPost.getPostName() %>')">復元</button>

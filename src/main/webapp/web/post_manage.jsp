@@ -273,7 +273,7 @@
                 <input type="hidden" name="action" value="add">
                 <div class="form-group">
                     <label for="newPostId">役職番号：</label>
-                    <input type="text" id="newPostId" name="postId" maxlength="10" required>
+                    <input type="text" id="newPostId" name="postId" maxlength="5" required>
                 </div>
                 <div class="form-group">
                     <label for="newPostName">役職名：</label>

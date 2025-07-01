@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <%@ page import="kintai.DeptBean" %>
 <%@ page import="kintai.UserBean" %>
 <%
@@ -14,6 +15,9 @@
     List<DeptBean> deletedDeptList = (List<DeptBean>) request.getAttribute("deletedDeptList");
     String message = (String) request.getAttribute("message");
     Boolean success = (Boolean) request.getAttribute("success");
+    
+    // 日時フォーマット用
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 %>
 <!DOCTYPE html>
 <html>
@@ -188,7 +192,7 @@
                         <tr>
                             <td><%= deletedDept.getDeptId() %></td>
                             <td><%= deletedDept.getDeptName() %></td>
-                            <td><%= deletedDept.getDeletedAt() != null ? deletedDept.getDeletedAt().toString() : "-" %></td>
+                            <td><%= deletedDept.getDeletedAt() != null ? sdf.format(deletedDept.getDeletedAt()) : "-" %></td>
                             <td><%= deletedDept.getDeletedBy() != null ? deletedDept.getDeletedBy() : "-" %></td>
                             <td>
                                 <button class="btn btn-success" onclick="confirmRestore('<%= deletedDept.getDeptId() %>', '<%= deletedDept.getDeptName() %>')">復元</button>

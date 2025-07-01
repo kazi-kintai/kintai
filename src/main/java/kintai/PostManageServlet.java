@@ -131,8 +131,9 @@ public class PostManageServlet extends HttpServlet {
                     }
                     
                     PostBean newPost = new PostBean(newPostId, newPostName);
-                    success = postDao.insert(newPost);
+                    success = postDao.insert(newPost, user.getEmpId());
                     message = success ? "役職を追加しました" : "役職の追加に失敗しました";
+                    System.out.println("PostManageServlet.doPost - add result: success=" + success + ", message=" + message);
                     break;
                     
                 case "update":
@@ -148,14 +149,14 @@ public class PostManageServlet extends HttpServlet {
                     // POST_IDの長さチェックは不要（主キーなので変更されないため）
                     
                     PostBean updatePost = new PostBean(updatePostId, updatePostName);
-                    success = postDao.update(updatePost);
+                    success = postDao.update(updatePost, user.getEmpId());
                     message = success ? "役職を更新しました" : "役職の更新に失敗しました";
                     break;
                     
                 case "delete":
                     // 削除処理
                     String deletePostId = request.getParameter("postId");
-                    success = postDao.delete(deletePostId);
+                    success = postDao.delete(deletePostId, user.getEmpId());
                     
                     if (success) {
                         message = "役職を削除しました";
@@ -167,7 +168,7 @@ public class PostManageServlet extends HttpServlet {
                 case "restore":
                     // 恢復処理
                     String restorePostId = request.getParameter("postId");
-                    success = postDao.restore(restorePostId);
+                    success = postDao.restore(restorePostId, user.getEmpId());
                     
                     if (success) {
                         message = "役職を恢復しました";

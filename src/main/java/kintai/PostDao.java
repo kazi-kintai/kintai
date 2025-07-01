@@ -76,15 +76,24 @@ public class PostDao {
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(PostBean post) {
-        String sql = "INSERT INTO post (POST_ID, POST_NAME, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, false, NOW(), 'system', NOW(), 'system')";
+        return insert(post, "system");
+    }
+    
+    public boolean insert(PostBean post, String createdBy) {
+        String sql = "INSERT INTO post (POST_ID, POST_NAME, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, false, NOW(), ?, NOW(), ?)";
+        
+        System.out.println("PostDao.insert - attempting to insert: " + post.getPostId() + ", " + post.getPostName() + " by " + createdBy);
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, post.getPostId());
             ps.setString(2, post.getPostName());
+            ps.setString(3, createdBy);
+            ps.setString(4, createdBy);
             
             int count = ps.executeUpdate();
+            System.out.println("PostDao.insert - insert successful, rows affected: " + count);
             return count > 0;
             
         } catch (SQLException e) {
@@ -92,9 +101,11 @@ public class PostDao {
             if (e.getSQLState().equals("23000")) {
                 System.err.println("役職番号が既に存在します: " + post.getPostId());
             } else {
+                System.err.println("SQL例外が発生しました: " + e.getMessage());
                 e.printStackTrace();
             }
         } catch (Exception e) {
+            System.err.println("予期しない例外が発生しました: " + e.getMessage());
             e.printStackTrace();
         }
         
@@ -107,13 +118,18 @@ public class PostDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(PostBean post) {
-        String sql = "UPDATE post SET POST_NAME = ?, UPDATED_AT = NOW(), UPDATED_BY = 'system' WHERE POST_ID = ? AND IS_DELETED = false";
+        return update(post, "system");
+    }
+    
+    public boolean update(PostBean post, String updatedBy) {
+        String sql = "UPDATE post SET POST_NAME = ?, UPDATED_AT = NOW(), UPDATED_BY = ? WHERE POST_ID = ? AND IS_DELETED = false";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, post.getPostName());
-            ps.setString(2, post.getPostId());
+            ps.setString(2, updatedBy);
+            ps.setString(3, post.getPostId());
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -131,12 +147,17 @@ public class PostDao {
      * @return 削除に成功した場合true、失敗した場合false
      */
     public boolean delete(String postId) {
-        String sql = "UPDATE post SET IS_DELETED = true, DELETED_AT = NOW(), DELETED_BY = 'system' WHERE POST_ID = ?";
+        return delete(postId, "system");
+    }
+    
+    public boolean delete(String postId, String deletedBy) {
+        String sql = "UPDATE post SET IS_DELETED = true, DELETED_AT = NOW(), DELETED_BY = ? WHERE POST_ID = ?";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, postId);
+            ps.setString(1, deletedBy);
+            ps.setString(2, postId);
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -170,7 +191,7 @@ public class PostDao {
      */
     public List<PostBean> findDeleted() {
         List<PostBean> postList = new ArrayList<>();
-        String sql = "SELECT POST_ID, POST_NAME FROM post WHERE IS_DELETED = true ORDER BY POST_ID";
+        String sql = "SELECT POST_ID, POST_NAME, DELETED_AT, DELETED_BY FROM post WHERE IS_DELETED = true ORDER BY DELETED_AT DESC, POST_ID";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -180,6 +201,8 @@ public class PostDao {
                 PostBean post = new PostBean();
                 post.setPostId(rs.getString("POST_ID"));
                 post.setPostName(rs.getString("POST_NAME"));
+                post.setDeletedAt(rs.getTimestamp("DELETED_AT"));
+                post.setDeletedBy(rs.getString("DELETED_BY"));
                 postList.add(post);
             }
             
@@ -196,12 +219,17 @@ public class PostDao {
      * @return 恢復に成功した場合true、失敗した場合false
      */
     public boolean restore(String postId) {
-        String sql = "UPDATE post SET IS_DELETED = false, DELETED_AT = NULL, DELETED_BY = NULL, UPDATED_AT = NOW(), UPDATED_BY = 'system' WHERE POST_ID = ? AND IS_DELETED = true";
+        return restore(postId, "system");
+    }
+    
+    public boolean restore(String postId, String updatedBy) {
+        String sql = "UPDATE post SET IS_DELETED = false, DELETED_AT = NULL, DELETED_BY = NULL, UPDATED_AT = NOW(), UPDATED_BY = ? WHERE POST_ID = ? AND IS_DELETED = true";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, postId);
+            ps.setString(1, updatedBy);
+            ps.setString(2, postId);
             
             int count = ps.executeUpdate();
             return count > 0;

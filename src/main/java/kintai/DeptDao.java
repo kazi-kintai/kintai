@@ -76,13 +76,19 @@ public class DeptDao {
      * @return 追加に成功した場合true、失敗した場合false
      */
     public boolean insert(DeptBean dept) {
-        String sql = "INSERT INTO dept (DEPT_ID, DEPT_NAME, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, false, NOW(), 'system', NOW(), 'system')";
+        return insert(dept, "system");
+    }
+    
+    public boolean insert(DeptBean dept, String createdBy) {
+        String sql = "INSERT INTO dept (DEPT_ID, DEPT_NAME, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) VALUES (?, ?, false, NOW(), ?, NOW(), ?)";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, dept.getDeptId());
             ps.setString(2, dept.getDeptName());
+            ps.setString(3, createdBy);
+            ps.setString(4, createdBy);
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -107,13 +113,18 @@ public class DeptDao {
      * @return 更新に成功した場合true、失敗した場合false
      */
     public boolean update(DeptBean dept) {
-        String sql = "UPDATE dept SET DEPT_NAME = ?, UPDATED_AT = NOW(), UPDATED_BY = 'system' WHERE DEPT_ID = ? AND IS_DELETED = false";
+        return update(dept, "system");
+    }
+    
+    public boolean update(DeptBean dept, String updatedBy) {
+        String sql = "UPDATE dept SET DEPT_NAME = ?, UPDATED_AT = NOW(), UPDATED_BY = ? WHERE DEPT_ID = ? AND IS_DELETED = false";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, dept.getDeptName());
-            ps.setString(2, dept.getDeptId());
+            ps.setString(2, updatedBy);
+            ps.setString(3, dept.getDeptId());
             
             int count = ps.executeUpdate();
             return count > 0;
@@ -131,14 +142,38 @@ public class DeptDao {
      * @return 削除に成功した場合true、失敗した場合false
      */
     public boolean delete(String deptId) {
-        String sql = "UPDATE dept SET IS_DELETED = true, DELETED_AT = NOW(), DELETED_BY = 'system' WHERE DEPT_ID = ?";
+        return delete(deptId, "system");
+    }
+    
+    public boolean delete(String deptId, String deletedBy) {
+        String sql = "UPDATE dept SET IS_DELETED = true, DELETED_AT = NOW(), DELETED_BY = ? WHERE DEPT_ID = ?";
+        
+        System.out.println("DeptDao.delete - Deleting dept: " + deptId + " by user: " + deletedBy);
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, deptId);
+            ps.setString(1, deletedBy);
+            ps.setString(2, deptId);
             
             int count = ps.executeUpdate();
+            System.out.println("DeptDao.delete - Update count: " + count);
+            
+            // 削除後の確認のためのSQL実行
+            String confirmSql = "SELECT DEPT_ID, DELETED_AT, DELETED_BY FROM dept WHERE DEPT_ID = ? AND IS_DELETED = true";
+            try (PreparedStatement confirmPs = conn.prepareStatement(confirmSql)) {
+                confirmPs.setString(1, deptId);
+                try (ResultSet rs = confirmPs.executeQuery()) {
+                    if (rs.next()) {
+                        System.out.println("DeptDao.delete - Confirmed deletion: " + rs.getString("DEPT_ID") 
+                            + ", deletedAt: " + rs.getTimestamp("DELETED_AT") 
+                            + ", deletedBy: " + rs.getString("DELETED_BY"));
+                    } else {
+                        System.out.println("DeptDao.delete - No deleted record found for confirmation");
+                    }
+                }
+            }
+            
             return count > 0;
             
         } catch (SQLException e) {
@@ -146,9 +181,11 @@ public class DeptDao {
             if (e.getSQLState().startsWith("23")) {
                 System.err.println("この部署に所属する社員が存在するため削除できません: " + deptId);
             } else {
+                System.err.println("DeptDao.delete - SQL Exception: " + e.getMessage());
                 e.printStackTrace();
             }
         } catch (Exception e) {
+            System.err.println("DeptDao.delete - Exception: " + e.getMessage());
             e.printStackTrace();
         }
         
@@ -170,7 +207,9 @@ public class DeptDao {
      */
     public List<DeptBean> findDeleted() {
         List<DeptBean> deptList = new ArrayList<>();
-        String sql = "SELECT DEPT_ID, DEPT_NAME FROM dept WHERE IS_DELETED = true ORDER BY DEPT_ID";
+        String sql = "SELECT DEPT_ID, DEPT_NAME, DELETED_AT, DELETED_BY FROM dept WHERE IS_DELETED = true ORDER BY DELETED_AT DESC, DEPT_ID";
+        
+        System.out.println("DeptDao.findDeleted - SQL: " + sql);
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
@@ -180,10 +219,19 @@ public class DeptDao {
                 DeptBean dept = new DeptBean();
                 dept.setDeptId(rs.getString("DEPT_ID"));
                 dept.setDeptName(rs.getString("DEPT_NAME"));
+                dept.setDeletedAt(rs.getTimestamp("DELETED_AT"));
+                dept.setDeletedBy(rs.getString("DELETED_BY"));
+                
+                System.out.println("DeptDao.findDeleted - Found deleted dept: " + dept.getDeptId() 
+                    + ", deletedAt: " + dept.getDeletedAt() + ", deletedBy: " + dept.getDeletedBy());
+                
                 deptList.add(dept);
             }
             
+            System.out.println("DeptDao.findDeleted - Total deleted depts found: " + deptList.size());
+            
         } catch (Exception e) {
+            System.err.println("DeptDao.findDeleted - Exception occurred: " + e.getMessage());
             e.printStackTrace();
         }
         
@@ -196,12 +244,17 @@ public class DeptDao {
      * @return 恢復に成功した場合true、失敗した場合false
      */
     public boolean restore(String deptId) {
-        String sql = "UPDATE dept SET IS_DELETED = false, DELETED_AT = NULL, DELETED_BY = NULL, UPDATED_AT = NOW(), UPDATED_BY = 'system' WHERE DEPT_ID = ? AND IS_DELETED = true";
+        return restore(deptId, "system");
+    }
+    
+    public boolean restore(String deptId, String updatedBy) {
+        String sql = "UPDATE dept SET IS_DELETED = false, DELETED_AT = NULL, DELETED_BY = NULL, UPDATED_AT = NOW(), UPDATED_BY = ? WHERE DEPT_ID = ? AND IS_DELETED = true";
         
         try (Connection conn = db.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, deptId);
+            ps.setString(1, updatedBy);
+            ps.setString(2, deptId);
             
             int count = ps.executeUpdate();
             return count > 0;

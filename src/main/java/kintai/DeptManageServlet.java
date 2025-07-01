@@ -52,7 +52,9 @@ public class DeptManageServlet extends HttpServlet {
         
         if ("history".equals(action)) {
             // 削除履歴一覧を表示
+            System.out.println("DeptManageServlet.doGet - Calling findDeleted()");
             List<DeptBean> deletedDeptList = deptDao.findDeleted();
+            System.out.println("DeptManageServlet.doGet - findDeleted() returned " + deletedDeptList.size() + " items");
             request.setAttribute("deletedDeptList", deletedDeptList);
             
             RequestDispatcher dispatcher = request.getRequestDispatcher("/web/dept_history.jsp");
@@ -131,7 +133,7 @@ public class DeptManageServlet extends HttpServlet {
                     }
                     
                     DeptBean newDept = new DeptBean(newDeptId, newDeptName);
-                    success = deptDao.insert(newDept);
+                    success = deptDao.insert(newDept, user.getEmpId());
                     message = success ? "部署を追加しました" : "部署の追加に失敗しました";
                     break;
                     
@@ -148,14 +150,16 @@ public class DeptManageServlet extends HttpServlet {
                     // DEPT_IDの長さチェックは不要（主キーなので変更されないため）
                     
                     DeptBean updateDept = new DeptBean(updateDeptId, updateDeptName);
-                    success = deptDao.update(updateDept);
+                    success = deptDao.update(updateDept, user.getEmpId());
                     message = success ? "部署を更新しました" : "部署の更新に失敗しました";
                     break;
                     
                 case "delete":
                     // 削除処理
                     String deleteDeptId = request.getParameter("deptId");
-                    success = deptDao.delete(deleteDeptId);
+                    System.out.println("DeptManageServlet.doPost - delete: deptId=" + deleteDeptId + ", user=" + user.getEmpId());
+                    success = deptDao.delete(deleteDeptId, user.getEmpId());
+                    System.out.println("DeptManageServlet.doPost - delete result: " + success);
                     
                     if (success) {
                         message = "部署を削除しました";
@@ -167,7 +171,7 @@ public class DeptManageServlet extends HttpServlet {
                 case "restore":
                     // 恢復処理
                     String restoreDeptId = request.getParameter("deptId");
-                    success = deptDao.restore(restoreDeptId);
+                    success = deptDao.restore(restoreDeptId, user.getEmpId());
                     
                     if (success) {
                         message = "部署を恢復しました";
