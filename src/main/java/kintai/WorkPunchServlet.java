@@ -1,7 +1,10 @@
 package kintai;
 
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Time;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -170,8 +173,18 @@ public class WorkPunchServlet extends HttpServlet {
             case "clock_out": // 退勤打刻処理
                 // 出勤記録があり、かつ退勤記録がまだない場合のみ処理
                 if (workTime != null && workTime.getClockOut() == null) {
-                    workTime.setClockOut(Time.valueOf(LocalTime.now())); // 現在時刻を退勤時刻として設定
-                    workTimeDao.saveWorkTime(workTime); // データベースを更新
+                	Time now = Time.valueOf(LocalTime.now());
+                	workTime.setClockOut(now); // 現在時刻を退勤時刻として設定
+                    
+                    /* 修正・追加*/
+                    
+                    
+                	// 退勤処理で再計算
+                	workTime.setClockOut(now);
+                	List<BreakBean> breaks = workTimeDao.findBreaksByDate(empId, today);
+                	recalculateWorkTime(workTime, breaks);
+                	workTimeDao.saveWorkTime(workTime);
+                    
                     request.setAttribute("successMessage", "退勤打刻を記録しました");
                 }
                 // 出勤記録がない、または既に退勤済みの場合は何もしない
@@ -240,6 +253,14 @@ public class WorkPunchServlet extends HttpServlet {
 
                 // データベースに保存
                 workTimeDao.addBreak(newBreak);
+                
+                // 休憩追加後、再計算
+                workTime = workTimeDao.findWorkTimeByDate(empId, today); // 念のため再取得
+                List<BreakBean> updatedBreaks = workTimeDao.findBreaksByDate(empId, today);
+                recalculateWorkTime(workTime, updatedBreaks);
+                workTimeDao.saveWorkTime(workTime);
+               
+    
                 request.setAttribute("successMessage", "休憩時間を追加しました");
                 break;
 
@@ -251,6 +272,13 @@ public class WorkPunchServlet extends HttpServlet {
                     int breakId = Integer.parseInt(breakIdStr);
                     // データベースから削除
                     workTimeDao.deleteBreak(breakId);
+                    
+                    // 削除後に再計算
+                    workTime = workTimeDao.findWorkTimeByDate(empId, today);
+                    List<BreakBean> deletedBreaks = workTimeDao.findBreaksByDate(empId, today);
+                    recalculateWorkTime(workTime, deletedBreaks);
+                    workTimeDao.saveWorkTime(workTime);
+                    
                     request.setAttribute("successMessage", "休憩記録を削除しました");
                 } catch (NumberFormatException e) {
                     // 休憩IDが数値でない場合のエラーハンドリング
@@ -288,4 +316,75 @@ public class WorkPunchServlet extends HttpServlet {
             return null; // フォーマットが不正な場合はnullを返す
         }
     }
+    
+    /** 追加
+     * 稼働時間を計算しDBに保存するメソッド
+     * 稼働時間 = 退勤時刻 - 出勤時刻 - 休憩時間
+     */
+    private void recalculateWorkTime(WorkTimeBean workTime, List<BreakBean> breaks) {
+        if (workTime.getClockIn() != null && workTime.getClockOut() != null) {
+            // 総勤務時間（分）
+            long totalWorkedMinutes = Duration.between(
+                workTime.getClockIn().toLocalTime(),
+                workTime.getClockOut().toLocalTime()
+            ).toMinutes();
+
+            // 総休憩時間（分）
+            long totalBreakMinutes = 0;
+            for (BreakBean b : breaks) {
+                if (b.getBreakStart() != null && b.getBreakEnd() != null) {
+                    totalBreakMinutes += Duration.between(
+                        b.getBreakStart().toLocalTime(),
+                        b.getBreakEnd().toLocalTime()
+                    ).toMinutes();
+                }
+            }
+
+            // 実働時間（分）
+            long netWorkedMinutes = totalWorkedMinutes - totalBreakMinutes;
+            if (netWorkedMinutes < 0) netWorkedMinutes = 0;
+
+            BigDecimal workingHours = BigDecimal.valueOf(netWorkedMinutes)
+                .divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP);
+            workTime.setWorkingHours(workingHours);
+
+            // 残業時間（8時間超過分）
+            BigDecimal overtime = workingHours.subtract(BigDecimal.valueOf(8));
+            if (overtime.compareTo(BigDecimal.ZERO) < 0) {
+                overtime = BigDecimal.ZERO;
+            }
+            workTime.setOvertimeHours(overtime);
+
+            // 深夜時間（22:00～翌5:00）
+            BigDecimal nightHours = BigDecimal.ZERO;
+            LocalTime clockIn = workTime.getClockIn().toLocalTime();
+            LocalTime clockOut = workTime.getClockOut().toLocalTime();
+
+            // 夜間1: 22:00～24:00
+            if (!clockOut.isBefore(LocalTime.of(22, 0))) {
+                LocalTime start = clockIn.isAfter(LocalTime.of(22, 0)) ? clockIn : LocalTime.of(22, 0);
+                LocalTime end = clockOut.isAfter(LocalTime.MIDNIGHT) ? LocalTime.MIDNIGHT : clockOut;
+                long night1 = Duration.between(start, end).toMinutes();
+                nightHours = nightHours.add(BigDecimal.valueOf(Math.max(night1, 0)));
+            }
+
+            // 夜間2: 0:00～5:00
+            if (clockOut.isBefore(LocalTime.of(5, 0)) || clockIn.isBefore(LocalTime.of(5, 0))) {
+                LocalTime start = clockIn.isAfter(LocalTime.MIDNIGHT) ? clockIn : LocalTime.MIDNIGHT;
+                LocalTime end = clockOut.isBefore(LocalTime.of(5, 0)) ? clockOut : LocalTime.of(5, 0);
+                long night2 = Duration.between(start, end).toMinutes();
+                nightHours = nightHours.add(BigDecimal.valueOf(Math.max(night2, 0)));
+            }
+
+            workTime.setNightHours(nightHours.divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
+
+        } else {
+            // 出退勤不完全 → 全て 0 にリセット
+            workTime.setWorkingHours(BigDecimal.ZERO);
+            workTime.setOvertimeHours(BigDecimal.ZERO);
+            workTime.setNightHours(BigDecimal.ZERO);
+        }
+    }
+    
+    
 }
