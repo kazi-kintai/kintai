@@ -183,10 +183,33 @@
         }
         .fc .fc-daygrid-day-number {
             font-size: 1em;
+            padding: 2px;
+        }
+        .fc .fc-daygrid-day-top { /* 追加 */
+            padding: 2px;
+            margin: 0px;
         }
         .fc .fc-col-header-cell {
             font-size: 0.9em;
         }
+        .fc .fc-day {
+            padding: 2px;
+        }
+        
+        .fc-daygrid-day-events { /* 追加 */
+    margin-top: 2px !important;
+}
+		.fc-header-toolbar {
+			margin:0px;
+			padding: 0px;
+			max-weight: 1px;
+		}
+		
+		.fc-header-toolbar.fc-toolbar.fc-toolbar-ltr{
+			margin:0px;
+			padding: 0px;
+		}
+
         .fc-event { /* イベント表示のスタイル */
             cursor: pointer;
             border-radius: 3px;
