@@ -1,5 +1,4 @@
 package kintai;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -7,7 +6,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
 public class ProjectBudgetReportDao {
     
     private DBAccess db = new DBAccess();
@@ -101,6 +99,7 @@ public class ProjectBudgetReportDao {
                     "LEFT JOIN hourly_rate_monthly hrm ON e.EMP_ID = hrm.EMP_ID " +
                     "    AND wa.PROJECT_ID = hrm.PROJECT_ID " +
                     "    AND DATE_FORMAT(hrm.TARGET_MONTH, '%Y-%m') = ? " +
+                    "    AND (hrm.IS_DELETED IS NULL OR hrm.IS_DELETED = FALSE) " +
                     "WHERE wa.PROJECT_ID = ? " +
                     "GROUP BY e.EMP_ID, e.EMP_NAME, hrm.HOURLY_RATE " +
                     "HAVING SUM(CASE WHEN DATE_FORMAT(wa.WORK_DATE, '%Y-%m') = ? THEN wa.WORK_HOURS ELSE 0 END) > 0 " +
@@ -126,6 +125,12 @@ public class ProjectBudgetReportDao {
                     report.setActualAmount(rs.getBigDecimal("ACTUAL_AMOUNT"));
                     report.setPersonalBudget(null); // 当月実績額のみ計算
                     report.setPersonalBudgetVariance(null); // 個人予算差異は計算しない
+                    
+                    // デバッグ出力を追加
+                    System.out.println("Employee: " + report.getEmpNo() + 
+                                     " | Hours: " + report.getTotalHours() + 
+                                     " | HourlyRate: " + report.getHourlyRate() + 
+                                     " | ActualAmount: " + report.getActualAmount());
                     
                     reports.add(report);
                 }
@@ -191,7 +196,7 @@ public class ProjectBudgetReportDao {
         
         // 挿入SQL
         String insertSql = "INSERT INTO hourly_rate_monthly (EMP_ID, PROJECT_ID, TARGET_MONTH, HOURLY_RATE, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) " +
-                          "VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-01'), ?, FALSE, NOW(), ?, NOW(), ?)";
+                          "VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%d'), ?, FALSE, NOW(), ?, NOW(), ?)";
         
         try (Connection conn = db.getConnection()) {
             conn.setAutoCommit(false);
@@ -327,7 +332,7 @@ public class ProjectBudgetReportDao {
         
         // 挿入SQL
         String insertSql = "INSERT INTO hourly_rate_monthly (EMP_ID, PROJECT_ID, TARGET_MONTH, HOURLY_RATE, IS_DELETED, CREATED_AT, CREATED_BY, UPDATED_AT, UPDATED_BY) " +
-                          "VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-01'), ?, FALSE, NOW(), ?, NOW(), ?)";
+                          "VALUES (?, ?, STR_TO_DATE(?, '%Y-%m-%d'), ?, FALSE, NOW(), ?, NOW(), ?)";
         
         // 既存レコードの確認
         boolean recordExists = false;

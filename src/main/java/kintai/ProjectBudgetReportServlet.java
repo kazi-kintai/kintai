@@ -1,5 +1,4 @@
 package kintai;
-
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
@@ -12,8 +11,6 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-
-
 @WebServlet("/ProjectBudgetReportServlet")
 public class ProjectBudgetReportServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
@@ -283,7 +280,12 @@ public class ProjectBudgetReportServlet extends HttpServlet {
                                     empNo = value;
                                 } else if ("hourlyRate".equals(key)) {
                                     try {
-                                        hourlyRate = new BigDecimal(value);
+                                        // 値が空文字またはゼロの場合はスキップ
+                                        if (value.isEmpty() || "0".equals(value)) {
+                                            hourlyRate = BigDecimal.ZERO;
+                                        } else {
+                                            hourlyRate = new BigDecimal(value);
+                                        }
                                     } catch (NumberFormatException e) {
                                         hourlyRate = BigDecimal.ZERO;
                                     }
@@ -291,8 +293,8 @@ public class ProjectBudgetReportServlet extends HttpServlet {
                             }
                         }
                         
-                        // データベースの時給を更新
-                        if (empNo != null && hourlyRate != null) {
+                        // データベースの時給を更新（時給が0より大きい場合のみ）
+                        if (empNo != null && hourlyRate != null && hourlyRate.compareTo(BigDecimal.ZERO) > 0) {
                             System.out.println("Updating hourly rate for empNo: " + empNo + ", rate: " + hourlyRate);
                             boolean success = budgetReportDao.updateHourlyRate(empNo, projectId, month, hourlyRate);
                             System.out.println("Update result: " + success);
