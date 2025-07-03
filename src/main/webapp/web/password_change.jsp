@@ -29,46 +29,50 @@
             font-family: 'メイリオ', sans-serif;
             background-color: #f0f0f0;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
         }
         .container {
-            max-width: 500px;
-            width: 100%;
-            margin: auto;
+            max-width: 400px;
+            width: 90%;
             background-color: white;
-            padding: 30px;
+            padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-height: 90vh;
+            overflow: hidden;
         }
         .header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            padding: 10px 20px;
+            padding: 8px 15px;
             background: #fff;
             border-bottom: 1px solid #ccc;
-            margin: -30px -30px 20px -30px; /* 親コンテナのパディングを相殺 */
+            margin: -20px -20px 15px -20px;
             border-top-left-radius: 8px;
             border-top-right-radius: 8px;
         }
         .user-info {
             display: flex;
             flex-direction: column;
-            line-height: 1.5;
+            line-height: 1.3;
             text-align: left;
+            font-size: 12px;
         }
         .logout-button {
             background-color: #dc3545;
             color: white;
             border: 1px solid #dc3545;
             border-radius: 5px;
-            padding: 8px 16px;
+            padding: 6px 12px;
             cursor: pointer;
-            font-size: 1em;
+            font-size: 12px;
             text-decoration: none;
             align-self: center;
         }
@@ -80,9 +84,10 @@
             color: #333;
             text-align: center;
             border-bottom: 2px solid #007bff;
-            padding-bottom: 10px;
+            padding-bottom: 8px;
             margin-top: 0;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
         }
         /* メッセージ表示エリア */
         .message {
@@ -102,33 +107,34 @@
             border: 1px solid #f5c6cb;
         }
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             font-weight: bold;
             color: #555;
+            font-size: 14px;
         }
         .form-group input[type="password"] {
             width: calc(100% - 16px);
-            padding: 10px;
+            padding: 8px;
             border: 1px solid #ced4da;
             border-radius: 4px;
-            font-size: 1em;
+            font-size: 14px;
         }
         .button-container {
             text-align: center;
-            margin-top: 30px;
+            margin-top: 20px;
         }
         .btn-primary {
             background-color: #007bff;
             color: white;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1.1em;
+            font-size: 14px;
             transition: background-color 0.2s ease;
         }
         .btn-primary:hover {
@@ -136,13 +142,14 @@
         }
         .back-link {
             display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
+            margin-top: 15px;
+            padding: 8px 16px;
             background-color: #6c757d;
             color: white;
             text-decoration: none;
             border-radius: 4px;
             text-align: center;
+            font-size: 14px;
             transition: background-color 0.2s ease;
         }
         .back-link:hover {

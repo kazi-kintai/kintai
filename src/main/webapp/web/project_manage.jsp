@@ -53,16 +53,22 @@
             font-family: 'メイリオ', sans-serif;
             background-color: #f0f0f0;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
+            height: 100vh;
+            overflow: hidden;
         }
         
         .container {
             max-width: 1200px;
             margin: 0 auto;
             background-color: white;
-            padding: 20px;
+            padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: calc(100vh - 30px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         
         .header {
@@ -132,42 +138,43 @@
         /* フィルターフォーム・追加フォーム */
         .add-form {
             background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
             border: 1px solid #dee2e6;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
         
         .add-form h2 {
             margin-top: 0;
+            margin-bottom: 10px;
             color: #495057;
-            font-size: 16px;
+            font-size: 14px;
         }
         
         .form-group {
             display: flex;
             flex-direction: column;
-            margin-right: 20px;
-            margin-bottom: 15px;
-            min-width: 160px;
+            margin-right: 15px;
+            margin-bottom: 10px;
+            min-width: 140px;
         }
         
         .form-group label {
             font-weight: 600;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             color: #495057;
-            font-size: 12px;
+            font-size: 11px;
         }
         
         .form-group input[type="text"],
         .form-group input[type="number"],
         .form-group input[type="date"],
         .form-group select {
-            padding: 8px 10px;
+            padding: 6px 8px;
             border: 1px solid #ced4da;
-            border-radius: 6px;
-            font-size: 13px;
+            border-radius: 4px;
+            font-size: 12px;
             transition: border-color 0.2s, box-shadow 0.2s;
             background-color: white;
         }
@@ -300,12 +307,15 @@
         /* 戻るボタン */
         .back-link {
             display: inline-block;
-            margin-top: 20px;
-            padding: 8px 16px;
+            margin-top: 8px;
+            padding: 4px 8px;
             background-color: #6c757d;
             color: white;
             text-decoration: none;
             border-radius: 4px;
+            font-size: 11px;
+            margin-bottom: 10px;
+            width: fit-content;
         }
         
         .back-link:hover {
@@ -329,16 +339,19 @@
         /* 並排配置のためのコンテナスタイル */
         .form-container-wrapper {
             display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
+            gap: 15px;
+            margin-bottom: 10px;
             align-items: stretch;
+            flex-grow: 1;
+            overflow: hidden;
         }
         
         .form-container {
             flex: 1;
-            min-height: 280px;
+            min-height: 200px;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
         
         .form-container form {
@@ -348,8 +361,8 @@
         }
         
         .project-info-display {
-            font-size: 16px;
-            padding: 20px;
+            font-size: 14px;
+            padding: 12px;
             flex-grow: 1;
             display: flex;
             flex-direction: column;
@@ -357,17 +370,17 @@
         }
         
         .info-grid div {
-            margin-bottom: 12px;
-            line-height: 1.6;
+            margin-bottom: 8px;
+            line-height: 1.4;
         }
         
         .info-grid strong {
-            font-size: 18px;
+            font-size: 13px;
             color: #495057;
         }
         
         .info-grid span {
-            font-size: 17px;
+            font-size: 12px;
             font-weight: 500;
             color: #1976d2;
         }
