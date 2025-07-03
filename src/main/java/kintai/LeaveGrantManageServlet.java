@@ -61,43 +61,61 @@ public class LeaveGrantManageServlet extends HttpServlet {
         int unissuedSubstitute = 0;
 
         for (EmpBean emp : allEmp) {
+        	
+        	// 追加
+        	// 年次
+            if (grantDao.isEligible(emp, grantDateForAnnual) &&
+                !grantDao.alreadyGranted(emp.getEmpId(), grantDateForAnnual, LeaveGrantDao.LEAVE_TYPE_ANNUAL)) {
+                unissuedAnnual++;
+            }
+
+            // 初回（3ヶ月 or 6ヶ月）
+            LocalDate date3m = emp.getEmpDate().plusMonths(3);
+            LocalDate date6m = emp.getEmpDate().plusMonths(6);
+            boolean need3m = !grantDao.alreadyGranted(emp.getEmpId(), date3m, LeaveGrantDao.LEAVE_TYPE_INITIAL_3M)
+                    && !grantDate.isBefore(date3m) && grantDao.isEligible(emp, date3m);
+            boolean need6m = !grantDao.alreadyGranted(emp.getEmpId(), date6m, LeaveGrantDao.LEAVE_TYPE_INITIAL_6M)
+                    && !grantDate.isBefore(date6m) && grantDao.isEligible(emp, date6m);
+            if (need3m || need6m) {
+                unissuedInitial++;
+            }
+
+            // 特別
+            if ((grantDate.isEqual(grantDateForSpecial) || grantDate.isAfter(grantDateForSpecial)) &&
+                !grantDao.alreadyGranted(emp.getEmpId(), grantDateForSpecial, LeaveGrantDao.LEAVE_TYPE_SPECIAL)) {
+                unissuedSpecial++;
+            }
+
+            // 代休
+            if (grantDao.isSubstituteLeaveNotGranted(emp, grantDate)) {
+                unissuedSubstitute++;
+            }
+        	
+        	
             boolean canGrantCurrent = false;
 
             switch (leaveType) {
-                case "annual":
-                    boolean eligibleAnnual = grantDao.isEligible(emp, grantDateForAnnual);
-                    boolean alreadyAnnual = grantDao.alreadyGranted(emp.getEmpId(), grantDateForAnnual, LeaveGrantDao.LEAVE_TYPE_ANNUAL);
-                    canGrantCurrent = eligibleAnnual && !alreadyAnnual;
-                    if (canGrantCurrent) unissuedAnnual++;
-                    break;
+            case "annual":
+                canGrantCurrent = grantDao.isEligible(emp, grantDateForAnnual)
+                                  && !grantDao.alreadyGranted(emp.getEmpId(), grantDateForAnnual, LeaveGrantDao.LEAVE_TYPE_ANNUAL);
+                break;
 
-                case "initial":
-                    LocalDate date3m = emp.getEmpDate().plusMonths(3);
-                    LocalDate date6m = emp.getEmpDate().plusMonths(6);
-                    boolean need3m = !grantDao.alreadyGranted(emp.getEmpId(), date3m, LeaveGrantDao.LEAVE_TYPE_INITIAL_3M)
-                            && !grantDate.isBefore(date3m) && grantDao.isEligible(emp, date3m);
-                    boolean need6m = !grantDao.alreadyGranted(emp.getEmpId(), date6m, LeaveGrantDao.LEAVE_TYPE_INITIAL_6M)
-                            && !grantDate.isBefore(date6m) && grantDao.isEligible(emp, date6m);
-                    canGrantCurrent = need3m || need6m;
-                    if (canGrantCurrent) unissuedInitial++;
-                    break;
+            case "initial":
+                canGrantCurrent = need3m || need6m;
+                break;
 
-                case "special":
-                    boolean afterSpecialDate = (grantDate.isEqual(grantDateForSpecial) || grantDate.isAfter(grantDateForSpecial));
-                    boolean alreadySpecial = grantDao.alreadyGranted(emp.getEmpId(), grantDateForSpecial, LeaveGrantDao.LEAVE_TYPE_SPECIAL);
-                    canGrantCurrent = afterSpecialDate && !alreadySpecial;
-                    if (canGrantCurrent) unissuedSpecial++;
-                    break;
+            case "special":
+                canGrantCurrent = (grantDate.isEqual(grantDateForSpecial) || grantDate.isAfter(grantDateForSpecial))
+                                  && !grantDao.alreadyGranted(emp.getEmpId(), grantDateForSpecial, LeaveGrantDao.LEAVE_TYPE_SPECIAL);
+                break;
 
-                case "substitute":
-                    boolean notGrantedSubstitute = grantDao.isSubstituteLeaveNotGranted(emp, grantDate);
-                    canGrantCurrent = notGrantedSubstitute;
-                    if (canGrantCurrent) unissuedSubstitute++;
-                    break;
+            case "substitute":
+                canGrantCurrent = grantDao.isSubstituteLeaveNotGranted(emp, grantDate);
+                break;
 
-                default:
-                    canGrantCurrent = false;
-                    break;
+            default:
+                canGrantCurrent = false;
+                break;
             }
 
             emp.setCanGrant(canGrantCurrent);
