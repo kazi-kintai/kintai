@@ -505,10 +505,29 @@ public class KintaiRecDao {
      * @return 休暇申請者数
      */
     public int getVacationEmployeeCount(LocalDate date) {
-        // TODO: 将来的に休暇管理テーブルが実装されたら、以下のようなSQLに変更
-        // String sql = "SELECT COUNT(*) FROM vacation WHERE vacation_date = ? AND status = 'approved'";
+        String sql = "SELECT COUNT(DISTINCT lr.EMP_ID) FROM leave_rec lr " +
+                    "WHERE lr.START_DATE <= ? AND lr.END_DATE >= ? " +
+                    "AND lr.STATUS = '承認済み' AND lr.IS_DELETED = 0";
         
-        // 現在は休暇管理機能がないため0を返す
+        System.out.println("getVacationEmployeeCount SQL: " + sql);
+        System.out.println("getVacationEmployeeCount date: " + date);
+        
+        try (Connection conn = db.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setDate(1, Date.valueOf(date));
+            ps.setDate(2, Date.valueOf(date));
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int count = rs.getInt(1);
+                    System.out.println("getVacationEmployeeCount result: " + count);
+                    return count;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return 0;
     }
     
